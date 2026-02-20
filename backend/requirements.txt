@@ -1,0 +1,29 @@
+# FastAPI 웹 프레임워크
+fastapi==0.109.2
+uvicorn[standard]==0.27.1
+python-multipart==0.0.9
+
+# 데이터 처리
+pandas==2.2.0
+openpyxl==3.1.2
+numpy==1.26.4
+
+# 데이터베이스
+sqlalchemy==2.0.27
+
+# DRG 매칭 (퍼지 매칭)
+fuzzywuzzy==0.18.0
+python-Levenshtein==0.25.0
+
+# 유틸리티
+python-dateutil==2.8.2
+pydantic==2.6.1
+pydantic-settings==2.1.0
+
+# 엑셀 리포트 생성
+xlsxwriter==3.1.9
+
+# 개발 도구
+pytest==8.0.0
+pytest-asyncio==0.23.4
+httpx==0.26.0
