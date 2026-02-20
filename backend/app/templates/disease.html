@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block nav_disease %}active{% endblock %}
+
+{% block content %}
+<!-- 질환 검색 -->
+<div class="content-section">
+    <input type="text" class="search-input" placeholder="질환명 또는 코드 입력... 🔍" id="diseaseSearch">
+</div>
+
+<!-- 질환 상세 정보 -->
+<div class="content-section">
+    <div style="border-bottom: 2px solid #3498db; padding-bottom: 15px; margin-bottom: 20px;">
+        <h5 style="color: #2c3e50; font-weight: 700; margin: 0;">{{ disease_name }}</h5>
+    </div>
+
+    <!-- 기준 LOS 정보 -->
+    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+        <div style="text-align: center;">
+            <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 8px; font-weight: 600;">HIRA 기준 LOS</div>
+            <div style="font-size: 24px; font-weight: bold; color: #2c3e50;">
+                {{ "%.1f"|format(disease_info.get('target_los', 0)) }}일
+            </div>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 8px; font-weight: 600;">병원 전체 현 LOS</div>
+            <div style="font-size: 24px; font-weight: bold; color: #2c3e50;">
+                {{ "%.1f"|format(disease_info.get('current_los', 0)) }}일
+            </div>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 8px; font-weight: 600;">갭</div>
+            <div style="font-size: 24px; font-weight: bold;">
+                {% if disease_info.get('los_gap', 0) >= 0 %}
+                    <span class="positive">+{{ "%.1f"|format(disease_info.get('los_gap', 0)) }}일</span>
+                {% else %}
+                    <span class="negative">{{ "%.1f"|format(disease_info.get('los_gap', 0)) }}일</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 담당 의료진 분포 & KPI -->
+    <div>
+        <div style="border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <h6 style="margin: 0; color: #2c3e50; font-weight: 700;">담당 의료진 분포 & KPI</h6>
+            <div class="sort-controls">
+                <button class="sort-btn active" data-sort="patient_count">환자수▼</button>
+                <button class="sort-btn" data-sort="los_gap">LOS갭</button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">의료진 (진료과)</th>
+                        <th>환자수</th>
+                        <th>현 LOS</th>
+                        <th>LOS 갭</th>
+                        <th>추가병상일</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if doctor_distribution %}
+                        {% for doctor in doctor_distribution %}
+                        <tr>
+                            <td style="text-align: left;">
+                                <strong>{{ doctor.doctor }}</strong> ({{ doctor.department }})
+                            </td>
+                            <td>{{ doctor.patient_count }}명</td>
+                            <td>{{ "%.1f"|format(doctor.current_los) }}일</td>
+                            <td>
+                                {% if doctor.los_gap >= 0 %}
+                                    <span class="positive">+{{ "%.1f"|format(doctor.los_gap) }}일</span>
+                                {% else %}
+                                    <span class="negative">{{ "%.1f"|format(doctor.los_gap) }}일</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ "%.0f"|format(doctor.additional_bed_days) }}일</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 20px; color: #7f8c8d;">
+                                의료진 데이터가 없습니다.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 월별 LOS 추이 (스파크라인) -->
+    <div style="margin-top: 40px; background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
+        <h6 style="color: #2c3e50; font-weight: 700; margin-bottom: 20px; margin-top: 0;">월별 LOS 추이 (스파크라인)</h6>
+
+        <div style="overflow-x: auto; padding: 10px 0;">
+            <table style="width: 100%;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #d0d8e0;">
+                        <th style="text-align: center; padding: 10px; font-weight: 600; color: #2c3e50;">월</th>
+                        {% for month in range(1, 13) %}
+                        {% if month in [3, 4, 11, 12] %}
+                        <th style="text-align: center; padding: 10px; font-weight: 600; color: #e74c3c; background-color: #fadbd8;">
+                            [{{ month }}월]
+                        </th>
+                        {% else %}
+                        <th style="text-align: center; padding: 10px; font-weight: 600; color: #2c3e50;">
+                            {{ month }}월
+                        </th>
+                        {% endif %}
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #d0d8e0;">
+                        <td style="text-align: center; padding: 10px; font-weight: 600;">LOS</td>
+                        {% set los_values = [8.5, 8.3, 7.9, 8.0, 8.8, 9.1, 8.6, 8.9, 9.2, 7.8, 8.1, 8.2] %}
+                        {% for i in range(1, 13) %}
+                        <td style="text-align: center; padding: 10px;">
+                            {{ "%.1f"|format(los_values[i-1]) }}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td colspan="13" style="text-align: center; padding: 10px; color: #7f8c8d; font-size: 12px;">
+                            ─────────────────────── HIRA 기준: {{ "%.1f"|format(disease_info.get('target_los', 0)) }}일 ───────────────────────
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 15px; font-size: 12px; color: #7f8c8d;">
+            <strong style="color: #e74c3c;">[  ]</strong> 표시 = 비수기 구간 (3-4월, 11-12월)
+        </div>
+    </div>
+</div>
+
+<script>
+    // 검색 기능
+    const searchInput = document.getElementById('diseaseSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            console.log('Search:', query);
+            // 실제 구현에서는 필터링 로직 추가
+        });
+    }
+
+    // 정렬 버튼 핸들러
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const sortBy = this.dataset.sort;
+            console.log('Sort by:', sortBy);
+        });
+    });
+</script>
+{% endblock %}

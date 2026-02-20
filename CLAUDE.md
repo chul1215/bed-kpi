@@ -12,9 +12,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 진료과-의료진-질환 단위 목표 관리 체계 구축
 
 **Tech Stack:**
-- Backend: Python 3.9+ with FastAPI + pandas + SQLite
-- Frontend: React + TypeScript + Ant Design (추후 구현)
+- Backend: Python 3.9+ with FastAPI + pandas + Jinja2 + Plotly
+- Frontend: HTML5 + Bootstrap 5 (와이어프레임 기반)
 - Data Processing: pandas, openpyxl for Excel parsing
+- Database: SQLite (추후)
 
 ---
 
@@ -39,15 +40,16 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ### Testing
 
 ```bash
-# 단위 테스트 실행
+# Day 1 완전한 파이프라인 테스트 (권장)
 cd backend
-pytest tests/
+python3 tests/test_kpi_engine.py
 
-# 특정 테스트 파일 실행
-pytest tests/test_file_parser.py -v
-
-# 파일 파서 수동 테스트
-python3 -c "from app.services.file_parser import FileParser; ..."
+# 특정 서비스 수동 테스트
+python3 -c "
+from app.services.file_parser import FileParser
+hira_df = FileParser.parse_hira_file('../data/hira/*.xlsx')
+print(f'HIRA: {len(hira_df)}건')
+"
 ```
 
 ---
@@ -65,31 +67,52 @@ python3 -c "from app.services.file_parser import FileParser; ..."
 
 ```
 backend/app/
-├── main.py              # FastAPI 앱 진입점
-├── config.py            # 설정 (MIN_PATIENT_COUNT=6, OFF_SEASON_MONTHS 등)
-├── models/              # Pydantic 모델
-├── services/            # 비즈니스 로직
-│   ├── file_parser.py   # HIRA/SMC 파일 파싱 (핵심!)
-│   ├── period_classifier.py  # 비수기/통상기간 분류
-│   ├── drg_matcher.py   # DRG 매칭 (구현 예정)
-│   ├── aggregator.py    # 데이터 집계 (구현 예정)
-│   └── kpi_calculator.py  # KPI 산출 엔진 (구현 예정)
-├── api/                 # API 라우터
-├── database/            # SQLite 스키마 및 repository
+├── main.py                      # FastAPI 앱 진입점 + 정적 파일 서빙
+├── config.py                    # 설정 (MIN_PATIENT_COUNT=6, OFF_SEASON_MONTHS 등)
+├── models/                      # Pydantic 모델
+├── services/                    # 비즈니스 로직 (Day 1 완성)
+│   ├── file_parser.py          # HIRA/SMC 파일 파싱 ✅
+│   ├── period_classifier.py     # 비수기/통상기간 분류 ✅
+│   ├── aggregator.py           # 질환/의료진/진료과 집계 ✅
+│   ├── kpi_calculator.py       # KPI 산출 엔진 ✅
+│   ├── drg_matcher.py          # DRG 매칭 ✅
+│   └── dashboard_generator.py  # HTML 대시보드 생성 (Day 2 진행중)
+├── api/                         # API 라우터 (Day 2 진행중)
+│   └── dashboard.py            # 대시보드 API 엔드포인트
+├── templates/                   # Jinja2 HTML 템플릿 (Day 2 진행중)
+│   ├── base.html               # 공통 헤더/레이아웃
+│   ├── index.html              # 홈 (KPI 카드 + 의사별 TOP 6)
+│   ├── department.html         # 진료과 뷰
+│   ├── doctor.html             # 의료진 상세
+│   └── disease.html            # 질환 뷰
+├── static/                      # CSS/JS (Day 2 진행중)
+│   ├── style.css               # Bootstrap + 커스텀 스타일
+│   └── charts.js               # Plotly 차트 스크립트
 └── utils/
-    └── constants.py     # 상수 (Period, UploadStatus, RequiredColumns)
+    └── constants.py            # 상수 (Period, UploadStatus 등)
 ```
 
-### Key Services
+### Key Services (Day 1 완성)
 
-**file_parser.py** - 가장 중요한 파일 파싱 로직:
-- `parse_hira_file()`: HIRA 데이터 파싱 (skiprows=2, '$' 행 제거, ~739건)
-- `parse_smc_file()`: SMC 데이터 파싱 (Sheet1, 의료진명 정제, ~33,853건)
-- `validate_files()`: 데이터 유효성 검증
+**file_parser.py** - 파일 파싱:
+- `parse_hira_file()`: HIRA 데이터 파싱 (skiprows=2, 739건 ✅)
+- `parse_smc_file()`: SMC 데이터 파싱 (Sheet1, 33,853건 ✅)
+- `validate_files()`: 데이터 유효성 검증 ✅
 
-**period_classifier.py**: 기간 분류
-- 비수기: 3, 4, 11, 12월
-- 통상기간: 나머지 월
+**aggregator.py** - 데이터 집계:
+- `aggregate_by_disease()`: 질환 단위 집계
+- `aggregate_by_doctor()`: 의료진 단위 집계
+- `aggregate_by_department()`: 진료과 단위 집계
+- `calculate_consistency_error()`: 정합성 검증 (진료과 합계 = 의료진 합계)
+
+**kpi_calculator.py** - KPI 산출 (양방향 유지):
+- `calculate_disease_kpi()`: 질환별 KPI (LOS 갭 = target_los - current_los)
+- `calculate_doctor_kpi()`: 의료진별 KPI (가중 평균 목표 LOS)
+- `calculate_summary_kpi()`: 요약 KPI (평균 갭, 추가 병상일수, 가동률)
+
+**period_classifier.py** - 기간 분류:
+- 비수기: 3-4월, 11-12월 (비수기 데이터: 11,330건)
+- 통상기간: 1-2월, 5-10월 (통상기간 데이터: 22,523건)
 
 ---
 
@@ -145,17 +168,25 @@ LOS_RANGE = (0.5, 100)  # 재원일수 정상 범위
 
 ## Development Phases
 
-현재: **Phase 1 (데이터 파이프라인)** 진행 중
+현재: **Day 2 (HTML 대시보드)** ✅ 완료, **Day 3 (최종 검증)** 준비 중
 
-### Phase 1: 데이터 파이프라인 (1-2주)
+### ✅ Day 1 완료: 데이터 파이프라인
 - [x] FastAPI 프로젝트 초기화
-- [x] file_parser.py 구현
-- [x] period_classifier.py 구현
-- [ ] DRG 매핑 테이블 생성 (선행 작업!)
-- [ ] database/schema.py 구현
-- [ ] drg_matcher.py 구현
-- [ ] aggregator.py 구현
-- [ ] 업로드 API 구현
+- [x] file_parser.py (HIRA 739건, SMC 33,853건 ✅)
+- [x] period_classifier.py (비수기 11,330건, 통상기간 22,523건 ✅)
+- [x] aggregator.py (질환/의료진/진료과 집계 ✅)
+- [x] kpi_calculator.py (KPI 산출 엔진 ✅)
+- [x] drg_matcher.py (DRG 매칭 ✅)
+- [x] 정합성 검증 통과 ✅
+
+### ✅ Day 2 완료: HTML 대시보드 (와이어프레임 기반)
+- [x] dashboard_generator.py (Jinja2 템플릿 렌더링 ✅)
+- [x] 공통 헤더 (base.html - 병원/기간 토글, 네비게이션 ✅)
+- [x] 홈 화면 (index.html - KPI 카드 3종 + 의사별 질환 TOP 6 ✅)
+- [x] 진료과 뷰 (department.html - 진료과 랭킹 + 드릴다운 ✅)
+- [x] 의료진 상세 (doctor.html - KPI 카드 + 질환별 상세 ✅)
+- [x] 질환 뷰 (disease.html - HIRA 기준 + 담당 의료진 분포 ✅)
+- [x] FastAPI 라우트 통합 (4개 주요 페이지 + health ✅)
 
 ### Phase 2: KPI 산출 엔진 (1-2주)
 - kpi_calculator.py (핵심 알고리즘)
