@@ -10,6 +10,9 @@ import pandas as pd
 
 from app.config import settings
 from app.services.dashboard_generator import DashboardGenerator
+from app.database.memory_store import memory_store
+from app.services.data_preloader import data_preloader
+from app.api import upload
 
 # 업로드 디렉토리 생성
 settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -34,11 +37,55 @@ app.add_middleware(
 # 대시보드 생성기
 dashboard_gen = DashboardGenerator()
 
+# API 라우터 등록
+app.include_router(upload.router, prefix="/api/upload", tags=["Upload"])
+
+
+# 애플리케이션 시작 이벤트
+@app.on_event("startup")
+async def startup_event():
+    """애플리케이션 시작 시 사전 식립 데이터 로드"""
+    import logging
+    logger = logging.getLogger(__name__)
+
+    logger.info("\n" + "=" * 80)
+    logger.info("선메디컬센터 병상가동 KPI 산출 시스템 시작")
+    logger.info("=" * 80)
+
+    # 사전 식립 데이터 로드
+    result = data_preloader.load_preloaded_data()
+
+    if result['success']:
+        logger.info(f"\n✅ 사전 식립 데이터 로딩 성공: {result['message']}")
+        for hospital, session_id in result['sessions'].items():
+            logger.info(f"   - {hospital}: {session_id}")
+    else:
+        logger.warning(f"\n⚠️  사전 식립 데이터 로딩 실패: {result['message']}")
+        logger.warning("   → 업로드 페이지에서 수동으로 파일을 업로드하세요")
+
+    logger.info("\n" + "=" * 80)
+    logger.info("서버 준비 완료!")
+    logger.info("=" * 80 + "\n")
+
 
 @app.get("/", response_class=HTMLResponse)
-async def home(hospital: str = "대전", period: str = "off_season"):
+async def home(hospital: str = "대전", period: str = "off_season", session_id: str = None):
     """홈 화면"""
-    # 샘플 데이터
+    # 세션 ID가 없으면 사전 식립된 기본 세션 사용
+    if not session_id:
+        session_id = data_preloader.get_default_session(hospital)
+
+    # 세션 ID가 있으면 실제 데이터 사용
+    if session_id:
+        summary_kpi = memory_store.get_summary_kpi(session_id, hospital, period)
+        doctor_kpis = memory_store.get_doctor_kpis(session_id, hospital, period)
+        insights = memory_store.get_insights(session_id, hospital, period)
+
+        if summary_kpi and len(doctor_kpis) > 0:
+            html = dashboard_gen.render_home(summary_kpi, doctor_kpis, insights, hospital, period)
+            return html
+
+    # 샘플 데이터 (세션 없거나 데이터 없을 때)
     summary_kpi = {
         "average_los_gap": 1.8,
         "total_additional_bed_days": 2834,
@@ -66,8 +113,27 @@ async def home(hospital: str = "대전", period: str = "off_season"):
 
 
 @app.get("/department", response_class=HTMLResponse)
-async def department(hospital: str = "대전", period: str = "off_season"):
+async def department(hospital: str = "대전", period: str = "off_season", session_id: str = None):
     """진료과 뷰"""
+    # 세션 ID가 없으면 사전 식립된 기본 세션 사용
+    if not session_id:
+        session_id = data_preloader.get_default_session(hospital)
+
+    # 실제 데이터 시도
+    if session_id:
+        department_kpis = memory_store.get_department_kpis(session_id, hospital, period)
+        doctor_kpis = memory_store.get_doctor_kpis(session_id, hospital, period)
+
+        if len(department_kpis) > 0 and len(doctor_kpis) > 0:
+            # 진료과별로 의료진 그룹화
+            doctor_kpis_by_dept = {}
+            for dept in department_kpis['department'].unique():
+                doctor_kpis_by_dept[dept] = doctor_kpis[doctor_kpis['department'] == dept]
+
+            html = dashboard_gen.render_department(department_kpis, doctor_kpis_by_dept, hospital, period)
+            return html
+
+    # 샘플 데이터
     department_kpis = pd.DataFrame({
         "department": ["내과", "정형외과", "신경과", "외과", "소아과", "산부인과"],
         "patient_count": [1200, 800, 600, 500, 450, 400],
@@ -99,8 +165,28 @@ async def department(hospital: str = "대전", period: str = "off_season"):
 
 
 @app.get("/doctor", response_class=HTMLResponse)
-async def doctor(name: str = "홍길동", hospital: str = "대전", period: str = "off_season"):
+async def doctor(name: str = "홍길동", hospital: str = "대전", period: str = "off_season", session_id: str = None):
     """의료진 상세 뷰"""
+    # 세션 ID가 없으면 사전 식립된 기본 세션 사용
+    if not session_id:
+        session_id = data_preloader.get_default_session(hospital)
+
+    # 실제 데이터 시도
+    if session_id:
+        doctor_kpis = memory_store.get_doctor_kpis(session_id, hospital, period)
+        disease_kpis = memory_store.get_disease_kpis(session_id, hospital, period)
+
+        if len(doctor_kpis) > 0:
+            # 해당 의료진 찾기
+            doctor_row = doctor_kpis[doctor_kpis['doctor'] == name]
+            if len(doctor_row) > 0:
+                doctor_kpi = doctor_row.iloc[0].to_dict()
+
+                # 해당 의료진의 질환별 KPI (실제로는 doctor-disease 관계 필요)
+                html = dashboard_gen.render_doctor(name, doctor_kpi, disease_kpis.head(5), hospital, period)
+                return html
+
+    # 샘플 데이터
     doctor_kpi = {
         "patient_count": 420,
         "los_gap": 1.7,
@@ -124,8 +210,29 @@ async def doctor(name: str = "홍길동", hospital: str = "대전", period: str 
 
 
 @app.get("/disease", response_class=HTMLResponse)
-async def disease(name: str = "폐렴", hospital: str = "대전", period: str = "off_season"):
+async def disease(name: str = "폐렴", hospital: str = "대전", period: str = "off_season", session_id: str = None):
     """질환 뷰"""
+    # 세션 ID가 없으면 사전 식립된 기본 세션 사용
+    if not session_id:
+        session_id = data_preloader.get_default_session(hospital)
+
+    # 실제 데이터 시도
+    if session_id:
+        disease_kpis = memory_store.get_disease_kpis(session_id, hospital, period)
+
+        if len(disease_kpis) > 0:
+            # 해당 질환 찾기
+            disease_row = disease_kpis[disease_kpis['diagnosis'] == name]
+            if len(disease_row) > 0:
+                disease_info = disease_row.iloc[0].to_dict()
+
+                # 담당 의료진 분포 (실제로는 disease-doctor 관계 필요)
+                doctor_distribution = pd.DataFrame()
+
+                html = dashboard_gen.render_disease(name, disease_info, doctor_distribution, hospital, period)
+                return html
+
+    # 샘플 데이터
     disease_info = {
         "target_los": 10.5,
         "current_los": 8.1,
@@ -143,6 +250,13 @@ async def disease(name: str = "폐렴", hospital: str = "대전", period: str = 
     })
 
     html = dashboard_gen.render_disease(name, disease_info, doctor_distribution, hospital, period)
+    return html
+
+
+@app.get("/upload", response_class=HTMLResponse)
+async def upload_page():
+    """업로드 페이지"""
+    html = dashboard_gen.render_upload()
     return html
 
 

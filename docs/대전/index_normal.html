@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>선메디컬센터 병상가동 KPI - 홈</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        /* ==================== 색상 체계 ==================== */
+        :root {
+            --bg-dark: #292F36;      /* 다크 그레이 - 배경 */
+            --accent: #4ECDC4;       /* 청록색 - 강조 */
+            --white: #FFFFFF;        /* 화이트 - 텍스트/카드 */
+
+            /* 파생 색상 */
+            --bg-light: #353C44;     /* 밝은 배경 */
+            --accent-hover: #3DB9B0; /* 강조색 호버 */
+            --text-primary: #FFFFFF; /* 주요 텍스트 */
+            --text-secondary: rgba(255, 255, 255, 0.7); /* 보조 텍스트 */
+            --border: rgba(78, 205, 196, 0.2); /* 테두리 */
+
+            /* 레이아웃 */
+            --radius: 12px;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* ==================== 전역 스타일 ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ==================== 헤더 ==================== */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(41, 47, 54, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title i {
+            color: var(--accent);
+            font-size: 28px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .control-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        /* ==================== 버튼 ==================== */
+        .btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 2px solid var(--border);
+            background-color: transparent;
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .btn.active {
+            background-color: var(--accent);
+            color: var(--bg-dark);
+            border-color: var(--accent);
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: var(--bg-dark);
+            border-color: var(--accent);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+
+        /* ==================== 카드 ==================== */
+        .card {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i {
+            color: var(--accent);
+            font-size: 20px;
+        }
+
+        /* ==================== KPI 카드 ==================== */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-dark) 100%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent);
+        }
+
+        .kpi-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--white);
+            font-family: 'Courier New', monospace;
+        }
+
+        .kpi-unit {
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            margin-left: 4px;
+        }
+
+        .kpi-change {
+            font-size: 14px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .kpi-change.positive {
+            color: var(--accent);
+        }
+
+        .kpi-change.negative {
+            color: #FF6B6B;
+        }
+
+        /* ==================== 테이블 ==================== */
+        .table-container {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--bg-dark);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        th.text-end {
+            text-align: right;
+        }
+
+        td {
+            padding: 16px;
+            font-size: 14px;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        td.text-end {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background-color: rgba(78, 205, 196, 0.05);
+        }
+
+        /* ==================== 배지 ==================== */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 6px;
+            background: var(--accent);
+            color: var(--bg-dark);
+        }
+
+        .badge.secondary {
+            background: var(--text-secondary);
+            color: var(--white);
+        }
+
+        /* ==================== 차트 컨테이너 ==================== */
+        .chart-container {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        /* ==================== 반응형 ==================== */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-controls {
+                width: 100%;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-container {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 600px;
+            }
+        }
+
+        /* ==================== 유틸리티 ==================== */
+        .text-accent {
+            color: var(--accent);
+        }
+
+        .text-secondary {
+            color: var(--text-secondary);
+        }
+
+        .mb-4 {
+            margin-bottom: 32px;
+        }
+
+        .mt-4 {
+            margin-top: 32px;
+        }
+
+        .gap-2 {
+            gap: 16px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-title">
+                    <i class="bi bi-hospital"></i>
+                    선메디컬센터 병상가동 KPI
+                </div>
+                <div class="header-controls">
+                    <!-- 병원 선택 -->
+                    <div class="control-group">
+                        <label>병원</label>
+                        <button class="btn active"
+                                onclick="switchHospital('대전')">
+                            대전선병원
+                        </button>
+                        <button class="btn "
+                                onclick="switchHospital('유성')">
+                            유성선병원
+                        </button>
+                    </div>
+
+                    <!-- 기간 선택 -->
+                    <div class="control-group">
+                        <label>기간</label>
+                        <button class="btn "
+                                onclick="switchPeriod('off_season')">
+                            비수기
+                        </button>
+                        <button class="btn active"
+                                onclick="switchPeriod('normal')">
+                            통상기간
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="container" style="padding-top: 32px; padding-bottom: 32px;">
+<!-- Summary KPI 카드 -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">평균 LOS 갭</div>
+        <div class="kpi-value">
+            -5.57
+            <span class="kpi-unit">일</span>
+        </div>
+        <div class="kpi-change negative">
+            <i class="bi bi-arrow-down-circle-fill"></i>
+            통상기간 기준
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">추가 재원일수</div>
+        <div class="kpi-value">
+            -12,888
+            <span class="kpi-unit">일</span>
+        </div>
+        <div class="kpi-change secondary">
+            <i class="bi bi-bed-fill"></i>
+            총 2557명 환자
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">가동률 개선 가능</div>
+        <div class="kpi-value">
+            -35.21
+            <span class="kpi-unit">%</span>
+        </div>
+        <div class="kpi-change positive">
+            <i class="bi bi-graph-up-arrow"></i>
+            통상기간 (1-2월, 5-10월) 기준
+        </div>
+    </div>
+</div>
+
+<!-- 의료진 랭킹 TOP 6 -->
+<div class="card mb-4">
+    <div class="card-title">
+        <i class="bi bi-trophy"></i>
+        의료진 랭킹 TOP 6 (임팩트 기준)
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 60px;">순위</th>
+                    <th>의료진</th>
+                    <th>진료과</th>
+                    <th class="text-end">환자수</th>
+                    <th class="text-end">LOS 갭</th>
+                    <th class="text-end">추가 재원일수</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-end"><strong style="color: var(--accent);">1</strong></td>
+                    <td><strong>범종욱</strong></td>
+                    <td><span class="badge">IMC</span></td>
+                    <td class="text-end">11</td>
+                    <td class="text-end negative">
+                            -1.69
+                    </td>
+                    <td class="text-end">
+                            -19
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-end"><strong style="color: var(--accent);">2</strong></td>
+                    <td><strong>김도희</strong></td>
+                    <td><span class="badge">PED</span></td>
+                    <td class="text-end">8</td>
+                    <td class="text-end negative">
+                            -4.00
+                    </td>
+                    <td class="text-end">
+                            -32
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-end"><strong style="color: var(--accent);">3</strong></td>
+                    <td><strong>박지훈</strong></td>
+                    <td><span class="badge">GS</span></td>
+                    <td class="text-end">10</td>
+                    <td class="text-end negative">
+                            -4.76
+                    </td>
+                    <td class="text-end">
+                            -48
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-end"><strong style="color: var(--accent);">4</strong></td>
+                    <td><strong>유지만</strong></td>
+                    <td><span class="badge">GS</span></td>
+                    <td class="text-end">21</td>
+                    <td class="text-end negative">
+                            -2.32
+                    </td>
+                    <td class="text-end">
+                            -49
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-end"><strong style="color: var(--accent);">5</strong></td>
+                    <td><strong>윤병준</strong></td>
+                    <td><span class="badge">GS</span></td>
+                    <td class="text-end">11</td>
+                    <td class="text-end negative">
+                            -6.05
+                    </td>
+                    <td class="text-end">
+                            -67
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-end"><strong style="color: var(--accent);">6</strong></td>
+                    <td><strong>이상훈</strong></td>
+                    <td><span class="badge">NS</span></td>
+                    <td class="text-end">13</td>
+                    <td class="text-end negative">
+                            -5.31
+                    </td>
+                    <td class="text-end">
+                            -69
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 진료과/의료진 선택 및 검색 -->
+<div class="card mb-4">
+    <div class="card-title">
+        <i class="bi bi-search"></i>
+        진료과 / 의료진 검색
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-top: 16px;">
+        <!-- 진료과 선택 -->
+        <div>
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-secondary);">
+                <i class="bi bi-building"></i> 진료과 선택
+            </label>
+            <select id="departmentSelect" style="width: 100%; padding: 10px; background: var(--bg-dark); color: var(--white); border: 1px solid var(--border); border-radius: 8px; font-size: 14px;">
+                <option value="">전체 진료과</option>
+                    <option value="CS">CS</option>
+                    <option value="DNS">DNS</option>
+                    <option value="ENT">ENT</option>
+                    <option value="FM">FM</option>
+                    <option value="GS">GS</option>
+                    <option value="IMC">IMC</option>
+                    <option value="IMG">IMG</option>
+                    <option value="IMI">IMI</option>
+                    <option value="IMN">IMN</option>
+                    <option value="IMO">IMO</option>
+                    <option value="IMR">IMR</option>
+                    <option value="JC">JC</option>
+                    <option value="NR">NR</option>
+                    <option value="NS">NS</option>
+                    <option value="OB">OB</option>
+                    <option value="OS">OS</option>
+                    <option value="PED">PED</option>
+                    <option value="SC">SC</option>
+                    <option value="UR">UR</option>
+            </select>
+        </div>
+
+        <!-- 의료진 검색 -->
+        <div>
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-secondary);">
+                <i class="bi bi-person-badge"></i> 의료진 검색
+            </label>
+            <input type="text" id="doctorSearch" placeholder="의료진 이름으로 검색..."
+                   style="width: 100%; padding: 10px; background: var(--bg-dark); color: var(--white); border: 1px solid var(--border); border-radius: 8px; font-size: 14px;">
+        </div>
+    </div>
+
+    <!-- 검색 결과 테이블 -->
+    <div id="searchResults" style="margin-top: 20px; display: none;">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>의료진</th>
+                        <th>진료과</th>
+                        <th class="text-end">환자수</th>
+                        <th class="text-end">LOS 갭</th>
+                        <th class="text-end">추가 재원일수</th>
+                    </tr>
+                </thead>
+                <tbody id="searchResultsBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 인사이트 -->
+<div class="card">
+    <div class="card-title">
+        <i class="bi bi-lightbulb"></i>
+        주요 인사이트
+    </div>
+    <ul style="color: var(--text-secondary); line-height: 2;">
+        <li>목표 도달이 가장 어려운 질환: 장의 기타 질환 (+2.8일)</li>
+        <li>임팩트 상위 의료진 TOP3 합산 추가 병상일수: -98일</li>
+        <li>기준치 대비 전체 평균 조정 필요량: -6.1일</li>
+    </ul>
+</div>
+
+    </main>
+
+    <!-- 스크립트 -->
+    <script>
+
+        // 정적 HTML용 네비게이션 (파일 경로 기반)
+        function switchHospital(targetHospital) {
+            const currentPeriod = 'normal';
+            const hospitalMap = {'대전': '대전', '유성': '유성'};
+            const path = `../${hospitalMap[targetHospital]}/index_${currentPeriod}.html`;
+            window.location.href = path;
+        }
+
+        function switchPeriod(targetPeriod) {
+            const currentHospital = '대전';
+            const path = `index_${targetPeriod}.html`;
+            window.location.href = path;
+        }
+    
+    </script>
+<script>
+// 전체 의료진 데이터 (JSON으로 전달)
+const allDoctors = [{"additional_bed_days": -844.33, "current_los": 7.2, "department": "IMO", "doctor": "\uc815\uc724\ud654", "los_gap": -6.98, "patient_count": 121, "status": "calculated", "target_los": 0.22, "total_bed_days": 871}, {"additional_bed_days": -599.26, "current_los": 6.76, "department": "OS", "doctor": "\uc774\ucca0\ud615", "los_gap": -6.59, "patient_count": 91, "status": "calculated", "target_los": 0.17, "total_bed_days": 615}, {"additional_bed_days": -443.21, "current_los": 6.69, "department": "IMG", "doctor": "\uc870\ub0a8\uc5f4", "los_gap": -5.54, "patient_count": 80, "status": "calculated", "target_los": 1.15, "total_bed_days": 535}, {"additional_bed_days": -369.45, "current_los": 7.42, "department": "IMG", "doctor": "\ubc15\uc6a9\uc6b0", "los_gap": -6.26, "patient_count": 59, "status": "calculated", "target_los": 1.16, "total_bed_days": 438}, {"additional_bed_days": -314.16, "current_los": 7.5, "department": "IMG", "doctor": "\ucd5c\uc720\uc544", "los_gap": -5.61, "patient_count": 56, "status": "calculated", "target_los": 1.89, "total_bed_days": 420}, {"additional_bed_days": NaN, "current_los": 4.08, "department": "ENT", "doctor": "\uc2e0\uba85\uc11d", "los_gap": NaN, "patient_count": 48, "status": "no_target_los", "target_los": NaN, "total_bed_days": 196}, {"additional_bed_days": -103.65, "current_los": 3.41, "department": "GS", "doctor": "\ucd5c\ub3d9\uc9c4", "los_gap": -2.25, "patient_count": 46, "status": "calculated", "target_los": 1.16, "total_bed_days": 157}, {"additional_bed_days": -189.9, "current_los": 5.0, "department": "IMG", "doctor": "\ub098\uc6b4\ud0dc", "los_gap": -4.42, "patient_count": 43, "status": "calculated", "target_los": 0.58, "total_bed_days": 215}, {"additional_bed_days": NaN, "current_los": 17.95, "department": "OS", "doctor": "\uc774\ubd09\uc8fc", "los_gap": NaN, "patient_count": 43, "status": "no_target_los", "target_los": NaN, "total_bed_days": 772}, {"additional_bed_days": -133.06, "current_los": 5.22, "department": "IMC", "doctor": "\ubc31\uc8fc\uc5f4", "los_gap": -3.25, "patient_count": 41, "status": "calculated", "target_los": 1.97, "total_bed_days": 214}, {"additional_bed_days": -526.54, "current_los": 14.83, "department": "IMI", "doctor": "\uae40\uad11\ubbfc", "los_gap": -12.84, "patient_count": 41, "status": "calculated", "target_los": 1.99, "total_bed_days": 608}, {"additional_bed_days": -287.83, "current_los": 8.5, "department": "UR", "doctor": "\ud669\uc720\uc9c4", "los_gap": -7.57, "patient_count": 38, "status": "calculated", "target_los": 0.93, "total_bed_days": 323}, {"additional_bed_days": -126.48, "current_los": 4.38, "department": "IMG", "doctor": "\uae40\ubbfc\ucc44", "los_gap": -3.42, "patient_count": 37, "status": "calculated", "target_los": 0.96, "total_bed_days": 162}, {"additional_bed_days": -140.47, "current_los": 4.47, "department": "ENT", "doctor": "\uc7a5\ud76c\uc0c1", "los_gap": -4.39, "patient_count": 32, "status": "calculated", "target_los": 0.08, "total_bed_days": 143}, {"additional_bed_days": -204.74, "current_los": 7.0, "department": "NR", "doctor": "\uae40\uc2b9\uc8fc", "los_gap": -6.82, "patient_count": 30, "status": "calculated", "target_los": 0.18, "total_bed_days": 210}, {"additional_bed_days": -167.33, "current_los": 5.83, "department": "NR", "doctor": "\ub0a8\uc120\uc6b0", "los_gap": -5.77, "patient_count": 29, "status": "calculated", "target_los": 0.06, "total_bed_days": 169}, {"additional_bed_days": NaN, "current_los": 13.88, "department": "JC", "doctor": "\uc804\uc7ac\uade0", "los_gap": NaN, "patient_count": 26, "status": "no_target_los", "target_los": NaN, "total_bed_days": 361}, {"additional_bed_days": -111.53, "current_los": 7.62, "department": "GS", "doctor": "\ud669\uc2dc\uc740", "los_gap": -4.29, "patient_count": 26, "status": "calculated", "target_los": 3.33, "total_bed_days": 198}, {"additional_bed_days": -337.42, "current_los": 13.19, "department": "JC", "doctor": "\uace0\uc885\uc9c4", "los_gap": -12.98, "patient_count": 26, "status": "calculated", "target_los": 0.21, "total_bed_days": 343}, {"additional_bed_days": NaN, "current_los": 16.31, "department": "JC", "doctor": "\uc1a1\uc778\uc218", "los_gap": NaN, "patient_count": 26, "status": "no_target_los", "target_los": NaN, "total_bed_days": 424}, {"additional_bed_days": NaN, "current_los": 8.43, "department": "SC", "doctor": "\uc774\ubcd1\uc120", "los_gap": NaN, "patient_count": 23, "status": "no_target_los", "target_los": NaN, "total_bed_days": 194}, {"additional_bed_days": -214.45, "current_los": 13.14, "department": "IMN", "doctor": "\uc815\uc9c0\uc724", "los_gap": -10.21, "patient_count": 21, "status": "calculated", "target_los": 2.93, "total_bed_days": 276}, {"additional_bed_days": NaN, "current_los": 7.33, "department": "SC", "doctor": "\uae40\uc7ac\ud6c8", "los_gap": NaN, "patient_count": 21, "status": "no_target_los", "target_los": NaN, "total_bed_days": 154}, {"additional_bed_days": -48.7, "current_los": 4.24, "department": "GS", "doctor": "\uc720\uc9c0\ub9cc", "los_gap": -2.32, "patient_count": 21, "status": "calculated", "target_los": 1.92, "total_bed_days": 89}, {"additional_bed_days": -94.55, "current_los": 9.71, "department": "IMR", "doctor": "\uc774\uc5f0\uc120", "los_gap": -5.56, "patient_count": 17, "status": "calculated", "target_los": 4.14, "total_bed_days": 165}, {"additional_bed_days": -150.65, "current_los": 10.73, "department": "CS", "doctor": "\uc5f0\uc131\ubaa8", "los_gap": -10.04, "patient_count": 15, "status": "calculated", "target_los": 0.69, "total_bed_days": 161}, {"additional_bed_days": NaN, "current_los": 6.07, "department": "DNS", "doctor": "\uc720\uae38\ud654", "los_gap": NaN, "patient_count": 15, "status": "no_target_los", "target_los": NaN, "total_bed_days": 91}, {"additional_bed_days": -69.08, "current_los": 5.46, "department": "NS", "doctor": "\uc774\uc0c1\ud6c8", "los_gap": -5.31, "patient_count": 13, "status": "calculated", "target_los": 0.15, "total_bed_days": 71}, {"additional_bed_days": -115.08, "current_los": 9.0, "department": "NS", "doctor": "\uae40\uc6d0\ud615", "los_gap": -8.85, "patient_count": 13, "status": "calculated", "target_los": 0.15, "total_bed_days": 117}, {"additional_bed_days": -74.24, "current_los": 9.77, "department": "IMN", "doctor": "\uae40\uc131\uc219", "los_gap": -5.71, "patient_count": 13, "status": "calculated", "target_los": 4.06, "total_bed_days": 127}, {"additional_bed_days": NaN, "current_los": 12.75, "department": "UR", "doctor": "\uc774\ubcd1\ud654", "los_gap": NaN, "patient_count": 12, "status": "no_target_los", "target_los": NaN, "total_bed_days": 153}, {"additional_bed_days": -18.61, "current_los": 3.18, "department": "IMC", "doctor": "\ubc94\uc885\uc6b1", "los_gap": -1.69, "patient_count": 11, "status": "calculated", "target_los": 1.49, "total_bed_days": 35}, {"additional_bed_days": -66.52, "current_los": 8.09, "department": "GS", "doctor": "\uc724\ubcd1\uc900", "los_gap": -6.05, "patient_count": 11, "status": "calculated", "target_los": 2.04, "total_bed_days": 89}, {"additional_bed_days": -47.59, "current_los": 7.1, "department": "GS", "doctor": "\ubc15\uc9c0\ud6c8", "los_gap": -4.76, "patient_count": 10, "status": "calculated", "target_los": 2.34, "total_bed_days": 71}, {"additional_bed_days": -32.0, "current_los": 4.38, "department": "PED", "doctor": "\uae40\ub3c4\ud76c", "los_gap": -4.0, "patient_count": 8, "status": "calculated", "target_los": 0.37, "total_bed_days": 35}, {"additional_bed_days": NaN, "current_los": 3.57, "department": "OB", "doctor": "\ub178\uc815\ud6c8", "los_gap": NaN, "patient_count": 7, "status": "no_target_los", "target_los": NaN, "total_bed_days": 25}, {"additional_bed_days": NaN, "current_los": 7.6, "department": "NR", "doctor": "\uc11c\ud638\uc131", "los_gap": NaN, "patient_count": 5, "status": "below_minimum", "target_los": NaN, "total_bed_days": 38}, {"additional_bed_days": NaN, "current_los": 4.0, "department": "PED", "doctor": "\ubc15\uae30\uc6a9", "los_gap": NaN, "patient_count": 4, "status": "below_minimum", "target_los": NaN, "total_bed_days": 16}, {"additional_bed_days": NaN, "current_los": 6.0, "department": "NR", "doctor": "\uae40\ubcd1\uc11d", "los_gap": NaN, "patient_count": 2, "status": "below_minimum", "target_los": NaN, "total_bed_days": 12}, {"additional_bed_days": NaN, "current_los": 3.0, "department": "OB", "doctor": "\uc624\ud604\ub7c9", "los_gap": NaN, "patient_count": 1, "status": "below_minimum", "target_los": NaN, "total_bed_days": 3}, {"additional_bed_days": NaN, "current_los": 8.0, "department": "FM", "doctor": "\ucd94\ud6a8\uc120", "los_gap": NaN, "patient_count": 1, "status": "below_minimum", "target_los": NaN, "total_bed_days": 8}];
+
+// 진료과 선택 필터
+document.getElementById('departmentSelect').addEventListener('change', function() {
+    filterDoctors();
+});
+
+// 의료진 검색
+document.getElementById('doctorSearch').addEventListener('input', function() {
+    filterDoctors();
+});
+
+function filterDoctors() {
+    const department = document.getElementById('departmentSelect').value;
+    const search = document.getElementById('doctorSearch').value.toLowerCase();
+
+    let filtered = allDoctors;
+
+    // 진료과 필터
+    if (department) {
+        filtered = filtered.filter(d => d.department === department);
+    }
+
+    // 이름 검색
+    if (search) {
+        filtered = filtered.filter(d => d.doctor.toLowerCase().includes(search));
+    }
+
+    // 결과 표시
+    displayResults(filtered);
+}
+
+function displayResults(doctors) {
+    const resultsDiv = document.getElementById('searchResults');
+    const tbody = document.getElementById('searchResultsBody');
+
+    if (doctors.length === 0 || (document.getElementById('departmentSelect').value === '' && document.getElementById('doctorSearch').value === '')) {
+        resultsDiv.style.display = 'none';
+        return;
+    }
+
+    resultsDiv.style.display = 'block';
+    tbody.innerHTML = '';
+
+    doctors.slice(0, 20).forEach(doctor => {
+        const row = document.createElement('tr');
+
+        const losGapClass = doctor.los_gap !== null && doctor.los_gap > 0 ? 'text-accent' : 'negative';
+        const losGapValue = doctor.los_gap !== null ? doctor.los_gap.toFixed(2) : 'N/A';
+        const additionalValue = doctor.additional_bed_days !== null ? doctor.additional_bed_days.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : 'N/A';
+
+        row.innerHTML = `
+            <td><strong>${doctor.doctor}</strong></td>
+            <td><span class="badge">${doctor.department}</span></td>
+            <td class="text-end">${doctor.patient_count.toLocaleString()}</td>
+            <td class="text-end ${doctor.los_gap !== null ? losGapClass : ''}" style="${doctor.los_gap === null ? 'color: var(--text-secondary);' : ''}">${losGapValue}</td>
+            <td class="text-end" style="${doctor.additional_bed_days === null ? 'color: var(--text-secondary);' : ''}">${additionalValue}</td>
+        `;
+
+        tbody.appendChild(row);
+    });
+}
+</script>
+</body>
+</html>

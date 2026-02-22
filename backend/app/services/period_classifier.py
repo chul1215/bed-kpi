@@ -157,3 +157,18 @@ class PeriodClassifier:
         logger.info(f"{period} 필터링 완료: {len(filtered_df)}건")
 
         return filtered_df
+
+    # Alias for compatibility
+    @staticmethod
+    def classify_dataframe(df: pd.DataFrame, date_column: str = 'discharge_date') -> pd.DataFrame:
+        """
+        DataFrame에 기간 구분 컬럼 추가 (add_period_column의 alias)
+
+        Args:
+            df: 데이터프레임
+            date_column: 날짜 컬럼명 (기본값: 'discharge_date')
+
+        Returns:
+            기간 구분 컬럼이 추가된 DataFrame
+        """
+        return PeriodClassifier.add_period_column(df, date_column)

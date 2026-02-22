@@ -71,13 +71,23 @@
                             <td>{{ doctor.patient_count }}명</td>
                             <td>{{ "%.1f"|format(doctor.current_los) }}일</td>
                             <td>
-                                {% if doctor.los_gap >= 0 %}
-                                    <span class="positive">+{{ "%.1f"|format(doctor.los_gap) }}일</span>
+                                {% if doctor.los_gap is not none %}
+                                    {% if doctor.los_gap >= 0 %}
+                                        <span class="positive">+{{ "%.1f"|format(doctor.los_gap) }}일</span>
+                                    {% else %}
+                                        <span class="negative">{{ "%.1f"|format(doctor.los_gap) }}일</span>
+                                    {% endif %}
                                 {% else %}
-                                    <span class="negative">{{ "%.1f"|format(doctor.los_gap) }}일</span>
+                                    <span style="color: #95a5a6;">-</span>
                                 {% endif %}
                             </td>
-                            <td>{{ "%.0f"|format(doctor.additional_bed_days) }}일</td>
+                            <td>
+                                {% if doctor.additional_bed_days is not none %}
+                                    {{ "%.0f"|format(doctor.additional_bed_days) }}일
+                                {% else %}
+                                    <span style="color: #95a5a6;">-</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     {% else %}

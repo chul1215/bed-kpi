@@ -76,13 +76,23 @@
                             <td>{{ "%.1f"|format(disease.current_los) }}일</td>
                             <td>{{ "%.1f"|format(disease.target_los if disease.target_los else 0) }}일</td>
                             <td>
-                                {% if disease.los_gap >= 0 %}
-                                    <span class="positive">+{{ "%.1f"|format(disease.los_gap) }}일</span>
+                                {% if disease.los_gap is not none %}
+                                    {% if disease.los_gap >= 0 %}
+                                        <span class="positive">+{{ "%.1f"|format(disease.los_gap) }}일</span>
+                                    {% else %}
+                                        <span class="negative">{{ "%.1f"|format(disease.los_gap) }}일</span>
+                                    {% endif %}
                                 {% else %}
-                                    <span class="negative">{{ "%.1f"|format(disease.los_gap) }}일</span>
+                                    <span style="color: #95a5a6;">-</span>
                                 {% endif %}
                             </td>
-                            <td>{{ "%.0f"|format(disease.additional_bed_days) }}일</td>
+                            <td>
+                                {% if disease.additional_bed_days is not none %}
+                                    {{ "%.0f"|format(disease.additional_bed_days) }}일
+                                {% else %}
+                                    <span style="color: #95a5a6;">-</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     {% else %}

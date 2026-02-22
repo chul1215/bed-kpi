@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>선메디컬센터 병상가동 KPI 산출</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        /* ==================== 색상 체계 ==================== */
+        :root {
+            --bg-dark: #292F36;      /* 다크 그레이 - 배경 */
+            --accent: #4ECDC4;       /* 청록색 - 강조 */
+            --white: #FFFFFF;        /* 화이트 - 텍스트/카드 */
+
+            /* 파생 색상 */
+            --bg-light: #353C44;     /* 밝은 배경 */
+            --accent-hover: #3DB9B0; /* 강조색 호버 */
+            --text-primary: #FFFFFF; /* 주요 텍스트 */
+            --text-secondary: rgba(255, 255, 255, 0.7); /* 보조 텍스트 */
+            --border: rgba(78, 205, 196, 0.2); /* 테두리 */
+
+            /* 레이아웃 */
+            --radius: 12px;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* ==================== 전역 스타일 ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ==================== 헤더 ==================== */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(41, 47, 54, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title i {
+            color: var(--accent);
+            font-size: 28px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .control-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        /* ==================== 버튼 ==================== */
+        .btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 2px solid var(--border);
+            background-color: transparent;
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .btn.active {
+            background-color: var(--accent);
+            color: var(--bg-dark);
+            border-color: var(--accent);
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: var(--bg-dark);
+            border-color: var(--accent);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+
+        /* ==================== 카드 ==================== */
+        .card {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i {
+            color: var(--accent);
+            font-size: 20px;
+        }
+
+        /* ==================== KPI 카드 ==================== */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-dark) 100%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent);
+        }
+
+        .kpi-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--white);
+            font-family: 'Courier New', monospace;
+        }
+
+        .kpi-unit {
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            margin-left: 4px;
+        }
+
+        .kpi-change {
+            font-size: 14px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .kpi-change.positive {
+            color: var(--accent);
+        }
+
+        .kpi-change.negative {
+            color: #FF6B6B;
+        }
+
+        /* ==================== 테이블 ==================== */
+        .table-container {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--bg-dark);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        th.text-end {
+            text-align: right;
+        }
+
+        td {
+            padding: 16px;
+            font-size: 14px;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        td.text-end {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background-color: rgba(78, 205, 196, 0.05);
+        }
+
+        /* ==================== 배지 ==================== */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 6px;
+            background: var(--accent);
+            color: var(--bg-dark);
+        }
+
+        .badge.secondary {
+            background: var(--text-secondary);
+            color: var(--white);
+        }
+
+        /* ==================== 차트 컨테이너 ==================== */
+        .chart-container {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        /* ==================== 반응형 ==================== */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-controls {
+                width: 100%;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-container {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 600px;
+            }
+        }
+
+        /* ==================== 유틸리티 ==================== */
+        .text-accent {
+            color: var(--accent);
+        }
+
+        .text-secondary {
+            color: var(--text-secondary);
+        }
+
+        .mb-4 {
+            margin-bottom: 32px;
+        }
+
+        .mt-4 {
+            margin-top: 32px;
+        }
+
+        .gap-2 {
+            gap: 16px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-title">
+                    <i class="bi bi-hospital"></i>
+                    선메디컬센터 병상가동 KPI
+                </div>
+                <div class="header-controls">
+                    <!-- 병원 선택 -->
+                    <div class="control-group">
+                        <label>병원</label>
+                        <button class="btn "
+                                onclick="switchHospital('대전')">
+                            대전선병원
+                        </button>
+                        <button class="btn active"
+                                onclick="switchHospital('유성')">
+                            유성선병원
+                        </button>
+                    </div>
+
+                    <!-- 기간 선택 -->
+                    <div class="control-group">
+                        <label>기간</label>
+                        <button class="btn active"
+                                onclick="switchPeriod('off_season')">
+                            비수기
+                        </button>
+                        <button class="btn "
+                                onclick="switchPeriod('normal')">
+                            통상기간
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="container" style="padding-top: 32px; padding-bottom: 32px;">
+<!-- 의료진 검색 -->
+<div class="content-section">
+    <input type="text" class="search-input" placeholder="이름 또는 진료과 입력... 🔍" id="doctorSearch">
+</div>
+
+<!-- 의료진 상세 정보 -->
+<div class="content-section">
+    <div style="border-bottom: 2px solid #3498db; padding-bottom: 15px; margin-bottom: 20px;">
+        <h5 style="color: #2c3e50; font-weight: 700; margin: 0;">정사라 (IMN)</h5>
+    </div>
+
+    <!-- 의료진 KPI 카드 3종 -->
+    <div class="row g-4" style="margin-bottom: 30px;">
+        <div class="col-md-4">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 12px; margin-bottom: 8px; opacity: 0.9;">환자수</div>
+                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">23</div>
+                <div style="font-size: 11px; opacity: 0.85;">명</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 12px; margin-bottom: 8px; opacity: 0.9;">LOS 갭</div>
+                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">
+                        -5.1
+                </div>
+                <div style="font-size: 11px; opacity: 0.85;">일</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 12px; margin-bottom: 8px; opacity: 0.9;">추가병상일</div>
+                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">-118</div>
+                <div style="font-size: 11px; opacity: 0.85;">일</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 질환별 KPI 상세 -->
+    <div style="margin-top: 30px;">
+        <div style="border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <h6 style="margin: 0; color: #2c3e50; font-weight: 700;">질환별 KPI 상세</h6>
+            <div class="sort-controls">
+                <button class="sort-btn active" data-sort="additional_bed_days">추가 병상일수▼</button>
+                <button class="sort-btn" data-sort="los_gap">LOS갭</button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">질환명</th>
+                        <th>환자수</th>
+                        <th>현 LOS</th>
+                        <th>목표 LOS</th>
+                        <th>LOS 갭</th>
+                        <th>추가병상일</th>
+                    </tr>
+                </thead>
+                <tbody>
+                        <tr>
+                            <td style="text-align: left;">기타 의학적 관리를 위하여 보건서비스와 접하고 있는 사람</td>
+                            <td>205명</td>
+                            <td>4.1일</td>
+                            <td>nan일</td>
+                            <td>
+                                        <span class="negative">nan일</span>
+                            </td>
+                            <td>
+                                    nan일
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: left;">담석증</td>
+                            <td>136명</td>
+                            <td>6.2일</td>
+                            <td>5.5일</td>
+                            <td>
+                                        <span class="negative">-0.8일</span>
+                            </td>
+                            <td>
+                                    -103일
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: left;">유방의 악성 신생물</td>
+                            <td>105명</td>
+                            <td>3.2일</td>
+                            <td>9.5일</td>
+                            <td>
+                                        <span class="positive">+6.4일</span>
+                            </td>
+                            <td>
+                                    668일
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: left;">호소증상 및 보고된 진단명이 없는 사람의 일반적 검사 및 조사</td>
+                            <td>100명</td>
+                            <td>1.8일</td>
+                            <td>nan일</td>
+                            <td>
+                                        <span class="negative">nan일</span>
+                            </td>
+                            <td>
+                                    nan일
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: left;">무릎관절증</td>
+                            <td>96명</td>
+                            <td>15.9일</td>
+                            <td>nan일</td>
+                            <td>
+                                        <span class="negative">nan일</span>
+                            </td>
+                            <td>
+                                    nan일
+                            </td>
+                        </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 목표 달성 시 예상 변화 요약 -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-top: 30px;">
+        <h6 style="font-weight: 700; margin-bottom: 15px; margin-top: 0;">목표 달성 시 예상 변화 요약</h6>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">현재 병상일수</div>
+                <div style="font-size: 18px; font-weight: bold;">
+                    239일
+                </div>
+            </div>
+            <div>
+                <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">목표 병상일수</div>
+                <div style="font-size: 18px; font-weight: bold;">
+                    121일
+                    (
+                        -49.3%
+                    )
+                </div>
+            </div>
+        </div>
+
+
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
+            <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">기간 가동률 추정</div>
+            <div style="font-size: 16px; font-weight: bold;">
+                현재 0.7% → 목표 0.3%
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 검색 기능
+    const searchInput = document.getElementById('doctorSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            console.log('Search:', query);
+            // 실제 구현에서는 필터링 로직 추가
+        });
+    }
+
+    // 정렬 버튼 핸들러
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const sortBy = this.dataset.sort;
+            console.log('Sort by:', sortBy);
+        });
+    });
+</script>
+    </main>
+
+    <!-- 스크립트 -->
+    <script>
+
+        // 정적 HTML용 네비게이션 (서브디렉토리에서)
+        function switchHospital(targetHospital) {
+            const currentPeriod = 'off_season';
+            const hospitalMap = {'대전': '대전', '유성': '유성'};
+            const path = `../../${hospitalMap[targetHospital]}/index_${currentPeriod}.html`;
+            window.location.href = path;
+        }
+
+        function switchPeriod(targetPeriod) {
+            const currentHospital = '유성';
+            const path = `../index_${targetPeriod}.html`;
+            window.location.href = path;
+        }
+    
+    </script>
+</body>
+</html>

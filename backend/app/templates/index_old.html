@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block nav_home %}active{% endblock %}
+
+{% block content %}
+<!-- 현재 기간 표시 -->
+<div style="text-align: center; margin-bottom: 20px; color: #7f8c8d; font-size: 14px;">
+    [{{ period_label }} 선택 중]
+</div>
+
+<!-- KPI 카드 3종 -->
+<div class="row g-4" style="margin-bottom: 40px;">
+    <div class="col-md-4">
+        <div class="kpi-card">
+            <div class="kpi-card-title">평균 LOS 갭</div>
+            <div class="kpi-card-value">
+                {% if summary_kpi.average_los_gap >= 0 %}
+                    +{{ "%.1f"|format(summary_kpi.average_los_gap) }}
+                {% else %}
+                    {{ "%.1f"|format(summary_kpi.average_los_gap) }}
+                {% endif %}
+            </div>
+            <div class="kpi-card-unit">일 (증감 조정분)</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="kpi-card card-secondary">
+            <div class="kpi-card-title">추가 병상일수</div>
+            <div class="kpi-card-value">{{ "%.0f"|format(summary_kpi.total_additional_bed_days) | replace(',', '') }}</div>
+            <div class="kpi-card-unit">일 (임팩트 합계)</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="kpi-card card-info">
+            <div class="kpi-card-title">목표 가동률</div>
+            <div class="kpi-card-value">{{ "%.1f"|format(summary_kpi.target_utilization_rate) }}</div>
+            <div class="kpi-card-unit">% (현재→목표)</div>
+        </div>
+    </div>
+</div>
+
+<!-- 의사별 질환 TOP 6 -->
+<div class="content-section">
+    <div class="section-title">
+        <span>의사별 질환 TOP 6</span>
+        <div class="sort-controls">
+            <button class="sort-btn active" data-sort="patient_count">환자수▼</button>
+            <button class="sort-btn" data-sort="los_gap">LOS갭</button>
+            <button class="sort-btn" data-sort="additional_bed_days">추가병상일</button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="width: 30%; text-align: left;">의료진 (진료과)</th>
+                    <th>환자수</th>
+                    <th>LOS갭</th>
+                    <th>추가병상일</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doctor in doctor_disease_data[:10] %}
+                <tr class="expandable">
+                    <td style="text-align: left;">
+                        <div class="row-expander" data-doctor="{{ doctor.doctor }}">
+                            <i class="bi bi-chevron-right"></i>
+                            <strong>{{ doctor.doctor }}</strong> ({{ doctor.department }})
+                        </div>
+                    </td>
+                    <td>{{ doctor.patient_count }}명</td>
+                    <td>
+                        {% if doctor.los_gap >= 0 %}
+                            <span class="positive">+{{ "%.1f"|format(doctor.los_gap) }}일</span>
+                        {% else %}
+                            <span class="negative">{{ "%.1f"|format(doctor.los_gap) }}일</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ "%.0f"|format(doctor.additional_bed_days) }}일</td>
+                </tr>
+                <tr class="expanded-detail">
+                    <td colspan="4">
+                        <div class="nested-table">
+                            <table style="width: 100%;">
+                                <thead>
+                                    <tr style="background-color: #ecf0f1;">
+                                        <th style="width: 10%; text-align: center;">순위</th>
+                                        <th style="text-align: left;">질환명</th>
+                                        <th>환자수</th>
+                                        <th>현 LOS</th>
+                                        <th>목표 LOS</th>
+                                        <th>LOS 갭</th>
+                                        <th>추가병상일</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for i in range(1, 7) %}
+                                    <tr>
+                                        <td style="text-align: center;">{{ i }}</td>
+                                        <td style="text-align: left;">질환명 {{ i }}</td>
+                                        <td>{{ 120 - (i * 10) }}명</td>
+                                        <td>{{ "%.1f"|format(8.0 + (i * 0.2)) }}일</td>
+                                        <td>{{ "%.1f"|format(10.0 + (i * 0.1)) }}일</td>
+                                        <td>
+                                            <span class="positive">+{{ "%.1f"|format(2.0 - (i * 0.15)) }}일</span>
+                                        </td>
+                                        <td>{{ 120 - (i * 15) }}일</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 핵심 인사이트 -->
+<div class="insight-panel">
+    <h6>🎯 핵심 인사이트 (자동 생성)</h6>
+    {% for insight in insights %}
+    <div class="insight-item">{{ insight }}</div>
+    {% endfor %}
+    {% if not insights %}
+    <div class="insight-item">비수기 기준 목표 도달이 가장 어려운 질환: 폐렴 (+3.0일)</div>
+    <div class="insight-item">임팩트 상위 의료진 TOP3 합산 추가 병상일수: 3,220일</div>
+    <div class="insight-item">기준치 대비 전체 평균 조정 필요량: ±1.8일</div>
+    {% endif %}
+</div>
+
+<!-- 다운로드 버튼 -->
+<div style="text-align: right; margin-top: 20px;">
+    <button class="download-btn" onclick="downloadExcel()">
+        <i class="bi bi-download"></i> 엑셀 다운로드
+    </button>
+</div>
+
+<script>
+    // 정렬 버튼 핸들러
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const sortBy = this.dataset.sort;
+            console.log('Sort by:', sortBy);
+            // 실제 구현에서는 정렬 기능 추가
+        });
+    });
+
+    function downloadExcel() {
+        alert('엑셀 다운로드 기능은 추후 구현됩니다.');
+        // window.location.href = '/api/report/excel';
+    }
+</script>
+{% endblock %}

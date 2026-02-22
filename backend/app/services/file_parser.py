@@ -102,7 +102,10 @@ class FileParser:
             raise
 
     @staticmethod
-    def parse_smc_file(file_path: Path | str) -> pd.DataFrame:
+    def parse_smc_file(
+        file_path: Path | str,
+        filter_quarter: int | None = None
+    ) -> pd.DataFrame:
         """
         SMC 내부 실적 데이터 파싱
 
@@ -113,6 +116,8 @@ class FileParser:
 
         Args:
             file_path: 파일 경로
+            filter_quarter: 분기 필터 (1=1-3월, 2=4-6월, 3=7-9월, 4=10-12월)
+                           None이면 전체 기간
 
         Returns:
             파싱된 DataFrame
@@ -175,6 +180,29 @@ class FileParser:
 
             # 기준월 추출 (YYYY-MM 형식)
             df['month'] = df['discharge_date'].dt.to_period('M').astype(str)
+
+            # 분기 필터링 (옵션)
+            if filter_quarter is not None:
+                if filter_quarter not in [1, 2, 3, 4]:
+                    raise ValueError(f"Invalid quarter: {filter_quarter}. Must be 1-4.")
+
+                # 분기별 월 매핑
+                quarter_months = {
+                    1: [1, 2, 3],
+                    2: [4, 5, 6],
+                    3: [7, 8, 9],
+                    4: [10, 11, 12]
+                }
+
+                target_months = quarter_months[filter_quarter]
+                df_before = len(df)
+                df = df[df['discharge_date'].dt.month.isin(target_months)]
+
+                logger.info(
+                    f"SMC 데이터 {filter_quarter}분기 필터링: "
+                    f"{df_before}건 → {len(df)}건 "
+                    f"({target_months}월)"
+                )
 
             logger.info(f"SMC 데이터 파싱 완료: 최종 {len(df)}건")
 

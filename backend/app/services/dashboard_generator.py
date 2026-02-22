@@ -49,17 +49,50 @@ class DashboardGenerator:
         Returns:
             렌더링된 HTML 문자열
         """
-        # 의료진별 질환 TOP 6 추출
-        doctor_disease_data = self._prepare_doctor_disease_data(doctor_kpis)
+        # 의료진별 질환 TOP 6 추출 (additional_bed_days 기준 정렬, None 제외)
+        doctor_disease_top6 = []
+        doctor_all_data = []
+        department_list = []
+
+        if len(doctor_kpis) > 0:
+            # NaN을 None으로 변환
+            doctor_kpis_clean = doctor_kpis.copy()
+            doctor_kpis_clean['los_gap'] = doctor_kpis_clean['los_gap'].where(pd.notna(doctor_kpis_clean['los_gap']), None)
+            doctor_kpis_clean['additional_bed_days'] = doctor_kpis_clean['additional_bed_days'].where(pd.notna(doctor_kpis_clean['additional_bed_days']), None)
+
+            # additional_bed_days가 None이 아닌 것만 필터링 후 정렬
+            doctor_with_data = doctor_kpis_clean[doctor_kpis_clean['additional_bed_days'].notna()]
+            if len(doctor_with_data) > 0:
+                doctor_disease_top6 = doctor_with_data.nlargest(6, 'additional_bed_days').to_dict('records')
+
+            # 전체 의료진 데이터 (검색용)
+            doctor_all_data = doctor_kpis_clean.to_dict('records')
+
+            # 진료과 목록
+            department_list = sorted(doctor_kpis['department'].unique().tolist())
+
+        # 진료과별 요약 (샘플)
+        department_summary = []
+
+        # Summary 키 매핑
+        summary = {
+            'avg_los_gap': summary_kpi.get('average_los_gap', 0),
+            'total_additional_bed_days': summary_kpi.get('total_additional_bed_days', 0),
+            'patient_count': summary_kpi.get('patient_count', 0),
+            'occupancy_improvement': summary_kpi.get('target_utilization_rate', 0) - summary_kpi.get('current_utilization_rate', 0)
+        }
 
         template = self.env.get_template('index.html')
         html = template.render(
             title='선메디컬센터 병상가동 KPI 산출',
             hospital=hospital,
             period=period,
-            period_label=self._get_period_label(period),
-            summary_kpi=summary_kpi,
-            doctor_disease_data=doctor_disease_data,
+            period_name=self._get_period_label(period),
+            summary=summary,
+            doctor_disease_top6=doctor_disease_top6,
+            doctor_all_data=doctor_all_data,
+            department_list=department_list,
+            department_summary=department_summary,
             insights=insights
         )
 
@@ -84,6 +117,11 @@ class DashboardGenerator:
         Returns:
             렌더링된 HTML 문자열
         """
+        # DataFrame을 리스트로 변환
+        doctor_kpis_by_dept_list = {}
+        for dept, df in doctor_kpis_by_dept.items():
+            doctor_kpis_by_dept_list[dept] = self._format_dataframe(df)
+
         template = self.env.get_template('department.html')
         html = template.render(
             title='선메디컬센터 병상가동 KPI 산출',
@@ -91,7 +129,7 @@ class DashboardGenerator:
             period=period,
             period_label=self._get_period_label(period),
             department_kpis=self._format_dataframe(department_kpis),
-            doctor_kpis_by_dept=doctor_kpis_by_dept
+            doctor_kpis_by_dept=doctor_kpis_by_dept_list
         )
 
         return html
@@ -205,14 +243,38 @@ class DashboardGenerator:
         result = []
 
         for _, row in doctor_kpis.head(10).iterrows():
+            # NaN 값 처리
+            patient_count = row.get('patient_count', 0)
+            los_gap = row.get('los_gap', 0)
+            additional_bed_days = row.get('additional_bed_days', 0)
+
+            # NaN을 0으로 변환
+            import pandas as pd
+            if pd.isna(patient_count):
+                patient_count = 0
+            if pd.isna(los_gap):
+                los_gap = 0
+            if pd.isna(additional_bed_days):
+                additional_bed_days = 0
+
             result.append({
                 'doctor': row.get('doctor', ''),
                 'department': row.get('department', ''),
-                'patient_count': int(row.get('patient_count', 0)),
-                'los_gap': float(row.get('los_gap', 0)),
-                'additional_bed_days': int(row.get('additional_bed_days', 0)),
+                'patient_count': int(patient_count),
+                'los_gap': float(los_gap),
+                'additional_bed_days': int(additional_bed_days),
                 'expanded': False,
                 'diseases': []  # 실제로는 disease_kpis에서 추출
             })
 
         return result
+
+    def render_upload(self) -> str:
+        """업로드 페이지 렌더링"""
+        template = self.env.get_template('upload.html')
+        html = template.render(
+            title='데이터 업로드',
+            hospital='대전',
+            period='off_season'
+        )
+        return html

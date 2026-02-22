@@ -153,9 +153,13 @@ doctor_target_los = Σ(disease_target_los × disease_patient_count) / total_pati
 - 컬럼: 구분(병원), 퇴원일자, 평균재원(=재원일수), 퇴원과, 진단명, 의사명
 
 **DRG 매칭 전략:**
-- SMC는 진단명(한글)만, HIRA는 DRG 코드 + ADRG명 제공 → 직접 매칭 불가
-- `data/mapping/diagnosis_drg_mapping.xlsx` 수동 매핑 테이블 필요
-- 퍼지 매칭 (fuzzywuzzy) 신뢰도 80% 이상 자동 매칭
+- **현재 상태**: 매칭률 2.1% (14개/663개 진단명)
+- **문제**: HIRA ADRG명은 수술/시술 중심(예: "대동맥판막 수술"), SMC 진단명은 질환명(예: "협심증", "담석증")으로 분류 체계가 근본적으로 다름
+- **매칭 성공 진단명**: 협심증(357명), 두통(271명), 실신(137명), 급성신부전(85명) 등 14개만 정확 일치
+- **매칭 실패 상위**: 기타 의학적 관리(3,190명), 담석증(1,166명), 무릎관절증(1,157명), 양성신생물(1,038명) 등
+- **해결 필요**: `data/mapping/diagnosis_drg_mapping.xlsx` 수동 매핑 테이블 생성
+  - 환자수 상위 100개 진단명만 매핑해도 전체의 60% 이상 커버 가능
+  - 또는 SMC 원본 데이터에 DRG 코드 포함 여부 확인 필요
 
 ### Data Filtering Rules
 
@@ -168,7 +172,7 @@ LOS_RANGE = (0.5, 100)  # 재원일수 정상 범위
 
 ## Development Phases
 
-현재: **Day 2 (HTML 대시보드)** ✅ 완료, **Day 3 (최종 검증)** 준비 중
+현재: **정적 HTML 대시보드 생성 완료** ✅ (GitHub Pages 배포 준비 완료)
 
 ### ✅ Day 1 완료: 데이터 파이프라인
 - [x] FastAPI 프로젝트 초기화
@@ -188,13 +192,38 @@ LOS_RANGE = (0.5, 100)  # 재원일수 정상 범위
 - [x] 질환 뷰 (disease.html - HIRA 기준 + 담당 의료진 분포 ✅)
 - [x] FastAPI 라우트 통합 (4개 주요 페이지 + health ✅)
 
-### Phase 2: KPI 산출 엔진 (1-2주)
-- kpi_calculator.py (핵심 알고리즘)
-- KPI 조회 API
-- 정합성 검증 (진료과 합계 = 전체 합계)
+### ✅ Day 3 완료: 파일 업로드 & 동적 데이터 연동
+- [x] kpi_pipeline.py (Day 1 서비스 통합 ✅)
+- [x] memory_store.py (세션 관리 및 데이터 저장소 ✅)
+- [x] upload.py (파일 업로드 API - POST /api/upload/files ✅)
+- [x] upload.html (업로드 UI 페이지 ✅)
+- [x] 동적 데이터 로딩 (session_id 기반 실제 KPI 표시 ✅)
+- [x] E2E 테스트 통과 (5/5 PASS ✅)
 
-### Phase 3-6: 프론트엔드, 테스트, 대시보드, 배포
-상세 내용은 `/Users/chul/.claude/plans/magical-soaring-blossom.md` 참조
+### ✅ 정적 HTML 대시보드 생성 완료
+- [x] generate_static_dashboard.py (서버 없이 파일 시스템에서 직접 실행 가능 ✅)
+- [x] 상대 경로 변환 (file:// 프로토콜 지원 ✅)
+- [x] 대전/유성 병원별 HTML 생성 (각 44개 파일 ✅)
+- [x] 비수기/통상기간별 페이지 분리 ✅
+- [x] docs/ 폴더 구조 (GitHub Pages 배포 준비 ✅)
+- [x] NaN 값 안전 처리 (Jinja2 템플릿 ✅)
+
+### ⚠️ 알려진 문제: DRG 매칭률 낮음
+- **현황**: 663개 진단명 중 14개만 매칭 (2.1%)
+- **영향**: 33,853명 환자 중 963명만 target_los 확보 (2.8%)
+- **원인**: HIRA는 수술/시술 중심(예: 간수술, 뇌신경수술), SMC는 진단명 중심(예: 담석증, 무릎관절증)으로 분류 체계가 완전히 다름
+- **해결 방안**:
+  1. 수동 매핑 테이블 생성 (`data/mapping/diagnosis_drg_mapping.xlsx`)
+  2. 상위 100개 진단명만이라도 우선 매핑 (전체 환자의 60% 이상 커버 가능)
+  3. 또는 SMC 데이터만으로 병원간/의사간 상대 비교
+
+### 향후 개선 사항 (선택적)
+- [ ] DRG 매핑 테이블 완성 (최우선!)
+- [ ] 데이터베이스 연동 (SQLite/PostgreSQL)
+- [ ] 엑셀 다운로드 기능
+- [ ] DRG 매핑 관리 UI
+- [ ] 사용자 인증
+- [ ] Docker 배포
 
 ---
 
@@ -281,6 +310,37 @@ When editing planning documents or implementing features, ensure consistency:
 - **추가 병상일수**: LOS_갭 × 환자수 (임팩트 점수)
 - **비수기**: 3-4월, 11-12월 (환자 감소 기간)
 - **통상기간**: 1-2월, 5-10월
+
+---
+
+## Static HTML Generation
+
+### Generate Static Dashboard (서버 없이 직접 실행 가능)
+
+```bash
+# 정적 HTML 생성
+python3 generate_static_dashboard.py
+```
+
+**출력**: `docs/` 폴더에 90개 HTML 파일 생성
+- 대전/유성 병원별 × 비수기/통상기간별
+- 홈, 진료과, 의료진 상세(10명), 질환 상세(10개)
+
+### 로컬에서 확인
+
+```bash
+# 방법 1: 파일 직접 더블클릭
+open docs/index.html
+
+# 방법 2: 간단한 웹서버 (선택)
+cd docs && python3 -m http.server 8080
+```
+
+### GitHub Pages 배포
+
+1. `docs/` 폴더 커밋 후 푸시
+2. GitHub Settings > Pages > Source: main branch, /docs folder
+3. URL: `https://<username>.github.io/<repository>/`
 
 ---
 

@@ -1,200 +1,293 @@
 """
-DRG 매칭 서비스
+DRG 매칭 서비스 (진단명 기반)
 
-SMC 진단명과 HIRA DRG 코드를 매칭합니다.
+SMC 진단명 → KDRG ADRG명 → HIRA 목표 LOS 매칭
 """
 from __future__ import annotations
 
 import pandas as pd
+import numpy as np
 import logging
 from pathlib import Path
-from app.config import settings
+from typing import Dict, Tuple
 
 logger = logging.getLogger(__name__)
 
 
 class DRGMatcher:
-    """DRG 매칭 클래스"""
+    """진단명 기반 DRG 매칭 클래스"""
 
-    def __init__(self, mapping_file: Path | str = None):
+    def __init__(self, kdrg_file: Path | str = None):
         """
         초기화
 
         Args:
-            mapping_file: DRG 매핑 파일 경로
+            kdrg_file: KDRG v4.6 전체코드.xlsx 파일 경로 (선택사항)
         """
-        self.mapping_file = Path(mapping_file or settings.DRG_MAPPING_FILE)
-        self.mapping_df = None
-        self._load_mapping()
+        self.kdrg_file = Path(kdrg_file) if kdrg_file else None
+        self.diagnosis_to_adrg: Dict[str, str] = {}
+        self.adrg_to_hira: Dict[str, float] = {}
 
-    def _load_mapping(self) -> None:
-        """매핑 테이블 로드"""
-        if not self.mapping_file.exists():
-            logger.warning(
-                f"DRG 매핑 파일이 없습니다: {self.mapping_file}\n"
-                f"초기 매핑 테이블을 먼저 생성해주세요."
+        # KDRG 파일이 있으면 ADRG명 로드
+        if self.kdrg_file and self.kdrg_file.exists():
+            self._load_kdrg_adrg_names()
+
+    def _load_kdrg_adrg_names(self) -> None:
+        """KDRG ADRG 전체목록 로드 (참고용)"""
+        try:
+            df_adrg = pd.read_excel(
+                self.kdrg_file,
+                sheet_name='ADRG_전체목록'
             )
-            self.mapping_df = pd.DataFrame(columns=[
-                'diagnosis', 'drg_code_3digit', 'adrg_name', 'confidence'
-            ])
+            logger.info(
+                f"KDRG ADRG 목록 로드 완료: "
+                f"{len(df_adrg)}개 ADRG"
+            )
+        except Exception as e:
+            logger.warning(f"KDRG ADRG 목록 로드 실패 (선택사항): {e}")
+
+    def load_hira_adrg_los(self, hira_df: pd.DataFrame) -> None:
+        """
+        HIRA ADRG별 평균재원일수 로드
+
+        Args:
+            hira_df: HIRA 데이터프레임 (컬럼: drg_code, adrg_name, target_los)
+        """
+        # ADRG명 → 평균재원일수 매핑
+        for _, row in hira_df.iterrows():
+            adrg_name = str(row.get('adrg_name', '')).strip()
+            target_los = row.get('target_los')
+
+            if adrg_name and pd.notna(target_los):
+                # 동일 ADRG명이 여러 개 있을 수 있으므로 평균 사용
+                if adrg_name in self.adrg_to_hira:
+                    # 기존 값과 평균
+                    self.adrg_to_hira[adrg_name] = (
+                        self.adrg_to_hira[adrg_name] + float(target_los)
+                    ) / 2
+                else:
+                    self.adrg_to_hira[adrg_name] = float(target_los)
+
+        logger.info(
+            f"HIRA ADRG 매핑 로드 완료: "
+            f"{len(self.adrg_to_hira)}개 ADRG명"
+        )
+
+    def create_diagnosis_mapping(
+        self,
+        smc_diagnoses: list[str],
+        hira_adrg_names: list[str]
+    ) -> Dict[str, str]:
+        """
+        진단명 자동 매칭 생성 (유사도 기반)
+
+        Args:
+            smc_diagnoses: SMC 진단명 리스트
+            hira_adrg_names: HIRA ADRG명 리스트
+
+        Returns:
+            진단명 → ADRG명 매핑 딕셔너리
+        """
+        mapping = {}
+
+        for diagnosis in smc_diagnoses:
+            diagnosis_clean = str(diagnosis).strip()
+            if not diagnosis_clean:
+                continue
+
+            # 완전 일치 우선
+            if diagnosis_clean in hira_adrg_names:
+                mapping[diagnosis_clean] = diagnosis_clean
+                continue
+
+            # 부분 일치 검색
+            matched = False
+            for adrg_name in hira_adrg_names:
+                # 진단명이 ADRG명에 포함되는 경우
+                if diagnosis_clean in adrg_name:
+                    mapping[diagnosis_clean] = adrg_name
+                    matched = True
+                    break
+                # ADRG명이 진단명에 포함되는 경우
+                elif adrg_name in diagnosis_clean:
+                    mapping[diagnosis_clean] = adrg_name
+                    matched = True
+                    break
+
+        logger.info(
+            f"진단명 자동 매칭 생성: "
+            f"{len(mapping)}/{len(smc_diagnoses)}개 매칭됨 "
+            f"({len(mapping)/len(smc_diagnoses)*100:.1f}%)"
+        )
+
+        return mapping
+
+    def load_manual_mapping(self, mapping_file: Path | str) -> None:
+        """
+        수동 매핑 테이블 로드
+
+        Args:
+            mapping_file: 진단명-ADRG 매핑 엑셀 파일 경로
+                         (컬럼: diagnosis, adrg_name)
+        """
+        mapping_path = Path(mapping_file)
+        if not mapping_path.exists():
+            logger.warning(f"매핑 파일이 없습니다: {mapping_file}")
             return
 
         try:
-            self.mapping_df = pd.read_excel(self.mapping_file)
+            df = pd.read_excel(mapping_path)
+            for _, row in df.iterrows():
+                diagnosis = str(row.get('diagnosis', '')).strip()
+                adrg_name = str(row.get('adrg_name', '')).strip()
+
+                if diagnosis and adrg_name:
+                    self.diagnosis_to_adrg[diagnosis] = adrg_name
+
             logger.info(
-                f"DRG 매핑 테이블 로드 완료: {len(self.mapping_df)}개 항목"
+                f"수동 매핑 테이블 로드 완료: "
+                f"{len(self.diagnosis_to_adrg)}개 매핑"
             )
         except Exception as e:
-            logger.error(f"DRG 매핑 파일 로드 오류: {e}")
-            self.mapping_df = pd.DataFrame(columns=[
-                'diagnosis', 'drg_code_3digit', 'adrg_name', 'confidence'
-            ])
+            logger.error(f"매핑 테이블 로드 오류: {e}")
 
-    def get_target_los(
-        self,
-        diagnosis: str,
-        hira_df: pd.DataFrame
-    ) -> float | None:
+    def get_target_los(self, diagnosis: str) -> float | None:
         """
         진단명으로 목표 LOS 조회
 
         Args:
-            diagnosis: 진단명
-            hira_df: HIRA 데이터프레임
+            diagnosis: 진단명 (예: "폐렴", "급성 충수염")
 
         Returns:
             목표 LOS 또는 None
         """
-        # 매핑 테이블에서 DRG 코드 조회
-        if self.mapping_df.empty:
-            return None
+        diagnosis = str(diagnosis).strip()
 
-        mapping_row = self.mapping_df[
-            self.mapping_df['diagnosis'] == diagnosis
-        ]
+        # 1. 수동 매핑 테이블에서 찾기
+        if diagnosis in self.diagnosis_to_adrg:
+            adrg_name = self.diagnosis_to_adrg[diagnosis]
+            if adrg_name in self.adrg_to_hira:
+                return self.adrg_to_hira[adrg_name]
 
-        if mapping_row.empty:
-            logger.debug(f"매핑 테이블에 없음: {diagnosis}")
-            return None
+        # 2. 직접 ADRG명으로 찾기 (진단명 = ADRG명)
+        if diagnosis in self.adrg_to_hira:
+            return self.adrg_to_hira[diagnosis]
 
-        drg_code_3digit = mapping_row.iloc[0]['drg_code_3digit']
+        # 3. 부분 일치로 찾기
+        for adrg_name, target_los in self.adrg_to_hira.items():
+            if diagnosis in adrg_name or adrg_name in diagnosis:
+                return target_los
 
-        # HIRA 데이터에서 목표 LOS 조회
-        hira_row = hira_df[
-            hira_df['drg_code_3digit'] == str(drg_code_3digit)
-        ]
+        return None
 
-        if hira_row.empty:
-            logger.debug(f"HIRA에 없음: DRG {drg_code_3digit}")
-            return None
-
-        # 첫 번째 매칭 행 반환 (여러 개인 경우)
-        target_los = hira_row.iloc[0]['target_los']
-
-        return float(target_los)
-
-    def match_all_diagnoses(
+    def match_smc_to_hira(
         self,
-        diagnoses: list[str],
+        smc_df: pd.DataFrame,
         hira_df: pd.DataFrame
-    ) -> Dict[str, float]:
+    ) -> Tuple[pd.DataFrame, Dict[str, float]]:
         """
-        모든 진단명에 대해 목표 LOS 매칭
+        SMC 데이터와 HIRA 데이터 매칭
 
         Args:
-            diagnoses: 진단명 리스트
-            hira_df: HIRA 데이터프레임
+            smc_df: SMC 데이터프레임 (컬럼: diagnosis)
+            hira_df: HIRA 데이터프레임 (컬럼: adrg_name, target_los)
 
         Returns:
-            {'진단명': target_los, ...}
+            (매칭된 SMC 데이터프레임, 진단명별 목표 LOS 딕셔너리)
         """
-        result = {}
+        # HIRA 데이터 로드
+        self.load_hira_adrg_los(hira_df)
+
+        # 고유 진단명 추출
+        unique_diagnoses = smc_df['diagnosis'].unique().tolist()
+        unique_adrg_names = hira_df['adrg_name'].unique().tolist()
+
+        # 자동 매칭 생성 (수동 매핑이 없는 경우에만)
+        if len(self.diagnosis_to_adrg) == 0:
+            auto_mapping = self.create_diagnosis_mapping(
+                unique_diagnoses,
+                unique_adrg_names
+            )
+            self.diagnosis_to_adrg.update(auto_mapping)
+
+        # 진단명별 목표 LOS 딕셔너리 생성
+        diagnosis_target_map = {}
         matched_count = 0
-        unmatched = []
+        total_patients = len(smc_df)
 
-        for diagnosis in diagnoses:
-            target_los = self.get_target_los(diagnosis, hira_df)
+        for diagnosis in unique_diagnoses:
+            target_los = self.get_target_los(diagnosis)
             if target_los is not None:
-                result[diagnosis] = target_los
-                matched_count += 1
-            else:
-                unmatched.append(diagnosis)
+                diagnosis_target_map[diagnosis] = target_los
+                # 해당 진단의 환자 수 계산
+                matched_count += len(smc_df[smc_df['diagnosis'] == diagnosis])
 
-        match_rate = (matched_count / len(diagnoses) * 100) if diagnoses else 0
+        match_rate = (matched_count / total_patients * 100) if total_patients > 0 else 0
+
         logger.info(
-            f"DRG 매칭 완료: {matched_count}/{len(diagnoses)} "
-            f"({match_rate:.1f}%)"
+            f"진단명 매칭 완료: "
+            f"{len(diagnosis_target_map)}/{len(unique_diagnoses)}개 진단명 매칭됨 "
+            f"({len(diagnosis_target_map)/len(unique_diagnoses)*100:.1f}%), "
+            f"환자 매칭률: {match_rate:.1f}% ({matched_count}/{total_patients}명)"
         )
 
-        if unmatched:
-            logger.warning(f"매칭 실패 진단명 ({len(unmatched)}개): {unmatched[:10]}")
+        return smc_df, diagnosis_target_map
 
-        return result
-
-    @staticmethod
-    def create_initial_mapping(
+    def generate_mapping_template(
+        self,
         smc_df: pd.DataFrame,
         hira_df: pd.DataFrame,
-        output_file: Path | str
+        output_file: Path | str,
+        top_n: int = 100
     ) -> None:
         """
-        초기 매핑 테이블 생성 (수동 매핑용)
-
-        SMC 고유 진단명 추출 → Excel로 저장
-        사용자가 수동으로 매핑 후 DRG 코드 입력
+        수동 매핑용 템플릿 엑셀 파일 생성
 
         Args:
             smc_df: SMC 데이터프레임
             hira_df: HIRA 데이터프레임
-            output_file: 저장 파일 경로
+            output_file: 출력 파일 경로
+            top_n: 상위 N개 진단명만 포함
         """
-        # 고유 진단명 추출
-        unique_diagnoses = smc_df['diagnosis'].unique()
-        diagnosis_counts = smc_df['diagnosis'].value_counts()
+        # 진단명별 환자 수 집계
+        diagnosis_counts = smc_df['diagnosis'].value_counts().head(top_n)
 
-        # 매핑 템플릿 생성
-        mapping_template = pd.DataFrame({
-            'diagnosis': unique_diagnoses,
-            'patient_count': [diagnosis_counts[d] for d in unique_diagnoses],
-            'drg_code_3digit': '',  # 수동 입력
-            'adrg_name': '',        # 참고용
-            'confidence': 0.0       # 매칭 확신도
-        })
+        # HIRA ADRG명 목록
+        adrg_names = sorted(hira_df['adrg_name'].unique().tolist())
 
-        # 환자수 기준 내림차순 정렬
-        mapping_template = mapping_template.sort_values('patient_count', ascending=False)
+        # 템플릿 DataFrame 생성
+        template_data = []
+        for diagnosis, patient_count in diagnosis_counts.items():
+            # 자동 매칭 시도
+            suggested_adrg = ""
+            for adrg_name in adrg_names:
+                if diagnosis in adrg_name or adrg_name in diagnosis:
+                    suggested_adrg = adrg_name
+                    break
 
-        # Excel 저장
-        output_file = Path(output_file)
-        output_file.parent.mkdir(parents=True, exist_ok=True)
+            template_data.append({
+                'diagnosis': diagnosis,
+                'patient_count': patient_count,
+                'suggested_adrg': suggested_adrg,
+                'adrg_name': suggested_adrg,  # 사용자가 수정할 컬럼
+                'note': ''
+            })
 
-        mapping_template.to_excel(output_file, index=False)
+        df_template = pd.DataFrame(template_data)
 
-        logger.info(
-            f"초기 매핑 테이블 생성 완료: {output_file}\n"
-            f"총 {len(unique_diagnoses)}개 진단명"
-        )
+        # 엑셀 파일로 저장
+        output_path = Path(output_file)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    @staticmethod
-    def get_unmatched_diagnoses(
-        smc_df: pd.DataFrame,
-        mapping_df: pd.DataFrame
-    ) -> list[str]:
-        """
-        매칭되지 않은 진단명 목록
+        with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
+            df_template.to_excel(writer, sheet_name='매핑', index=False)
 
-        Args:
-            smc_df: SMC 데이터프레임
-            mapping_df: 매핑 데이터프레임
+            # ADRG 참고 목록 시트 추가
+            pd.DataFrame({'adrg_name': adrg_names}).to_excel(
+                writer, sheet_name='ADRG목록', index=False
+            )
 
-        Returns:
-            매핑 실패 진단명 리스트
-        """
-        smc_diagnoses = set(smc_df['diagnosis'].unique())
-        mapped_diagnoses = set(mapping_df['diagnosis'].unique())
-
-        unmatched = list(smc_diagnoses - mapped_diagnoses)
-
-        logger.info(f"매칭 실패 진단명: {len(unmatched)}개")
-
-        return sorted(unmatched)
+        logger.info(f"매핑 템플릿 생성 완료: {output_path}")
+        logger.info(f"  - 상위 {len(template_data)}개 진단명 포함")
+        logger.info(f"  - 전체 환자 커버리지: {diagnosis_counts.sum()}/{len(smc_df)}명 "
+                   f"({diagnosis_counts.sum()/len(smc_df)*100:.1f}%)")

@@ -44,10 +44,11 @@ class Aggregator:
         agg_df = filtered_df.groupby('diagnosis').agg({
             'los_days': 'sum',          # 병상일수 합계
             'discharge_date': 'count',  # 환자수 (레코드 수)
-            'hospital': 'first'         # 병원명
+            'hospital': 'first',        # 병원명
+            'target_los': 'first'       # 목표 LOS
         }).reset_index()
 
-        agg_df.columns = ['diagnosis', 'total_bed_days', 'patient_count', 'hospital']
+        agg_df.columns = ['diagnosis', 'total_bed_days', 'patient_count', 'hospital', 'target_los']
 
         # 현재 LOS 계산
         agg_df['current_los'] = agg_df['total_bed_days'] / agg_df['patient_count']

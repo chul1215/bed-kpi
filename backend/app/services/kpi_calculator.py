@@ -18,15 +18,13 @@ class KPICalculator:
 
     @staticmethod
     def calculate_disease_kpi(
-        disease_row: pd.Series,
-        target_los: float
+        disease_row: pd.Series
     ) -> Dict[str, float]:
         """
         질환별 KPI 계산
 
         Args:
-            disease_row: 질환 집계 행 (patient_count, total_bed_days, current_los 포함)
-            target_los: HIRA 목표 LOS
+            disease_row: 질환 집계 행 (patient_count, total_bed_days, current_los, target_los 포함)
 
         Returns:
             KPI 딕셔너리
@@ -34,10 +32,12 @@ class KPICalculator:
         patient_count = disease_row['patient_count']
         total_bed_days = disease_row['total_bed_days']
         current_los = disease_row['current_los']
+        target_los = disease_row['target_los']
 
         # 최소 환자수 기준 확인
         if patient_count < settings.MIN_PATIENT_COUNT:
             return {
+                'diagnosis': disease_row['diagnosis'],
                 'patient_count': patient_count,
                 'total_bed_days': total_bed_days,
                 'current_los': current_los,
@@ -47,6 +47,18 @@ class KPICalculator:
                 'status': 'below_minimum'
             }
 
+        if pd.isna(target_los):
+            return {
+                'diagnosis': disease_row['diagnosis'],
+                'patient_count': patient_count,
+                'total_bed_days': total_bed_days,
+                'current_los': current_los,
+                'target_los': None,
+                'los_gap': None,
+                'additional_bed_days': None,
+                'status': 'no_target_los'
+            }
+
         # LOS 갭 계산 (양방향 유지)
         los_gap = target_los - current_los
 
@@ -54,6 +66,7 @@ class KPICalculator:
         additional_bed_days = los_gap * patient_count
 
         return {
+            'diagnosis': disease_row['diagnosis'],
             'patient_count': patient_count,
             'total_bed_days': total_bed_days,
             'current_los': round(current_los, 2),
@@ -89,6 +102,7 @@ class KPICalculator:
         if patient_count < settings.MIN_PATIENT_COUNT:
             return {
                 'doctor': doctor_name,
+                'department': doctor_row.get('department', ''),
                 'patient_count': patient_count,
                 'total_bed_days': total_bed_days,
                 'current_los': current_los,
@@ -106,6 +120,7 @@ class KPICalculator:
         if doctor_diseases.empty:
             return {
                 'doctor': doctor_name,
+                'department': doctor_row.get('department', ''),
                 'patient_count': patient_count,
                 'total_bed_days': total_bed_days,
                 'current_los': current_los,
@@ -139,6 +154,20 @@ class KPICalculator:
                 f"({total_matched}/{patient_count})"
             )
 
+        # 매칭된 환자가 없으면 None 반환
+        if total_matched == 0 or weighted_target_los == 0:
+            return {
+                'doctor': doctor_name,
+                'department': doctor_row.get('department', ''),
+                'patient_count': patient_count,
+                'total_bed_days': total_bed_days,
+                'current_los': round(current_los, 2),
+                'target_los': None,
+                'los_gap': None,
+                'additional_bed_days': None,
+                'status': 'no_target_los'
+            }
+
         # LOS 갭 계산
         los_gap = weighted_target_los - current_los
 
@@ -147,6 +176,7 @@ class KPICalculator:
 
         return {
             'doctor': doctor_name,
+            'department': doctor_row.get('department', ''),
             'patient_count': patient_count,
             'total_bed_days': total_bed_days,
             'current_los': round(current_los, 2),

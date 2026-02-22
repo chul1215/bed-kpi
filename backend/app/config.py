@@ -5,6 +5,10 @@ from pydantic_settings import BaseSettings
 from pathlib import Path
 
 
+# 프로젝트 루트 경로 (backend/app/config.py -> bed-kpi/)
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+
+
 class Settings(BaseSettings):
     """애플리케이션 설정"""
 
@@ -23,6 +27,12 @@ class Settings(BaseSettings):
     # 파일 업로드 설정
     MAX_UPLOAD_SIZE: int = 50 * 1024 * 1024  # 50MB
     UPLOAD_DIR: Path = Path("./uploads")
+
+    # 사전 식립 데이터 경로 (프로젝트 루트 기준)
+    PRELOADED_HIRA_FILE: Path = PROJECT_ROOT / "data/hira/2025_4분기_종합병원_ADRG별_평균재원)_20260220111626.xlsx"
+    PRELOADED_SMC_FILE: Path = PROJECT_ROOT / "data/smc/25년도 대전, 유성 의사별 퇴원진단(26.01.28_방하나).xlsx"
+    PRELOADED_KDRG_FILE: Path = PROJECT_ROOT / "data/KDRG v4.6 전체코드.xlsx"
+    ENABLE_PRELOADED_DATA: bool = True  # 사전 식립 데이터 활성화
 
     # 데이터 처리 설정
     MIN_PATIENT_COUNT: int = 6  # 최소 환자수 기준
