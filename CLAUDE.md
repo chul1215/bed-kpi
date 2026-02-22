@@ -92,27 +92,45 @@ backend/app/
     └── constants.py            # 상수 (Period, UploadStatus 등)
 ```
 
-### Key Services (Day 1 완성)
+### Key Services
 
 **file_parser.py** - 파일 파싱:
-- `parse_hira_file()`: HIRA 데이터 파싱 (skiprows=2, 739건 ✅)
-- `parse_smc_file()`: SMC 데이터 파싱 (Sheet1, 33,853건 ✅)
-- `validate_files()`: 데이터 유효성 검증 ✅
+- `parse_hira_file()`: HIRA 데이터 파싱 (skiprows=2, 739건)
+- `parse_smc_file(filter_quarter=None)`: SMC 데이터 파싱 + 분기 필터링 (Sheet1, 33,853건)
+- `validate_files()`: 데이터 유효성 검증
+
+**drg_matcher.py** - 진단명 기반 DRG 매칭:
+- `load_manual_mapping(file)`: 수동 매핑 테이블 로드
+- `match_smc_to_hira()`: SMC 진단명과 HIRA ADRG명 매칭
+- `get_target_los(diagnosis)`: 진단명으로 목표 LOS 조회 (수동 → 직접 → 부분 일치)
+- `generate_mapping_template()`: 상위 N개 진단명 매핑 템플릿 생성
+
+**kpi_pipeline.py** - 통합 파이프라인:
+- `run_pipeline(hira, smc, hospital, filter_quarter)`: 전체 KPI 계산 파이프라인
+- 진단명 매칭 → 기간 분류 → 집계 → KPI 산출
+- NaN 제거된 disease_target_map 생성 (의료진 KPI 계산용)
+
+**kpi_calculator.py** - KPI 산출 (양방향 유지):
+- `calculate_disease_kpi()`: 질환별 KPI (LOS 갭 = target_los - current_los)
+- `calculate_doctor_kpi()`: 의료진별 KPI (가중 평균 목표 LOS, None 반환 시 status='no_target_los')
+- `calculate_summary_kpi()`: 요약 KPI (평균 갭, 추가 재원일수, 가동률)
 
 **aggregator.py** - 데이터 집계:
 - `aggregate_by_disease()`: 질환 단위 집계
 - `aggregate_by_doctor()`: 의료진 단위 집계
 - `aggregate_by_department()`: 진료과 단위 집계
-- `calculate_consistency_error()`: 정합성 검증 (진료과 합계 = 의료진 합계)
-
-**kpi_calculator.py** - KPI 산출 (양방향 유지):
-- `calculate_disease_kpi()`: 질환별 KPI (LOS 갭 = target_los - current_los)
-- `calculate_doctor_kpi()`: 의료진별 KPI (가중 평균 목표 LOS)
-- `calculate_summary_kpi()`: 요약 KPI (평균 갭, 추가 병상일수, 가동률)
+- `aggregate_by_doctor_disease()`: 의료진-질환 교차 집계 (의료진 KPI 계산용)
 
 **period_classifier.py** - 기간 분류:
-- 비수기: 3-4월, 11-12월 (비수기 데이터: 11,330건)
-- 통상기간: 1-2월, 5-10월 (통상기간 데이터: 22,523건)
+- 비수기: 3-4월, 11-12월
+- 통상기간: 1-2월, 5-10월
+
+**dashboard_generator.py** - HTML 대시보드 생성:
+- `render_home()`: 홈 화면 (KPI 카드 + TOP 6 랭킹 + 검색)
+- `render_department()`: 진료과 뷰
+- `render_doctor()`: 의료진 상세
+- `render_disease()`: 질환 상세
+- NaN → None → "N/A" 처리 로직 포함
 
 ---
 
@@ -152,14 +170,18 @@ doctor_target_los = Σ(disease_target_los × disease_patient_count) / total_pati
 - 의료진명에 공백 포함 가능 (예: "홍길동 교수") → 공백 전 이름만 추출
 - 컬럼: 구분(병원), 퇴원일자, 평균재원(=재원일수), 퇴원과, 진단명, 의사명
 
-**DRG 매칭 전략:**
-- **현재 상태**: 매칭률 2.1% (14개/663개 진단명)
-- **문제**: HIRA ADRG명은 수술/시술 중심(예: "대동맥판막 수술"), SMC 진단명은 질환명(예: "협심증", "담석증")으로 분류 체계가 근본적으로 다름
-- **매칭 성공 진단명**: 협심증(357명), 두통(271명), 실신(137명), 급성신부전(85명) 등 14개만 정확 일치
-- **매칭 실패 상위**: 기타 의학적 관리(3,190명), 담석증(1,166명), 무릎관절증(1,157명), 양성신생물(1,038명) 등
-- **해결 필요**: `data/mapping/diagnosis_drg_mapping.xlsx` 수동 매핑 테이블 생성
-  - 환자수 상위 100개 진단명만 매핑해도 전체의 60% 이상 커버 가능
-  - 또는 SMC 원본 데이터에 DRG 코드 포함 여부 확인 필요
+**DRG 매칭 전략 (진단명 기반):**
+- **현재 상태**: 46개 진단명 매칭 (수동 15개 + 자동 31개)
+- **방법**: HIRA ADRG명과 SMC 진단명을 직접 매칭 (ICD-10 코드 불필요)
+- **매핑 파일**: `data/mapping/diagnosis_drg_mapping.xlsx` (수동 매핑 테이블)
+- **템플릿**: `data/mapping/diagnosis_drg_mapping_template.xlsx` (상위 100개 진단명 + 제안 ADRG)
+- **결과**: 대전 비수기 기준 32명/42명 의료진에 데이터 표시 (76%)
+- **주요 매핑 예시**:
+  - 협심증 → 협심증
+  - 급성 충수염 → 복잡한 주진단이 없는 충수절제술
+  - 담석증 → 복강경을 이용한 전담낭절제술
+  - 상세불명 병원체의 폐렴 → 세균성 폐렴
+- **매칭률 향상**: 템플릿 파일에서 상위 진단명을 확인하여 `diagnosis_drg_mapping.xlsx`에 추가
 
 ### Data Filtering Rules
 
@@ -200,25 +222,32 @@ LOS_RANGE = (0.5, 100)  # 재원일수 정상 범위
 - [x] 동적 데이터 로딩 (session_id 기반 실제 KPI 표시 ✅)
 - [x] E2E 테스트 통과 (5/5 PASS ✅)
 
-### ✅ 정적 HTML 대시보드 생성 완료
-- [x] generate_static_dashboard.py (서버 없이 파일 시스템에서 직접 실행 가능 ✅)
-- [x] 상대 경로 변환 (file:// 프로토콜 지원 ✅)
-- [x] 대전/유성 병원별 HTML 생성 (각 44개 파일 ✅)
-- [x] 비수기/통상기간별 페이지 분리 ✅
-- [x] docs/ 폴더 구조 (GitHub Pages 배포 준비 ✅)
-- [x] NaN 값 안전 처리 (Jinja2 템플릿 ✅)
+### ✅ 정적 HTML 대시보드 생성 완료 (진단명 기반 매칭)
+- [x] generate_static_dashboard.py (서버 없이 파일 시스템에서 직접 실행 가능)
+- [x] **파일 경로 기반 네비게이션** (병원/기간 전환 작동)
+  - 병원 전환: `../유성/index_off_season.html`
+  - 기간 전환: `index_normal.html`
+  - 서브디렉토리: `../../대전/index_off_season.html`
+- [x] 대전/유성 병원별 HTML 생성 (각 44개 파일, 총 88개)
+- [x] 비수기/통상기간별 페이지 분리
+- [x] docs/ 폴더 구조 (GitHub Pages 배포 준비 완료)
+- [x] NaN 값 안전 처리 (None → "N/A")
+- [x] 진단명 기반 DRG 매칭 적용 (46개 진단명, 32명 의료진 데이터 표시)
 
-### ⚠️ 알려진 문제: DRG 매칭률 낮음
-- **현황**: 663개 진단명 중 14개만 매칭 (2.1%)
-- **영향**: 33,853명 환자 중 963명만 target_los 확보 (2.8%)
-- **원인**: HIRA는 수술/시술 중심(예: 간수술, 뇌신경수술), SMC는 진단명 중심(예: 담석증, 무릎관절증)으로 분류 체계가 완전히 다름
-- **해결 방안**:
-  1. 수동 매핑 테이블 생성 (`data/mapping/diagnosis_drg_mapping.xlsx`)
-  2. 상위 100개 진단명만이라도 우선 매핑 (전체 환자의 60% 이상 커버 가능)
-  3. 또는 SMC 데이터만으로 병원간/의사간 상대 비교
+### 📊 현재 상태 (2026-02-22)
+- **DRG 매칭**: 46개 진단명 매칭 완료 (14.2%)
+- **환자 커버리지**: ~30% (추정)
+- **의료진 데이터**: 대전 비수기 기준 32명/42명 (76%)
+- **정적 HTML**: 88개 파일 생성, 즉시 실행 가능
+- **배포 준비**: GitHub Pages 배포 가능 상태
 
 ### 향후 개선 사항 (선택적)
-- [ ] DRG 매핑 테이블 완성 (최우선!)
+- [ ] DRG 매핑 테이블 확장 (현재 46개 → 목표 100개+)
+  - 상위 100개 진단명 매핑 시 환자 커버리지 60%+ 예상
+  - `diagnosis_drg_mapping_template.xlsx` 참조
+- [ ] 병원 시스템에서 ICD-10 코드 포함 데이터 확보
+  - DRG 청구 데이터는 ICD-10 코드 포함되어 있어야 함
+- [ ] HIRA 연간 데이터 확보 (현재: 4분기만)
 - [ ] 데이터베이스 연동 (SQLite/PostgreSQL)
 - [ ] 엑셀 다운로드 기능
 - [ ] DRG 매핑 관리 UI
@@ -289,58 +318,67 @@ When editing planning documents or implementing features, ensure consistency:
 
 ---
 
-## Reference Documentation
-
-**Planning Docs** (plan/ 폴더):
-- `병상가동 KPI 산출 프로그램 PRD.md`: 상세 요구사항, FR-01 ~ FR-10
-- `선메디컬센터 시기별 병상가동 KPI 산출 프로그램 기획안.md`: 기획 의도, KPI 정의
-- `병상가동 KPI 프로그램 와이어프레임.md`: UI 화면 설계
-
-**Implementation Plan:**
-- `/Users/chul/.claude/plans/magical-soaring-blossom.md`: 전체 구현 계획 (6 Phases)
-
-**Note on plan/ folder:**
-- Contains Obsidian vault documents (PRD, 기획안, 와이어프레임)
-- Uses `[[wikilink]]` syntax for cross-references
-- Critical content from plan/CLAUDE.md is integrated above
-
-**Key Domain Terms:**
-- **LOS (Length of Stay)**: 재원일수 = 병상일수 / 환자수
-- **LOS 갭**: HIRA_목표_LOS - 현재_LOS (양수면 늘려야 함, 음수면 줄여야 함)
-- **추가 병상일수**: LOS_갭 × 환자수 (임팩트 점수)
-- **비수기**: 3-4월, 11-12월 (환자 감소 기간)
-- **통상기간**: 1-2월, 5-10월
-
----
-
 ## Static HTML Generation
 
 ### Generate Static Dashboard (서버 없이 직접 실행 가능)
 
 ```bash
-# 정적 HTML 생성
+# 정적 HTML 생성 (진단명 기반 DRG 매칭 적용)
 python3 generate_static_dashboard.py
 ```
 
-**출력**: `docs/` 폴더에 90개 HTML 파일 생성
+**출력**: `docs/` 폴더에 88개 HTML 파일 생성
 - 대전/유성 병원별 × 비수기/통상기간별
 - 홈, 진료과, 의료진 상세(10명), 질환 상세(10개)
+
+**중요 특징**:
+- 파일 경로 기반 네비게이션 (URL 파라미터 없이 작동)
+- NaN 값 안전 처리 (None → "N/A")
+- 진단명 기반 DRG 매칭 (46개 진단명)
+- 진료과/의료진 검색 기능
 
 ### 로컬에서 확인
 
 ```bash
-# 방법 1: 파일 직접 더블클릭
+# 방법 1: 파일 직접 더블클릭 (권장)
 open docs/index.html
 
 # 방법 2: 간단한 웹서버 (선택)
 cd docs && python3 -m http.server 8080
+# http://localhost:8080 접속
+```
+
+### 매칭률 향상 방법
+
+현재 46개 진단명 매칭 → 더 많은 진단명 추가:
+
+```bash
+# 1. 템플릿 확인 (상위 100개 진단명 + 제안 ADRG)
+open data/mapping/diagnosis_drg_mapping_template.xlsx
+
+# 2. 수동 매핑 추가
+# data/mapping/diagnosis_drg_mapping.xlsx 편집
+# - diagnosis: SMC 진단명
+# - adrg_name: HIRA ADRG명 (템플릿의 "ADRG목록" 시트 참조)
+
+# 3. 재생성
+python3 generate_static_dashboard.py
 ```
 
 ### GitHub Pages 배포
 
-1. `docs/` 폴더 커밋 후 푸시
-2. GitHub Settings > Pages > Source: main branch, /docs folder
-3. URL: `https://<username>.github.io/<repository>/`
+```bash
+# 1. 커밋 및 푸시
+git add docs/ data/mapping/
+git commit -m "Update dashboard with diagnosis-based DRG matching"
+git push origin main
+
+# 2. GitHub Settings > Pages
+# Source: main branch, /docs folder
+
+# 3. 배포 URL
+# https://<username>.github.io/<repository>/
+```
 
 ---
 
@@ -379,3 +417,145 @@ total_patients_disease = disease_kpis['patient_count'].sum()
 total_patients_doctor = doctor_kpis['patient_count'].sum()
 assert total_patients_disease == total_patients_doctor
 ```
+
+### Testing DRG Matching
+
+```python
+from app.services.drg_matcher import DRGMatcher
+from app.services.file_parser import FileParser
+from app.config import settings, PROJECT_ROOT
+
+# 파일 로드
+hira_df = FileParser.parse_hira_file(settings.PRELOADED_HIRA_FILE)
+smc_df = FileParser.parse_smc_file(settings.PRELOADED_SMC_FILE, filter_quarter=4)
+smc_df = smc_df[smc_df['hospital'] == '대전']
+
+# DRG Matcher 초기화 및 매핑 로드
+matcher = DRGMatcher()
+mapping_file = PROJECT_ROOT / 'data' / 'mapping' / 'diagnosis_drg_mapping.xlsx'
+matcher.load_manual_mapping(mapping_file)
+
+# 매칭 실행
+smc_matched, disease_target_map = matcher.match_smc_to_hira(smc_df, hira_df)
+
+print(f"매칭된 진단명: {len(disease_target_map)}개")
+print(f"환자 커버리지: {sum(1 for d in smc_df['diagnosis'] if d in disease_target_map)}/{len(smc_df)}명")
+```
+
+### Generating Mapping Template
+
+```python
+from app.services.drg_matcher import DRGMatcher
+from pathlib import Path
+
+matcher = DRGMatcher()
+matcher.generate_mapping_template(
+    smc_df,
+    hira_df,
+    Path('../data/mapping/diagnosis_drg_mapping_template.xlsx'),
+    top_n=100  # 상위 100개 진단명
+)
+```
+
+---
+
+## Key Implementation Learnings
+
+### 진단명 기반 DRG 매칭 (Diagnosis-Based Matching)
+
+**배경**: SMC 데이터에 ICD-10 코드가 존재하지 않아 코드 기반 매칭 불가능
+
+**해결책**:
+1. HIRA ADRG명과 SMC 진단명을 직접 매칭
+2. 3단계 매칭 전략:
+   - 수동 매핑 테이블 우선 (diagnosis_drg_mapping.xlsx)
+   - 직접 일치 (진단명 = ADRG명)
+   - 부분 일치 (진단명 in ADRG명 or ADRG명 in 진단명)
+
+**핵심 코드**:
+```python
+# drg_matcher.py
+def get_target_los(self, diagnosis: str) -> float | None:
+    diagnosis = str(diagnosis).strip()
+
+    # 1. 수동 매핑 테이블
+    if diagnosis in self.diagnosis_to_adrg:
+        adrg_name = self.diagnosis_to_adrg[diagnosis]
+        if adrg_name in self.adrg_to_hira:
+            return self.adrg_to_hira[adrg_name]
+
+    # 2. 직접 일치
+    if diagnosis in self.adrg_to_hira:
+        return self.adrg_to_hira[diagnosis]
+
+    # 3. 부분 일치
+    for adrg_name, target_los in self.adrg_to_hira.items():
+        if diagnosis in adrg_name or adrg_name in diagnosis:
+            return target_los
+
+    return None
+```
+
+### 정적 HTML 네비게이션 (Static HTML Navigation)
+
+**문제**: URL 파라미터 방식은 정적 파일(file://)에서 작동하지 않음
+
+**해결책**: 파일 경로 기반 네비게이션으로 JavaScript 동적 교체
+
+**핵심 개념**:
+```javascript
+// generate_static_dashboard.py에서 주입
+function switchHospital(targetHospital) {
+    const currentPeriod = 'off_season';  // 템플릿 변수
+    const path = `../${targetHospital}/index_${currentPeriod}.html`;
+    window.location.href = path;
+}
+
+function switchPeriod(targetPeriod) {
+    const path = `index_${targetPeriod}.html`;
+    window.location.href = path;
+}
+```
+
+**디렉토리별 경로 패턴**:
+- 루트 레벨 (`대전/index.html`): `../유성/index.html`
+- 서브디렉토리 (`대전/doctors/의사.html`): `../../유성/doctors/의사.html`
+
+### NaN 값 처리 (NaN Handling)
+
+**문제**: pandas DataFrame에서 None이 NaN으로 변환되어 JSON/템플릿에서 문제 발생
+
+**해결책**: 3단계 방어
+
+1. **KPI 계산**: 매칭 실패 시 None 반환
+```python
+if total_matched == 0:
+    return {'target_los': None, 'los_gap': None, ...}
+```
+
+2. **파이프라인**: NaN 제거한 매핑 딕셔너리
+```python
+disease_target_map = {
+    diagnosis: target_los
+    for diagnosis, target_los in zip(...)
+    if pd.notna(target_los)  # NaN 제거
+}
+```
+
+3. **템플릿**: None 값 안전 표시
+```jinja2
+{{ doctor.los_gap if doctor.los_gap is not none else 'N/A' }}
+```
+
+---
+
+## 참고 문서
+
+**완료 보고서**:
+- [DIAGNOSIS_MATCHING_COMPLETE.md](DIAGNOSIS_MATCHING_COMPLETE.md) - 진단명 기반 매칭 완료 보고
+- [실행방법.md](실행방법.md) - 사용자 실행 가이드
+
+**기획 문서** (plan/ 폴더):
+- `병상가동 KPI 산출 프로그램 PRD.md` - 요구사항 정의
+- `선메디컬센터 시기별 병상가동 KPI 산출 프로그램 기획안.md` - 기획 의도
+- `병상가동 KPI 프로그램 와이어프레임.md` - UI 설계
