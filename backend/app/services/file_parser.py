@@ -2,15 +2,17 @@
 파일 파싱 서비스
 
 HIRA 심평원 데이터와 SMC 내부 실적 데이터를 파싱합니다.
+ADRG 코드 기반 매칭을 지원합니다.
 """
 from __future__ import annotations
 
 import pandas as pd
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict, Optional
 import logging
 
 from app.utils.constants import RequiredColumns, ErrorMessages
+from app.services.adrg_mapper import ADRGMapper
 
 logger = logging.getLogger(__name__)
 
@@ -21,18 +23,21 @@ class FileParser:
     @staticmethod
     def parse_hira_file(file_path: Path | str) -> pd.DataFrame:
         """
-        HIRA 심평원 기준 데이터 파싱
+        HIRA 심평원 ADRG 기준 데이터 파싱
 
         데이터 특이사항:
         - 헤더가 3번째 행 (skiprows=2, header=0)
         - 첫 데이터 행은 '$' (전체 평균): 제거 필요
-        - 실제 유효 데이터: ~740건
+        - 실제 유효 데이터: ~740개 ADRG
 
         Args:
             file_path: 파일 경로
 
         Returns:
-            파싱된 DataFrame
+            파싱된 DataFrame with columns:
+            - adrg_code: ADRG 코드 (4자리, 예: A010)
+            - adrg_name: ADRG명
+            - target_los: 심평원 기준 평균 재원일수
 
         Raises:
             FileNotFoundError: 파일을 찾을 수 없음
@@ -90,13 +95,12 @@ class FileParser:
             # NaN 값이 있는 행 제거
             df = df.dropna(subset=['target_los'])
 
-            # DRG 코드 3자리 추출 (ADRG 코드로 사용)
-            df['adrg_code'] = df['drg_code'].str[:3]
-            df['drg_code_3digit'] = df['drg_code'].str[:3]  # 하위 호환성
+            # ADRG 코드 = 4단DRG번호 그대로 사용 (4자리)
+            df['adrg_code'] = df['drg_code']
 
-            logger.info(f"HIRA 데이터 파싱 완료: 최종 {len(df)}건")
+            logger.info(f"HIRA ADRG 데이터 파싱 완료: 최종 {len(df)}개")
 
-            return df
+            return df[['adrg_code', 'adrg_name', 'target_los']]
 
         except Exception as e:
             logger.error(f"HIRA 파일 파싱 오류: {e}")
@@ -105,10 +109,11 @@ class FileParser:
     @staticmethod
     def parse_smc_file(
         file_path: Path | str,
-        filter_quarter: int | None = None
+        filter_quarter: int | None = None,
+        adrg_mapper: Optional[ADRGMapper] = None
     ) -> pd.DataFrame:
         """
-        SMC 내부 실적 데이터 파싱
+        SMC 내부 실적 데이터 파싱 (ADRG 코드 자동 매핑 포함)
 
         데이터 특이사항:
         - Sheet1에 33,853건의 개별 환자 레벨 데이터
@@ -119,9 +124,13 @@ class FileParser:
             file_path: 파일 경로
             filter_quarter: 분기 필터 (1=1-3월, 2=4-6월, 3=7-9월, 4=10-12월)
                            None이면 전체 기간
+            adrg_mapper: ADRG 매핑 객체 (제공 시 자동 매핑 수행)
 
         Returns:
-            파싱된 DataFrame
+            파싱된 DataFrame with additional columns (if adrg_mapper provided):
+            - adrg_code: ADRG 코드
+            - adrg_name: ADRG명
+            - target_los: 심평원 기준 목표 LOS
 
         Raises:
             FileNotFoundError: 파일을 찾을 수 없음
@@ -204,6 +213,12 @@ class FileParser:
                     f"{df_before}건 → {len(df)}건 "
                     f"({target_months}월)"
                 )
+
+            # ADRG 자동 매핑 (옵션)
+            if adrg_mapper is not None:
+                logger.info("ADRG 자동 매핑 시작...")
+                df, adrg_info_map = adrg_mapper.add_adrg_to_smc(df)
+                logger.info(f"ADRG 매핑 완료: {len(adrg_info_map)}개 ADRG 매칭")
 
             logger.info(f"SMC 데이터 파싱 완료: 최종 {len(df)}건")
 

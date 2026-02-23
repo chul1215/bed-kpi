@@ -424,7 +424,7 @@
             <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
                 <div style="font-size: 12px; margin-bottom: 8px; opacity: 0.9;">LOS 갭</div>
                 <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">
-                        +6.9
+                        -1.2
                 </div>
                 <div style="font-size: 11px; opacity: 0.85;">일</div>
             </div>
@@ -432,7 +432,7 @@
         <div class="col-md-4">
             <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
                 <div style="font-size: 12px; margin-bottom: 8px; opacity: 0.9;">추가병상일</div>
-                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">630</div>
+                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">-110</div>
                 <div style="font-size: 11px; opacity: 0.85;">일</div>
             </div>
         </div>
@@ -448,77 +448,69 @@
             </div>
         </div>
 
-        <div class="table-responsive">
-            <table class="table">
+        <div class="table-responsive" style="overflow-x: auto;">
+            <table class="table" style="font-size: 13px; width: 100%; border-collapse: collapse;">
                 <thead>
-                    <tr>
-                        <th style="text-align: left;">질환명</th>
-                        <th>환자수</th>
-                        <th>현 LOS</th>
-                        <th>목표 LOS</th>
-                        <th>LOS 갭</th>
-                        <th>추가병상일</th>
+                    <tr style="border-bottom: 2px solid rgba(52, 152, 219, 0.3);">
+                        <th style="text-align: left; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">질환명</th>
+                        <th style="text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">환자수</th>
+                        <th style="text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            평균재원일수<br><span style="font-size: 11px; font-weight: 400; color: #95a5a6; text-transform: none;">(병원 / 심평원)</span>
+                        </th>
+                        <th style="text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">LOS 갭</th>
+                        <th style="text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">추가재원일수(일)</th>
                     </tr>
                 </thead>
                 <tbody>
-                        <tr>
-                            <td style="text-align: left;">기타 의학적 관리를 위하여 보건서비스와 접하고 있는 사람</td>
-                            <td>205명</td>
-                            <td>4.1일</td>
-                            <td>14.5일</td>
-                            <td>
-                                        <span class="positive">+10.4일</span>
+                        <tr style="border-bottom: 1px solid rgba(52, 152, 219, 0.1); transition: background-color 0.12s ease; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='rgba(124, 221, 255, 0.07)'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="text-align: left; padding: 12px 10px; color: #2c3e50; font-weight: 500;">Z630 (기타 추적관리)</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">17</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace;">
+                                <span style="font-weight: 600; color: #2c3e50;">2.6</span>
+                                <span style="color: #95a5a6; margin: 0 4px;">/</span>
+                                <span style="color: #3498db; font-weight: 500;">10.8</span>
                             </td>
-                            <td>
-                                    2135일
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600;">
+                                        <span style="color: #27ae60;">+8.2</span>
                             </td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: left;">담석증</td>
-                            <td>136명</td>
-                            <td>6.2일</td>
-                            <td>5.5일</td>
-                            <td>
-                                        <span class="negative">-0.8일</span>
-                            </td>
-                            <td>
-                                    -103일
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">
+                                    139
                             </td>
                         </tr>
-                        <tr>
-                            <td style="text-align: left;">유방의 악성 신생물</td>
-                            <td>105명</td>
-                            <td>3.2일</td>
-                            <td>9.5일</td>
-                            <td>
-                                        <span class="positive">+6.4일</span>
+                        <tr style="border-bottom: 1px solid rgba(52, 152, 219, 0.1); transition: background-color 0.12s ease; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='rgba(124, 221, 255, 0.07)'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="text-align: left; padding: 12px 10px; color: #2c3e50; font-weight: 500;">L601 (급성 신부전)</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">13</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace;">
+                                <span style="font-weight: 600; color: #2c3e50;">8.2</span>
+                                <span style="color: #95a5a6; margin: 0 4px;">/</span>
+                                <span style="color: #3498db; font-weight: 500;">8.8</span>
                             </td>
-                            <td>
-                                    668일
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600;">
+                                        <span style="color: #27ae60;">+0.6</span>
                             </td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: left;">호소증상 및 보고된 진단명이 없는 사람의 일반적 검사 및 조사</td>
-                            <td>100명</td>
-                            <td>1.8일</td>
-                            <td>14.5일</td>
-                            <td>
-                                        <span class="positive">+12.8일</span>
-                            </td>
-                            <td>
-                                    1275일
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">
+                                    7
                             </td>
                         </tr>
-                        <tr>
-                            <td style="text-align: left;">무릎관절증</td>
-                            <td>96명</td>
-                            <td>15.9일</td>
-                            <td>14.5일</td>
-                            <td>
-                                        <span class="negative">-1.4일</span>
+                        <tr style="border-bottom: 1px solid rgba(52, 152, 219, 0.1); transition: background-color 0.12s ease; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='rgba(124, 221, 255, 0.07)'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="text-align: left; padding: 12px 10px; color: #2c3e50; font-weight: 500;">L100 (요로결석 제거를 위한 체외충격파쇄석술)</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">27</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace;">
+                                <span style="font-weight: 600; color: #2c3e50;">3.1</span>
+                                <span style="color: #95a5a6; margin: 0 4px;">/</span>
+                                <span style="color: #3498db; font-weight: 500;">2.5</span>
                             </td>
-                            <td>
-                                    -138일
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600;">
+                                        <span style="color: #e74c3c;">-0.6</span>
+                            </td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">
+                                    -15
                             </td>
                         </tr>
                 </tbody>
@@ -539,9 +531,9 @@
             <div>
                 <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">목표 병상일수</div>
                 <div style="font-size: 18px; font-weight: bold;">
-                    1130일
+                    390일
                     (
-                        +126.0%
+                        -22.0%
                     )
                 </div>
             </div>
@@ -551,7 +543,7 @@
         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
             <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">기간 가동률 추정</div>
             <div style="font-size: 16px; font-weight: bold;">
-                현재 1.4% → 목표 3.1%
+                현재 1.4% → 목표 1.1%
             </div>
         </div>
     </div>
@@ -582,21 +574,37 @@
 
     <!-- 스크립트 -->
     <script>
-
-        // 정적 HTML용 네비게이션 (서브디렉토리에서)
+        // 병원 전환 (정적 파일 경로 기반)
         function switchHospital(targetHospital) {
+            const currentPath = window.location.pathname;
             const currentPeriod = 'off_season';
-            const hospitalMap = {'대전': '대전', '유성': '유성'};
-            const path = `../../${hospitalMap[targetHospital]}/index_${currentPeriod}.html`;
-            window.location.href = path;
+
+            // 현재 파일명 추출 (index_off_season.html 등)
+            const filename = currentPath.split('/').pop() || 'index_' + currentPeriod + '.html';
+
+            // 병원 디렉토리 변경
+            const newPath = currentPath.includes('/doctors_') || currentPath.includes('/diseases_') || currentPath.includes('/adrgs_')
+                ? '../../' + targetHospital + '/' + filename
+                : '../' + targetHospital + '/' + filename;
+
+            window.location.href = newPath;
         }
 
+        // 기간 전환 (정적 파일 경로 기반)
         function switchPeriod(targetPeriod) {
-            const currentHospital = '유성';
-            const path = `../index_${targetPeriod}.html`;
-            window.location.href = path;
+            const currentPath = window.location.pathname;
+            const filename = currentPath.split('/').pop() || 'index.html';
+
+            // 파일명에서 기간 부분만 교체
+            const newFilename = filename.replace(/_off_season/, '_' + targetPeriod).replace(/_normal/, '_' + targetPeriod);
+
+            // 서브디렉토리에 있는 경우
+            if (currentPath.includes('/doctors_') || currentPath.includes('/diseases_') || currentPath.includes('/adrgs_')) {
+                window.location.href = '../' + newFilename;
+            } else {
+                window.location.href = newFilename;
+            }
         }
-    
     </script>
 </body>
 </html>

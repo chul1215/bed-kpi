@@ -370,11 +370,11 @@
                     <!-- 병원 선택 -->
                     <div class="control-group">
                         <label>병원</label>
-                        <button class="btn active"
+                        <button class="btn "
                                 onclick="switchHospital('대전')">
                             대전선병원
                         </button>
-                        <button class="btn "
+                        <button class="btn active"
                                 onclick="switchHospital('유성')">
                             유성선병원
                         </button>
@@ -383,11 +383,11 @@
                     <!-- 기간 선택 -->
                     <div class="control-group">
                         <label>기간</label>
-                        <button class="btn "
+                        <button class="btn active"
                                 onclick="switchPeriod('off_season')">
                             비수기
                         </button>
-                        <button class="btn active"
+                        <button class="btn "
                                 onclick="switchPeriod('normal')">
                             통상기간
                         </button>
@@ -408,7 +408,7 @@
 <!-- 의료진 상세 정보 -->
 <div class="content-section">
     <div style="border-bottom: 2px solid #3498db; padding-bottom: 15px; margin-bottom: 20px;">
-        <h5 style="color: #2c3e50; font-weight: 700; margin: 0;">신명석 (ENT)</h5>
+        <h5 style="color: #2c3e50; font-weight: 700; margin: 0;">권순행 (JC)</h5>
     </div>
 
     <!-- 의료진 KPI 카드 3종 -->
@@ -416,7 +416,7 @@
         <div class="col-md-4">
             <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
                 <div style="font-size: 12px; margin-bottom: 8px; opacity: 0.9;">환자수</div>
-                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">48</div>
+                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">83</div>
                 <div style="font-size: 11px; opacity: 0.85;">명</div>
             </div>
         </div>
@@ -424,7 +424,7 @@
             <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
                 <div style="font-size: 12px; margin-bottom: 8px; opacity: 0.9;">LOS 갭</div>
                 <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">
-                        -0.8
+                        -3.1
                 </div>
                 <div style="font-size: 11px; opacity: 0.85;">일</div>
             </div>
@@ -432,7 +432,7 @@
         <div class="col-md-4">
             <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
                 <div style="font-size: 12px; margin-bottom: 8px; opacity: 0.9;">추가병상일</div>
-                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">-39</div>
+                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">-258</div>
                 <div style="font-size: 11px; opacity: 0.85;">일</div>
             </div>
         </div>
@@ -465,18 +465,18 @@
                         <tr style="border-bottom: 1px solid rgba(52, 152, 219, 0.1); transition: background-color 0.12s ease; cursor: pointer;"
                             onmouseover="this.style.backgroundColor='rgba(124, 221, 255, 0.07)'"
                             onmouseout="this.style.backgroundColor='transparent'">
-                            <td style="text-align: left; padding: 12px 10px; color: #2c3e50; font-weight: 500;">D680 (부비동염 및 비용종)</td>
-                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">10</td>
+                            <td style="text-align: left; padding: 12px 10px; color: #2c3e50; font-weight: 500;">I164 (기타 슬관절 수술)</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">77</td>
                             <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace;">
-                                <span style="font-weight: 600; color: #2c3e50;">4.1</span>
+                                <span style="font-weight: 600; color: #2c3e50;">16.3</span>
                                 <span style="color: #95a5a6; margin: 0 4px;">/</span>
-                                <span style="color: #3498db; font-weight: 500;">2.3</span>
+                                <span style="color: #3498db; font-weight: 500;">14.2</span>
                             </td>
                             <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600;">
-                                        <span style="color: #e74c3c;">-1.8</span>
+                                        <span style="color: #e74c3c;">-2.1</span>
                             </td>
                             <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">
-                                    -18
+                                    -161
                             </td>
                         </tr>
                 </tbody>
@@ -491,15 +491,15 @@
             <div>
                 <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">현재 병상일수</div>
                 <div style="font-size: 18px; font-weight: bold;">
-                    196일
+                    1350일
                 </div>
             </div>
             <div>
                 <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">목표 병상일수</div>
                 <div style="font-size: 18px; font-weight: bold;">
-                    157일
+                    1092일
                     (
-                        -19.9%
+                        -19.1%
                     )
                 </div>
             </div>
@@ -509,7 +509,7 @@
         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
             <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">기간 가동률 추정</div>
             <div style="font-size: 16px; font-weight: bold;">
-                현재 0.3% → 목표 0.2%
+                현재 3.7% → 목표 3.0%
             </div>
         </div>
     </div>
@@ -543,7 +543,7 @@
         // 병원 전환 (정적 파일 경로 기반)
         function switchHospital(targetHospital) {
             const currentPath = window.location.pathname;
-            const currentPeriod = 'normal';
+            const currentPeriod = 'off_season';
 
             // 현재 파일명 추출 (index_off_season.html 등)
             const filename = currentPath.split('/').pop() || 'index_' + currentPeriod + '.html';

@@ -17,27 +17,30 @@ class KPICalculator:
     """KPI 산출 클래스"""
 
     @staticmethod
-    def calculate_disease_kpi(
-        disease_row: pd.Series
+    def calculate_adrg_kpi(
+        adrg_row: pd.Series
     ) -> Dict[str, float]:
         """
-        질환별 KPI 계산
+        ADRG별 KPI 계산
 
         Args:
-            disease_row: 질환 집계 행 (patient_count, total_bed_days, current_los, target_los 포함)
+            adrg_row: ADRG 집계 행 (adrg_code, adrg_name, patient_count, total_bed_days, current_los, target_los 포함)
 
         Returns:
             KPI 딕셔너리
         """
-        patient_count = disease_row['patient_count']
-        total_bed_days = disease_row['total_bed_days']
-        current_los = disease_row['current_los']
-        target_los = disease_row['target_los']
+        adrg_code = adrg_row['adrg_code']
+        adrg_name = adrg_row.get('adrg_name', adrg_code)
+        patient_count = adrg_row['patient_count']
+        total_bed_days = adrg_row['total_bed_days']
+        current_los = adrg_row['current_los']
+        target_los = adrg_row['target_los']
 
         # 최소 환자수 기준 확인
         if patient_count < settings.MIN_PATIENT_COUNT:
             return {
-                'diagnosis': disease_row['diagnosis'],
+                'adrg_code': adrg_code,
+                'adrg_name': adrg_name,
                 'patient_count': patient_count,
                 'total_bed_days': total_bed_days,
                 'current_los': current_los,
@@ -49,7 +52,8 @@ class KPICalculator:
 
         if pd.isna(target_los):
             return {
-                'diagnosis': disease_row['diagnosis'],
+                'adrg_code': adrg_code,
+                'adrg_name': adrg_name,
                 'patient_count': patient_count,
                 'total_bed_days': total_bed_days,
                 'current_los': current_los,
@@ -66,7 +70,8 @@ class KPICalculator:
         additional_bed_days = los_gap * patient_count
 
         return {
-            'diagnosis': disease_row['diagnosis'],
+            'adrg_code': adrg_code,
+            'adrg_name': adrg_name,
             'patient_count': patient_count,
             'total_bed_days': total_bed_days,
             'current_los': round(current_los, 2),
@@ -77,18 +82,83 @@ class KPICalculator:
         }
 
     @staticmethod
-    def calculate_doctor_kpi(
-        doctor_row: pd.Series,
-        disease_target_los_map: Dict[str, float],
-        doctor_disease_df: pd.DataFrame
+    def calculate_diagnosis_kpi(
+        diagnosis_row: pd.Series
     ) -> Dict[str, float]:
         """
-        의료진별 KPI 계산 (가중 평균 목표 LOS)
+        진단명별 KPI 계산 (하위 호환성 유지)
+
+        NOTE: calculate_adrg_kpi 사용 권장. 이 함수는 레거시 지원용입니다.
+
+        Args:
+            diagnosis_row: 진단명 집계 행 (patient_count, total_bed_days, current_los, target_los 포함)
+
+        Returns:
+            KPI 딕셔너리
+        """
+        patient_count = diagnosis_row['patient_count']
+        total_bed_days = diagnosis_row['total_bed_days']
+        current_los = diagnosis_row['current_los']
+        target_los = diagnosis_row['target_los']
+
+        # 최소 환자수 기준 확인
+        if patient_count < settings.MIN_PATIENT_COUNT:
+            return {
+                'diagnosis': diagnosis_row['diagnosis'],
+                'patient_count': patient_count,
+                'total_bed_days': total_bed_days,
+                'current_los': current_los,
+                'target_los': target_los,
+                'los_gap': None,
+                'additional_bed_days': None,
+                'status': 'below_minimum'
+            }
+
+        if pd.isna(target_los):
+            return {
+                'diagnosis': diagnosis_row['diagnosis'],
+                'patient_count': patient_count,
+                'total_bed_days': total_bed_days,
+                'current_los': current_los,
+                'target_los': None,
+                'los_gap': None,
+                'additional_bed_days': None,
+                'status': 'no_target_los'
+            }
+
+        # LOS 갭 계산 (양방향 유지)
+        los_gap = target_los - current_los
+
+        # 추가 병상일수 계산
+        additional_bed_days = los_gap * patient_count
+
+        return {
+            'diagnosis': diagnosis_row['diagnosis'],
+            'patient_count': patient_count,
+            'total_bed_days': total_bed_days,
+            'current_los': round(current_los, 2),
+            'target_los': target_los,
+            'los_gap': round(los_gap, 2),
+            'additional_bed_days': round(additional_bed_days, 2),
+            'status': 'calculated'
+        }
+
+    # 하위 호환성 별칭
+    calculate_disease_kpi = calculate_diagnosis_kpi
+
+    @staticmethod
+    def calculate_doctor_kpi_by_adrg(
+        doctor_row: pd.Series,
+        adrg_target_los_map: Dict[str, float],
+        doctor_adrg_df: pd.DataFrame
+    ) -> Dict[str, float]:
+        """
+        의료진별 KPI 계산 (ADRG 기반 가중 평균 목표 LOS)
 
         Args:
             doctor_row: 의료진 집계 행
-            disease_target_los_map: 질환별 목표 LOS 매핑 {'질환명': target_los}
-            doctor_disease_df: 의료진-질환 집계 데이터
+            adrg_target_los_map: ADRG별 목표 LOS 매핑 {'adrg_code': target_los}
+            doctor_adrg_df: 의료진-ADRG 집계 데이터
 
         Returns:
             KPI 딕셔너리
@@ -112,12 +182,12 @@ class KPICalculator:
                 'status': 'below_minimum'
             }
 
-        # 의료진의 질환별 데이터 추출
-        doctor_diseases = doctor_disease_df[
-            doctor_disease_df['doctor'] == doctor_name
+        # 의료진의 ADRG별 데이터 추출
+        doctor_adrgs = doctor_adrg_df[
+            doctor_adrg_df['doctor'] == doctor_name
         ].copy()
 
-        if doctor_diseases.empty:
+        if doctor_adrgs.empty:
             return {
                 'doctor': doctor_name,
                 'department': doctor_row.get('department', ''),
@@ -127,30 +197,143 @@ class KPICalculator:
                 'target_los': None,
                 'los_gap': None,
                 'additional_bed_days': None,
-                'status': 'no_disease_data'
+                'status': 'no_adrg_data'
             }
 
         # 가중 평균 목표 LOS 계산
-        # target_los = Σ(질환_목표_LOS × 질환_환자수_비중)
+        # target_los = Σ(ADRG_목표_LOS × ADRG_환자수_비중)
         weighted_target_los = 0
         total_matched = 0
 
-        for _, disease_row in doctor_diseases.iterrows():
-            diagnosis = disease_row['diagnosis']
-            disease_patient_count = disease_row['patient_count']
+        for _, adrg_row in doctor_adrgs.iterrows():
+            adrg_code = adrg_row['adrg_code']
+            adrg_patient_count = adrg_row['patient_count']
 
-            if diagnosis in disease_target_los_map:
-                disease_target = disease_target_los_map[diagnosis]
-                patient_weight = disease_patient_count / patient_count
-                weighted_target_los += disease_target * patient_weight
-                total_matched += disease_patient_count
+            if adrg_code in adrg_target_los_map:
+                adrg_target = adrg_target_los_map[adrg_code]
+                patient_weight = adrg_patient_count / patient_count
+                weighted_target_los += adrg_target * patient_weight
+                total_matched += adrg_patient_count
 
-        # 매칭되지 않은 질환이 있으면 가중치 조정
+        # 매칭되지 않은 ADRG가 있으면 가중치 조정
         if total_matched < patient_count:
             # 매칭율이 낮으면 경고
             match_rate = (total_matched / patient_count) * 100
             logger.warning(
-                f"의료진 {doctor_name} DRG 매칭율 낮음: {match_rate:.1f}% "
+                f"의료진 {doctor_name} ADRG 매칭율: {match_rate:.1f}% "
+                f"({total_matched}/{patient_count})"
+            )
+
+        # 매칭된 환자가 없으면 None 반환
+        if total_matched == 0 or weighted_target_los == 0:
+            return {
+                'doctor': doctor_name,
+                'department': doctor_row.get('department', ''),
+                'patient_count': patient_count,
+                'total_bed_days': total_bed_days,
+                'current_los': round(current_los, 2),
+                'target_los': None,
+                'los_gap': None,
+                'additional_bed_days': None,
+                'status': 'no_target_los'
+            }
+
+        # LOS 갭 계산
+        los_gap = weighted_target_los - current_los
+
+        # 추가 병상일수 계산
+        additional_bed_days = los_gap * patient_count
+
+        return {
+            'doctor': doctor_name,
+            'department': doctor_row.get('department', ''),
+            'patient_count': patient_count,
+            'total_bed_days': total_bed_days,
+            'current_los': round(current_los, 2),
+            'target_los': round(weighted_target_los, 2),
+            'los_gap': round(los_gap, 2),
+            'additional_bed_days': round(additional_bed_days, 2),
+            'match_rate': round((total_matched / patient_count) * 100, 1),
+            'status': 'calculated'
+        }
+
+    @staticmethod
+    def calculate_doctor_kpi_by_diagnosis(
+        doctor_row: pd.Series,
+        diagnosis_target_los_map: Dict[str, float],
+        doctor_diagnosis_df: pd.DataFrame
+    ) -> Dict[str, float]:
+        """
+        의료진별 KPI 계산 (진단명 기반 가중 평균 목표 LOS - 하위 호환성)
+
+        NOTE: calculate_doctor_kpi_by_adrg 사용 권장. 이 함수는 레거시 지원용입니다.
+
+        Args:
+            doctor_row: 의료진 집계 행
+            diagnosis_target_los_map: 진단명별 목표 LOS 매핑 {'진단명': target_los}
+            doctor_diagnosis_df: 의료진-진단명 집계 데이터
+
+        Returns:
+            KPI 딕셔너리
+        """
+        doctor_name = doctor_row['doctor']
+        patient_count = doctor_row['patient_count']
+        total_bed_days = doctor_row['total_bed_days']
+        current_los = doctor_row['current_los']
+
+        # 최소 환자수 기준 확인
+        if patient_count < settings.MIN_PATIENT_COUNT:
+            return {
+                'doctor': doctor_name,
+                'department': doctor_row.get('department', ''),
+                'patient_count': patient_count,
+                'total_bed_days': total_bed_days,
+                'current_los': current_los,
+                'target_los': None,
+                'los_gap': None,
+                'additional_bed_days': None,
+                'status': 'below_minimum'
+            }
+
+        # 의료진의 진단명별 데이터 추출
+        doctor_diagnoses = doctor_diagnosis_df[
+            doctor_diagnosis_df['doctor'] == doctor_name
+        ].copy()
+
+        if doctor_diagnoses.empty:
+            return {
+                'doctor': doctor_name,
+                'department': doctor_row.get('department', ''),
+                'patient_count': patient_count,
+                'total_bed_days': total_bed_days,
+                'current_los': current_los,
+                'target_los': None,
+                'los_gap': None,
+                'additional_bed_days': None,
+                'status': 'no_diagnosis_data'
+            }
+
+        # 가중 평균 목표 LOS 계산
+        # target_los = Σ(진단명_목표_LOS × 진단명_환자수_비중)
+        weighted_target_los = 0
+        total_matched = 0
+
+        for _, diagnosis_row in doctor_diagnoses.iterrows():
+            diagnosis = diagnosis_row['diagnosis']
+            diagnosis_patient_count = diagnosis_row['patient_count']
+
+            if diagnosis in diagnosis_target_los_map:
+                diagnosis_target = diagnosis_target_los_map[diagnosis]
+                patient_weight = diagnosis_patient_count / patient_count
+                weighted_target_los += diagnosis_target * patient_weight
+                total_matched += diagnosis_patient_count
+
+        # 매칭되지 않은 진단명이 있으면 가중치 조정
+        if total_matched < patient_count:
+            # 매칭율이 낮으면 경고
+            match_rate = (total_matched / patient_count) * 100
+            logger.warning(
+                f"의료진 {doctor_name} 진단명 매칭율 낮음: {match_rate:.1f}% "
                 f"({total_matched}/{patient_count})"
             )
 
@@ -185,6 +368,9 @@ class KPICalculator:
             'additional_bed_days': round(additional_bed_days, 2),
             'status': 'calculated'
         }
+
+    # 하위 호환성 별칭
+    calculate_doctor_kpi = calculate_doctor_kpi_by_diagnosis
 
     @staticmethod
     def calculate_department_kpi(

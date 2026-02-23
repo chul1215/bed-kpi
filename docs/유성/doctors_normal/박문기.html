@@ -4,53 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>선메디컬센터 병상가동 KPI 산출</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
+        /* ==================== 색상 체계 ==================== */
         :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --success-color: #27ae60;
-            --danger-color: #e74c3c;
-            --warning-color: #f39c12;
-            --info-color: #16a085;
+            --bg-dark: #292F36;      /* 다크 그레이 - 배경 */
+            --accent: #4ECDC4;       /* 청록색 - 강조 */
+            --white: #FFFFFF;        /* 화이트 - 텍스트/카드 */
+
+            /* 파생 색상 */
+            --bg-light: #353C44;     /* 밝은 배경 */
+            --accent-hover: #3DB9B0; /* 강조색 호버 */
+            --text-primary: #FFFFFF; /* 주요 텍스트 */
+            --text-secondary: rgba(255, 255, 255, 0.7); /* 보조 텍스트 */
+            --border: rgba(78, 205, 196, 0.2); /* 테두리 */
+
+            /* 레이아웃 */
+            --radius: 12px;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* ==================== 전역 스타일 ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f7fa;
-            color: #2c3e50;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
         }
 
-        /* 공통 헤더 스타일 */
-        .header-container {
-            background-color: #fff;
-            border-bottom: 2px solid #e0e6ed;
-            padding: 20px 0;
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ==================== 헤더 ==================== */
+        .header {
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background: rgba(41, 47, 54, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
         }
 
         .header-title {
             font-size: 24px;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 15px;
+            font-weight: 700;
+            color: var(--white);
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 12px;
         }
 
-        .header-divider {
-            border-top: 1px solid #d0d8e0;
-            margin: 10px 0;
+        .header-title i {
+            color: var(--accent);
+            font-size: 28px;
         }
 
         .header-controls {
             display: flex;
-            gap: 30px;
+            gap: 24px;
             align-items: center;
             flex-wrap: wrap;
         }
@@ -62,385 +91,315 @@
         }
 
         .control-group label {
+            font-size: 14px;
             font-weight: 600;
-            color: var(--primary-color);
-            margin: 0;
+            color: var(--text-secondary);
             white-space: nowrap;
         }
 
-        .btn-hospital, .btn-period {
-            padding: 6px 14px;
-            font-size: 14px;
-            border: 2px solid #d0d8e0;
-            background-color: #fff;
-            color: var(--primary-color);
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-        }
-
-        .btn-hospital.active, .btn-period.active {
-            background-color: var(--secondary-color);
-            color: white;
-            border-color: var(--secondary-color);
-        }
-
-        .btn-hospital:hover, .btn-period:hover {
-            border-color: var(--secondary-color);
-        }
-
-        .btn-upload {
+        /* ==================== 버튼 ==================== */
+        .btn {
             padding: 8px 16px;
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background-color 0.3s ease;
-        }
-
-        .btn-upload:hover {
-            background-color: #2980b9;
-        }
-
-        /* 네비게이션 메뉴 */
-        .nav-menu {
-            display: flex;
-            gap: 20px;
-            margin-top: 10px;
-        }
-
-        .nav-menu a {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 600;
-            padding: 8px 12px;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-        }
-
-        .nav-menu a:hover {
-            background-color: #ecf0f1;
-            color: var(--secondary-color);
-        }
-
-        .nav-menu a.active {
-            background-color: var(--secondary-color);
-            color: white;
-        }
-
-        /* 메인 콘텐츠 */
-        .main-container {
-            max-width: 1400px;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
-
-        .content-section {
-            background-color: white;
-            border-radius: 8px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        /* 카드 스타일 */
-        .kpi-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-        }
-
-        .kpi-card.card-secondary {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.2);
-        }
-
-        .kpi-card.card-info {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            box-shadow: 0 4px 12px rgba(79, 172, 254, 0.2);
-        }
-
-        .kpi-card-title {
             font-size: 14px;
             font-weight: 600;
-            margin-bottom: 10px;
-            opacity: 0.95;
+            border: 2px solid var(--border);
+            background-color: transparent;
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
         }
 
-        .kpi-card-value {
-            font-size: 32px;
-            font-weight: bold;
+        .btn:hover {
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .btn.active {
+            background-color: var(--accent);
+            color: var(--bg-dark);
+            border-color: var(--accent);
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: var(--bg-dark);
+            border-color: var(--accent);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+
+        /* ==================== 카드 ==================== */
+        .card {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i {
+            color: var(--accent);
+            font-size: 20px;
+        }
+
+        /* ==================== KPI 카드 ==================== */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-dark) 100%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent);
+        }
+
+        .kpi-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             margin-bottom: 8px;
         }
 
-        .kpi-card-unit {
-            font-size: 12px;
-            opacity: 0.85;
-        }
-
-        /* 테이블 스타일 */
-        .table-responsive {
-            margin-bottom: 0;
-        }
-
-        .table {
-            margin-bottom: 0;
-        }
-
-        .table thead th {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
-            font-weight: 600;
-            color: var(--primary-color);
-            padding: 12px;
-            text-align: center;
-        }
-
-        .table tbody td {
-            padding: 12px;
-            vertical-align: middle;
-            text-align: center;
-        }
-
-        .table tbody tr {
-            border-bottom: 1px solid #dee2e6;
-            transition: background-color 0.2s ease;
-        }
-
-        .table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        .table tbody tr.expandable {
-            cursor: pointer;
-        }
-
-        .table tbody tr.expandable:hover {
-            background-color: #f0f3ff;
-        }
-
-        /* 행 확장 스타일 */
-        .row-expander {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-        }
-
-        .row-expander i {
-            transition: transform 0.3s ease;
-        }
-
-        .row-expander.expanded i {
-            transform: rotate(90deg);
-        }
-
-        .expanded-detail {
-            display: none;
-        }
-
-        .expanded-detail.show {
-            display: table-row;
-        }
-
-        .nested-table {
-            background-color: #f8f9fa;
-        }
-
-        .nested-table table {
-            margin-bottom: 0;
-        }
-
-        /* 섹션 제목 */
-        .section-title {
-            font-size: 18px;
+        .kpi-value {
+            font-size: 36px;
             font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #3498db;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            color: var(--white);
+            font-family: 'Courier New', monospace;
         }
 
-        .sort-controls {
-            display: flex;
-            gap: 10px;
+        .kpi-unit {
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            margin-left: 4px;
         }
 
-        .sort-btn {
-            padding: 6px 12px;
-            background-color: #ecf0f1;
-            border: 1px solid #bdc3c7;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .sort-btn:hover, .sort-btn.active {
-            background-color: var(--secondary-color);
-            color: white;
-            border-color: var(--secondary-color);
-        }
-
-        /* 인사이트 패널 */
-        .insight-panel {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-
-        .insight-panel h6 {
-            font-weight: 700;
-            margin-bottom: 15px;
+        .kpi-change {
             font-size: 14px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
-        .insight-item {
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        .kpi-change.positive {
+            color: var(--accent);
         }
 
-        .insight-item:last-child {
-            border-bottom: none;
+        .kpi-change.negative {
+            color: #FF6B6B;
         }
 
-        .insight-item::before {
-            content: "• ";
-            margin-right: 8px;
-            font-weight: bold;
+        /* ==================== 테이블 ==================== */
+        .table-container {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 32px;
         }
 
-        /* 검색 입력 */
-        .search-input {
+        table {
             width: 100%;
-            padding: 10px 15px;
-            font-size: 14px;
-            border: 1px solid #d0d8e0;
-            border-radius: 4px;
-            margin-bottom: 20px;
+            border-collapse: collapse;
         }
 
-        .search-input:focus {
-            outline: none;
-            border-color: var(--secondary-color);
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        thead {
+            background: var(--bg-dark);
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        /* 다운로드 버튼 */
-        .download-btn {
-            padding: 10px 20px;
-            background-color: var(--success-color);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background-color 0.3s ease;
+        th {
+            padding: 16px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border);
         }
 
-        .download-btn:hover {
-            background-color: #229954;
-        }
-
-        /* 유틸리티 클래스 */
-        .text-right {
+        th.text-end {
             text-align: right;
         }
 
-        .text-center {
-            text-align: center;
+        td {
+            padding: 16px;
+            font-size: 14px;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border);
         }
 
-        .positive {
-            color: var(--danger-color);
+        td.text-end {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background-color: rgba(78, 205, 196, 0.05);
+        }
+
+        /* ==================== 배지 ==================== */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            font-size: 12px;
             font-weight: 600;
+            border-radius: 6px;
+            background: var(--accent);
+            color: var(--bg-dark);
         }
 
-        .negative {
-            color: var(--success-color);
-            font-weight: 600;
+        .badge.secondary {
+            background: var(--text-secondary);
+            color: var(--white);
         }
 
-        .neutral {
-            color: #7f8c8d;
-            font-weight: 600;
+        /* ==================== 차트 컨테이너 ==================== */
+        .chart-container {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 32px;
         }
 
-        /* 응답형 디자인 */
+        /* ==================== 반응형 ==================== */
         @media (max-width: 768px) {
-            .header-controls {
+            .header-content {
                 flex-direction: column;
-                gap: 15px;
                 align-items: flex-start;
             }
 
-            .nav-menu {
-                flex-wrap: wrap;
+            .header-controls {
+                width: 100%;
+                flex-direction: column;
+                align-items: flex-start;
             }
 
-            .table-responsive {
-                font-size: 12px;
+            .kpi-grid {
+                grid-template-columns: 1fr;
             }
 
-            .table thead th, .table tbody td {
-                padding: 8px 4px;
+            .table-container {
+                overflow-x: auto;
             }
 
-            .kpi-card-value {
-                font-size: 24px;
+            table {
+                min-width: 600px;
             }
+        }
+
+        /* ==================== 유틸리티 ==================== */
+        .text-accent {
+            color: var(--accent);
+        }
+
+        .text-secondary {
+            color: var(--text-secondary);
+        }
+
+        .mb-4 {
+            margin-bottom: 32px;
+        }
+
+        .mt-4 {
+            margin-top: 32px;
+        }
+
+        .gap-2 {
+            gap: 16px;
         }
     </style>
 </head>
 <body>
-    <!-- 공통 헤더 -->
-    <div class="header-container">
-        <div class="container-fluid" style="max-width: 1400px; margin: 0 auto;">
-            <div class="header-title">
-                <span>선메디컬센터 병상가동 KPI 산출</span>
-            </div>
-            <div class="header-divider"></div>
-            <div class="header-controls">
-                <div class="control-group">
-                    <label>병원:</label>
-                    <button class="btn-hospital " data-hospital="대전">
-                        ■ 대전선병원
-                    </button>
-                    <button class="btn-hospital active" data-hospital="유성">
-                        □ 유성선병원
-                    </button>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-title">
+                    <i class="bi bi-hospital"></i>
+                    선메디컬센터 병상가동 KPI
                 </div>
-                <div class="control-group">
-                    <label>기간:</label>
-                    <button class="btn-period " data-period="off_season">
-                        ● 비수기 (3-4·11-12월)
-                    </button>
-                    <button class="btn-period active" data-period="normal">
-                        ○ 통상기간
-                    </button>
+                <div class="header-controls">
+                    <!-- 병원 선택 -->
+                    <div class="control-group">
+                        <label>병원</label>
+                        <button class="btn "
+                                onclick="switchHospital('대전')">
+                            대전선병원
+                        </button>
+                        <button class="btn active"
+                                onclick="switchHospital('유성')">
+                            유성선병원
+                        </button>
+                    </div>
+
+                    <!-- 기간 선택 -->
+                    <div class="control-group">
+                        <label>기간</label>
+                        <button class="btn "
+                                onclick="switchPeriod('off_season')">
+                            비수기
+                        </button>
+                        <button class="btn active"
+                                onclick="switchPeriod('normal')">
+                            통상기간
+                        </button>
+                    </div>
+
                 </div>
-            </div>
-            <div class="nav-menu">
-                <a href="../index_normal.html" class="">홈</a>
-                <a href="../department_normal.html" class="">진료과</a>
-                <a href="../index_normal.html" class="active">의료진</a>
-                <a href="../index_normal.html" class="">질환</a>
             </div>
         </div>
-    </div>
+    </header>
 
-    <!-- 메인 콘텐츠 -->
-    <div class="main-container">
+    <!-- 메인 컨텐츠 -->
+    <main class="container" style="padding-top: 32px; padding-bottom: 32px;">
 <!-- 의료진 검색 -->
 <div class="content-section">
     <input type="text" class="search-input" placeholder="이름 또는 진료과 입력... 🔍" id="doctorSearch">
@@ -457,7 +416,7 @@
         <div class="col-md-4">
             <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
                 <div style="font-size: 12px; margin-bottom: 8px; opacity: 0.9;">환자수</div>
-                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">442</div>
+                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">55</div>
                 <div style="font-size: 11px; opacity: 0.85;">명</div>
             </div>
         </div>
@@ -465,7 +424,7 @@
             <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
                 <div style="font-size: 12px; margin-bottom: 8px; opacity: 0.9;">LOS 갭</div>
                 <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">
-                        nan
+                        -1.9
                 </div>
                 <div style="font-size: 11px; opacity: 0.85;">일</div>
             </div>
@@ -473,7 +432,7 @@
         <div class="col-md-4">
             <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
                 <div style="font-size: 12px; margin-bottom: 8px; opacity: 0.9;">추가병상일</div>
-                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">nan</div>
+                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">-106</div>
                 <div style="font-size: 11px; opacity: 0.85;">일</div>
             </div>
         </div>
@@ -489,77 +448,52 @@
             </div>
         </div>
 
-        <div class="table-responsive">
-            <table class="table">
+        <div class="table-responsive" style="overflow-x: auto;">
+            <table class="table" style="font-size: 13px; width: 100%; border-collapse: collapse;">
                 <thead>
-                    <tr>
-                        <th style="text-align: left;">질환명</th>
-                        <th>환자수</th>
-                        <th>현 LOS</th>
-                        <th>목표 LOS</th>
-                        <th>LOS 갭</th>
-                        <th>추가병상일</th>
+                    <tr style="border-bottom: 2px solid rgba(52, 152, 219, 0.3);">
+                        <th style="text-align: left; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">질환명</th>
+                        <th style="text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">환자수</th>
+                        <th style="text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            평균재원일수<br><span style="font-size: 11px; font-weight: 400; color: #95a5a6; text-transform: none;">(병원 / 심평원)</span>
+                        </th>
+                        <th style="text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">LOS 갭</th>
+                        <th style="text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">추가재원일수(일)</th>
                     </tr>
                 </thead>
                 <tbody>
-                        <tr>
-                            <td style="text-align: left;">기타 의학적 관리를 위하여 보건서비스와 접하고 있는 사람</td>
-                            <td>1244명</td>
-                            <td>4.0일</td>
-                            <td>nan일</td>
-                            <td>
-                                    <span style="color: #95a5a6;">-</span>
+                        <tr style="border-bottom: 1px solid rgba(52, 152, 219, 0.1); transition: background-color 0.12s ease; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='rgba(124, 221, 255, 0.07)'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="text-align: left; padding: 12px 10px; color: #2c3e50; font-weight: 500;">H032 (복강경을 이용한 전담낭절제술(총수담관탐구술 미동반))</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">26</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace;">
+                                <span style="font-weight: 600; color: #2c3e50;">5.4</span>
+                                <span style="color: #95a5a6; margin: 0 4px;">/</span>
+                                <span style="color: #3498db; font-weight: 500;">5.5</span>
                             </td>
-                            <td>
-                                    <span style="color: #95a5a6;">-</span>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600;">
+                                        <span style="color: #27ae60;">+0.1</span>
                             </td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: left;">호소증상 및 보고된 진단명이 없는 사람의 일반적 검사 및 조사</td>
-                            <td>585명</td>
-                            <td>1.8일</td>
-                            <td>nan일</td>
-                            <td>
-                                    <span style="color: #95a5a6;">-</span>
-                            </td>
-                            <td>
-                                    <span style="color: #95a5a6;">-</span>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">
+                                    2
                             </td>
                         </tr>
-                        <tr>
-                            <td style="text-align: left;">담석증</td>
-                            <td>564명</td>
-                            <td>5.6일</td>
-                            <td>nan일</td>
-                            <td>
-                                    <span style="color: #95a5a6;">-</span>
+                        <tr style="border-bottom: 1px solid rgba(52, 152, 219, 0.1); transition: background-color 0.12s ease; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='rgba(124, 221, 255, 0.07)'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="text-align: left; padding: 12px 10px; color: #2c3e50; font-weight: 500;">G082 (복잡한 주진단이 없는 충수절제술)</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">9</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace;">
+                                <span style="font-weight: 600; color: #2c3e50;">4.7</span>
+                                <span style="color: #95a5a6; margin: 0 4px;">/</span>
+                                <span style="color: #3498db; font-weight: 500;">3.4</span>
                             </td>
-                            <td>
-                                    <span style="color: #95a5a6;">-</span>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600;">
+                                        <span style="color: #e74c3c;">-1.2</span>
                             </td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: left;">급성 충수염</td>
-                            <td>359명</td>
-                            <td>5.4일</td>
-                            <td>nan일</td>
-                            <td>
-                                    <span style="color: #95a5a6;">-</span>
-                            </td>
-                            <td>
-                                    <span style="color: #95a5a6;">-</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: left;">뇌경색증</td>
-                            <td>343명</td>
-                            <td>13.5일</td>
-                            <td>nan일</td>
-                            <td>
-                                    <span style="color: #95a5a6;">-</span>
-                            </td>
-                            <td>
-                                    <span style="color: #95a5a6;">-</span>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">
+                                    -11
                             </td>
                         </tr>
                 </tbody>
@@ -574,15 +508,15 @@
             <div>
                 <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">현재 병상일수</div>
                 <div style="font-size: 18px; font-weight: bold;">
-                    2409일
+                    291일
                 </div>
             </div>
             <div>
                 <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">목표 병상일수</div>
                 <div style="font-size: 18px; font-weight: bold;">
-                    nan일
+                    185일
                     (
-                        nan%
+                        -36.5%
                     )
                 </div>
             </div>
@@ -592,7 +526,7 @@
         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
             <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">기간 가동률 추정</div>
             <div style="font-size: 16px; font-weight: bold;">
-                현재 3.3% → 목표 nan%
+                현재 0.4% → 목표 0.3%
             </div>
         </div>
     </div>
@@ -619,62 +553,41 @@
         });
     });
 </script>
-    </div>
+    </main>
 
-    <!-- 하단 -->
-    <footer style="text-align: center; padding: 30px 20px; color: #7f8c8d; background-color: #f5f7fa; margin-top: 50px; border-top: 1px solid #e0e6ed;">
-        <p style="margin: 0;">선메디컬센터 병상가동 KPI 산출 시스템 | © 2026</p>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 스크립트 -->
     <script>
-        // 병원 선택 핸들러
-        document.querySelectorAll('.btn-hospital').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const hospital = this.dataset.hospital;
-                updateHospital(hospital);
-            });
-        });
+        // 병원 전환 (정적 파일 경로 기반)
+        function switchHospital(targetHospital) {
+            const currentPath = window.location.pathname;
+            const currentPeriod = 'normal';
 
-        // 기간 선택 핸들러
-        document.querySelectorAll('.btn-period').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const period = this.dataset.period;
-                updatePeriod(period);
-            });
-        });
+            // 현재 파일명 추출 (index_off_season.html 등)
+            const filename = currentPath.split('/').pop() || 'index_' + currentPeriod + '.html';
 
-        function updateHospital(hospital) {
-            document.querySelectorAll('.btn-hospital').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            // 실제 구현에서는 API 호출
-            console.log('Hospital changed:', hospital);
+            // 병원 디렉토리 변경
+            const newPath = currentPath.includes('/doctors_') || currentPath.includes('/diseases_') || currentPath.includes('/adrgs_')
+                ? '../../' + targetHospital + '/' + filename
+                : '../' + targetHospital + '/' + filename;
+
+            window.location.href = newPath;
         }
 
-        function updatePeriod(period) {
-            document.querySelectorAll('.btn-period').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            console.log('Period changed:', period);
-        }
+        // 기간 전환 (정적 파일 경로 기반)
+        function switchPeriod(targetPeriod) {
+            const currentPath = window.location.pathname;
+            const filename = currentPath.split('/').pop() || 'index.html';
 
-        // 행 확장 핸들러
-        document.querySelectorAll('.expandable').forEach(row => {
-            const expander = row.querySelector('.row-expander');
-            if (expander) {
-                expander.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const nextRow = row.nextElementSibling;
-                    if (nextRow && nextRow.classList.contains('expanded-detail')) {
-                        nextRow.classList.toggle('show');
-                        this.classList.toggle('expanded');
-                    }
-                });
+            // 파일명에서 기간 부분만 교체
+            const newFilename = filename.replace(/_off_season/, '_' + targetPeriod).replace(/_normal/, '_' + targetPeriod);
+
+            // 서브디렉토리에 있는 경우
+            if (currentPath.includes('/doctors_') || currentPath.includes('/diseases_') || currentPath.includes('/adrgs_')) {
+                window.location.href = '../' + newFilename;
+            } else {
+                window.location.href = newFilename;
             }
-        });
+        }
     </script>
 </body>
 </html>

@@ -17,21 +17,21 @@ class Aggregator:
     """데이터 집계 클래스"""
 
     @staticmethod
-    def aggregate_by_disease(
+    def aggregate_by_adrg(
         df: pd.DataFrame,
         hospital: str = None,
         period: str = None
     ) -> pd.DataFrame:
         """
-        질환 단위 집계
+        ADRG 코드 단위 집계
 
         Args:
-            df: SMC 파싱된 데이터프레임 (period 컬럼 포함)
+            df: SMC 파싱된 데이터프레임 (adrg_code, period 컬럼 포함)
             hospital: 병원 필터 ('대전', '유성' 또는 None)
             period: 기간 필터 ('off_season', 'normal' 또는 None)
 
         Returns:
-            질환별 집계 데이터프레임
+            ADRG별 집계 데이터프레임
         """
         filtered_df = df.copy()
 
@@ -41,7 +41,58 @@ class Aggregator:
         if period:
             filtered_df = filtered_df[filtered_df['period'] == period]
 
-        # 질환별 집계
+        # ADRG 코드가 없는 행 제외
+        filtered_df = filtered_df[filtered_df['adrg_code'].notna()]
+
+        # ADRG별 집계
+        agg_df = filtered_df.groupby('adrg_code').agg({
+            'los_days': 'sum',          # 병상일수 합계
+            'discharge_date': 'count',  # 환자수 (레코드 수)
+            'hospital': 'first',        # 병원명
+            'adrg_name': 'first',       # ADRG명
+            'target_los': 'first'       # 목표 LOS (심평원 기준)
+        }).reset_index()
+
+        agg_df.columns = ['adrg_code', 'total_bed_days', 'patient_count', 'hospital', 'adrg_name', 'target_los']
+
+        # 현재 LOS 계산
+        agg_df['current_los'] = agg_df['total_bed_days'] / agg_df['patient_count']
+
+        # 정렬
+        agg_df = agg_df.sort_values('patient_count', ascending=False)
+
+        logger.info(f"ADRG 집계 완료: {len(agg_df)}개 ADRG, {agg_df['patient_count'].sum()}명")
+
+        return agg_df
+
+    @staticmethod
+    def aggregate_by_diagnosis(
+        df: pd.DataFrame,
+        hospital: str = None,
+        period: str = None
+    ) -> pd.DataFrame:
+        """
+        진단명 단위 집계 (하위 호환성 유지)
+
+        NOTE: ADRG 기반 집계 사용 권장. 이 함수는 레거시 지원용입니다.
+
+        Args:
+            df: SMC 파싱된 데이터프레임 (period 컬럼 포함)
+            hospital: 병원 필터 ('대전', '유성' 또는 None)
+            period: 기간 필터 ('off_season', 'normal' 또는 None)
+
+        Returns:
+            진단명별 집계 데이터프레임
+        """
+        filtered_df = df.copy()
+
+        # 필터링
+        if hospital:
+            filtered_df = filtered_df[filtered_df['hospital'] == hospital]
+        if period:
+            filtered_df = filtered_df[filtered_df['period'] == period]
+
+        # 진단명별 집계
         agg_df = filtered_df.groupby('diagnosis').agg({
             'los_days': 'sum',          # 병상일수 합계
             'discharge_date': 'count',  # 환자수 (레코드 수)
@@ -57,9 +108,12 @@ class Aggregator:
         # 정렬
         agg_df = agg_df.sort_values('patient_count', ascending=False)
 
-        logger.info(f"질환 집계 완료: {len(agg_df)}개 질환, {agg_df['patient_count'].sum()}명")
+        logger.info(f"진단명 집계 완료: {len(agg_df)}개 진단명, {agg_df['patient_count'].sum()}명")
 
         return agg_df
+
+    # 하위 호환성 별칭
+    aggregate_by_disease = aggregate_by_diagnosis
 
     @staticmethod
     def aggregate_by_doctor(
@@ -155,21 +209,21 @@ class Aggregator:
         return agg_df
 
     @staticmethod
-    def aggregate_by_doctor_disease(
+    def aggregate_by_doctor_adrg(
         df: pd.DataFrame,
         hospital: str = None,
         period: str = None
     ) -> pd.DataFrame:
         """
-        의료진-질환 단위 집계 (의사별 질환 TOP 6용)
+        의료진-ADRG 단위 집계 (의사별 ADRG TOP 6용)
 
         Args:
-            df: SMC 파싱된 데이터프레임
+            df: SMC 파싱된 데이터프레임 (adrg_code 컬럼 포함)
             hospital: 병원 필터
             period: 기간 필터
 
         Returns:
-            의료진-질환별 집계 데이터프레임
+            의료진-ADRG별 집계 데이터프레임
         """
         filtered_df = df.copy()
 
@@ -179,7 +233,57 @@ class Aggregator:
         if period:
             filtered_df = filtered_df[filtered_df['period'] == period]
 
-        # 의료진-질환별 집계
+        # ADRG 코드가 없는 행 제외
+        filtered_df = filtered_df[filtered_df['adrg_code'].notna()]
+
+        # 의료진-ADRG별 집계
+        agg_df = filtered_df.groupby(['doctor', 'department', 'adrg_code', 'hospital']).agg({
+            'los_days': 'sum',
+            'discharge_date': 'count',
+            'adrg_name': 'first',
+            'target_los': 'first'
+        }).reset_index()
+
+        agg_df.columns = [
+            'doctor', 'department', 'adrg_code', 'hospital',
+            'total_bed_days', 'patient_count', 'adrg_name', 'target_los'
+        ]
+
+        # 현재 LOS 계산
+        agg_df['current_los'] = agg_df['total_bed_days'] / agg_df['patient_count']
+
+        logger.info(f"의료진-ADRG 집계 완료: {len(agg_df)}개 조합")
+
+        return agg_df
+
+    @staticmethod
+    def aggregate_by_doctor_diagnosis(
+        df: pd.DataFrame,
+        hospital: str = None,
+        period: str = None
+    ) -> pd.DataFrame:
+        """
+        의료진-진단명 단위 집계 (하위 호환성 유지)
+
+        NOTE: ADRG 기반 집계 사용 권장. 이 함수는 레거시 지원용입니다.
+
+        Args:
+            df: SMC 파싱된 데이터프레임
+            hospital: 병원 필터
+            period: 기간 필터
+
+        Returns:
+            의료진-진단명별 집계 데이터프레임
+        """
+        filtered_df = df.copy()
+
+        # 필터링
+        if hospital:
+            filtered_df = filtered_df[filtered_df['hospital'] == hospital]
+        if period:
+            filtered_df = filtered_df[filtered_df['period'] == period]
+
+        # 의료진-진단명별 집계
         agg_df = filtered_df.groupby(['doctor', 'department', 'diagnosis', 'hospital']).agg({
             'los_days': 'sum',
             'discharge_date': 'count'
@@ -190,9 +294,34 @@ class Aggregator:
         # 현재 LOS 계산
         agg_df['current_los'] = agg_df['total_bed_days'] / agg_df['patient_count']
 
-        logger.info(f"의료진-질환 집계 완료: {len(agg_df)}개 조합")
+        logger.info(f"의료진-진단명 집계 완료: {len(agg_df)}개 조합")
 
         return agg_df
+
+    # 하위 호환성 별칭
+    aggregate_by_doctor_disease = aggregate_by_doctor_diagnosis
+
+    @staticmethod
+    def get_doctor_top_adrgs(
+        doctor_adrg_df: pd.DataFrame,
+        doctor_name: str,
+        top_n: int = 6
+    ) -> pd.DataFrame:
+        """
+        의료진의 ADRG TOP N 추출
+
+        Args:
+            doctor_adrg_df: 의료진-ADRG 집계 데이터
+            doctor_name: 의료진명
+            top_n: 상위 개수 (기본값: 6)
+
+        Returns:
+            의료진의 ADRG TOP N (환자수 기준)
+        """
+        doctor_df = doctor_adrg_df[doctor_adrg_df['doctor'] == doctor_name].copy()
+        top_adrgs = doctor_df.nlargest(top_n, 'patient_count')
+
+        return top_adrgs
 
     @staticmethod
     def get_doctor_top_diseases(
@@ -201,15 +330,17 @@ class Aggregator:
         top_n: int = 6
     ) -> pd.DataFrame:
         """
-        의료진의 질환 TOP N 추출
+        의료진의 진단명 TOP N 추출 (하위 호환성 유지)
+
+        NOTE: get_doctor_top_adrgs 사용 권장
 
         Args:
-            doctor_disease_df: 의료진-질환 집계 데이터
+            doctor_disease_df: 의료진-진단명 집계 데이터
             doctor_name: 의료진명
             top_n: 상위 개수 (기본값: 6)
 
         Returns:
-            의료진의 질환 TOP N (환자수 기준)
+            의료진의 진단명 TOP N (환자수 기준)
         """
         doctor_df = doctor_disease_df[doctor_disease_df['doctor'] == doctor_name].copy()
         top_diseases = doctor_df.nlargest(top_n, 'patient_count')
