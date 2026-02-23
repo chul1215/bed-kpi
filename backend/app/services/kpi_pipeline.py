@@ -106,11 +106,16 @@ class KPIPipeline:
         else:
             logger.warning(f"ICD-10 매핑 파일 없음: {icd10_mapping_file}")
 
-        # 수동 진단명 매핑 파일 로드 (폴백)
-        mapping_file = PROJECT_ROOT / "data" / "mapping" / "diagnosis_kdrg44_mapping.xlsx"
+        # 수동 진단명 매핑 파일 로드 (폴백) - 병원별 분리
+        # 대전: 주상병 매핑 제외, 유성: 주상병 매핑 포함
+        if hospital == "유성":
+            mapping_file = PROJECT_ROOT / "data" / "mapping" / "diagnosis_kdrg44_mapping_유성.xlsx"
+        else:  # 대전
+            mapping_file = PROJECT_ROOT / "data" / "mapping" / "diagnosis_kdrg44_mapping_대전.xlsx"
+
         if mapping_file.exists():
             self.kdrg_matcher.load_manual_mapping(mapping_file)
-            logger.info(f"진단명 수동 매핑 로드 완료: {mapping_file}")
+            logger.info(f"진단명 수동 매핑 로드 완료 ({hospital}): {mapping_file.name}")
         else:
             logger.warning(f"진단명 매핑 파일 없음: {mapping_file}")
 

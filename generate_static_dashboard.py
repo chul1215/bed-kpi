@@ -123,7 +123,10 @@ def generate_static_dashboard():
     else:
         print(f"\n⚠️  ICD-10 매핑 파일 없음: {icd10_mapping_file}")
 
-    # 수동 진단명 매핑 로드 (ICD-10 매칭 실패 시 폴백)
+    # ⚠️ 주의: 병원별로 다른 매핑 파일 사용
+    # - 대전: 주상병 매핑 제외 (원본)
+    # - 유성: 주상병 매핑 포함 (주상병현황 그래프 반영)
+    # 일단 공통 매핑만 로드 (병원별 분리는 각 병원 처리 시 수행)
     mapping_file = PROJECT_ROOT / "data" / "mapping" / "diagnosis_kdrg44_mapping.xlsx"
     if mapping_file.exists():
         kdrg_matcher.load_manual_mapping(mapping_file)
