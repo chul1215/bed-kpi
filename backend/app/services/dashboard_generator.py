@@ -32,6 +32,7 @@ class DashboardGenerator:
         self,
         summary_kpi: Dict[str, float],
         doctor_kpis: pd.DataFrame,
+        disease_kpis: pd.DataFrame,
         insights: List[str],
         hospital: str = '대전',
         period: str = 'off_season',
@@ -43,6 +44,7 @@ class DashboardGenerator:
         Args:
             summary_kpi: 요약 KPI 딕셔너리
             doctor_kpis: 의료진별 KPI 데이터프레임
+            disease_kpis: 질환별 KPI 데이터프레임
             insights: 인사이트 리스트
             hospital: 병원명
             period: 기간
@@ -51,7 +53,7 @@ class DashboardGenerator:
         Returns:
             렌더링된 HTML 문자열
         """
-        # 의료진별 질환 TOP 6 추출 (additional_bed_days 기준 정렬, None 제외)
+        # 의료진별 TOP 6 추출 (환자수 기준 정렬)
         doctor_disease_top6 = []
         doctor_all_data = []
         department_list = []
@@ -62,16 +64,30 @@ class DashboardGenerator:
             doctor_kpis_clean['los_gap'] = doctor_kpis_clean['los_gap'].where(pd.notna(doctor_kpis_clean['los_gap']), None)
             doctor_kpis_clean['additional_bed_days'] = doctor_kpis_clean['additional_bed_days'].where(pd.notna(doctor_kpis_clean['additional_bed_days']), None)
 
-            # additional_bed_days가 None이 아닌 것만 필터링 후 정렬
-            doctor_with_data = doctor_kpis_clean[doctor_kpis_clean['additional_bed_days'].notna()]
+            # 환자수 기준 TOP 6
+            doctor_with_data = doctor_kpis_clean[doctor_kpis_clean['patient_count'] > 0]
             if len(doctor_with_data) > 0:
-                doctor_disease_top6 = doctor_with_data.nlargest(6, 'additional_bed_days').to_dict('records')
+                doctor_disease_top6 = doctor_with_data.nlargest(6, 'patient_count').to_dict('records')
 
             # 전체 의료진 데이터 (검색용)
             doctor_all_data = doctor_kpis_clean.to_dict('records')
 
             # 진료과 목록
             department_list = sorted(doctor_kpis['department'].unique().tolist())
+
+        # 진단별 TOP 6 추출 (추가 재원일수 기준 정렬)
+        disease_top6 = []
+        if len(disease_kpis) > 0:
+            # NaN을 None으로 변환
+            disease_kpis_clean = disease_kpis.copy()
+            disease_kpis_clean['los_gap'] = disease_kpis_clean['los_gap'].where(pd.notna(disease_kpis_clean['los_gap']), None)
+            disease_kpis_clean['additional_bed_days'] = disease_kpis_clean['additional_bed_days'].where(pd.notna(disease_kpis_clean['additional_bed_days']), None)
+
+            # 추가 재원일수 기준 TOP 6 (절댓값 기준, 임팩트 큰 순서)
+            disease_with_data = disease_kpis_clean[disease_kpis_clean['additional_bed_days'].notna()]
+            if len(disease_with_data) > 0:
+                disease_with_data['abs_additional_bed_days'] = disease_with_data['additional_bed_days'].abs()
+                disease_top6 = disease_with_data.nlargest(6, 'abs_additional_bed_days').to_dict('records')
 
         # 진료과별 요약 (샘플)
         department_summary = []
@@ -92,6 +108,7 @@ class DashboardGenerator:
             period_name=self._get_period_label(period),
             summary=summary,
             doctor_disease_top6=doctor_disease_top6,
+            disease_top6=disease_top6,
             doctor_all_data=doctor_all_data,
             department_list=department_list,
             department_summary=department_summary,

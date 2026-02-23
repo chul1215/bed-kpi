@@ -1,0 +1,227 @@
+﻿순번,진단명,환자수,ICD코드,ADRG,ADRG명,MDC,계열,DRG코드
+1,바이러스성 및 기타 명시된 장감염,17,A08,G671,"Enteritis, Age ≤18 G67113 W Catastrophic CC",06,,"G67110, G67111, G67112, G67113, G67120, G67121, G67122, G67123, G67130, G67131, G67132, G67133"
+1,바이러스성 및 기타 명시된 장감염,17,A08,P641,"Neonate, Admission Weight 1250-1499g P64100 중증도 구분 없음",15,,P64100
+1,바이러스성 및 기타 명시된 장감염,17,A08,P652,"Neonate, Admission Weight 1500-1999g P65200 중증도 구분 없음",18-2,,P65200
+1,바이러스성 및 기타 명시된 장감염,17,A08,P662,"Neonate, Admission Weight 2000-2499g P66200 중증도 구분 없음",18-2,,P66200
+1,바이러스성 및 기타 명시된 장감염,17,A08,P671,"Neonate, Admission Weight>2499g without P67100 중증도 구분 없음",06,,P67100
+1,바이러스성 및 기타 명시된 장감염,17,A08,P672,"Neonate, Admission Weight>2499g without P67200 중증도 구분 없음",15,,P67200
+1,바이러스성 및 기타 명시된 장감염,17,A08,S630,HIV-Related Infection S63000 중증도 구분 없음,18-1,,S63000
+2,거미막하출혈,16,I60,B011,Complex Cerebral Aneurysm Procedures with Stroke,01,S,"B01100, B01101"
+2,거미막하출혈,16,I60,B015,Embolization of Cerebral Aneurysm with Stroke,01,S,"B01500, B01501, B01502"
+2,거미막하출혈,16,I60,B017,Combined Procedures in Cerebral Aneurysm with Stroke,01,S,B01700
+2,거미막하출혈,16,I60,B021,Intracranial Vascular Procedures with Stroke,01,S,"B02100, B02101, B02102"
+2,거미막하출혈,16,I60,B023,Embolization of Central Nervous System B02301 W Catastrophic CC,15,,"B02300, B02301"
+2,거미막하출혈,16,I60,B092,CNS Stereotactic Procedures in Intracranial Hemorrhage,01,S,"B09200, B09201"
+2,거미막하출혈,16,I60,B093,우선순위,01,S,B09300
+2,거미막하출혈,16,I60,B682,Subarachnoid Hemorrhage B68203 W Catastrophic CC,01,,"B68200, B68201, B68202, B68203"
+2,거미막하출혈,16,I60,P641,"Neonate, Admission Weight 1250-1499g P64100 중증도 구분 없음",15,,P64100
+3,안면신경장애,15,G51,B715,Cranial Nerve Disorders B71503 W Catastrophic CC,01,,"B71500, B71501, B71502, B71503"
+3,안면신경장애,15,G51,B716,Nerve Root and Plexus Disorders B71601 W Catastrophic CC,01,,"B71600, B71601"
+3,안면신경장애,15,G51,B717,Peripheral Nerve Disorders B71702 W Catastrophic or Severe CC,01,,"B71700, B71701, B71702"
+3,안면신경장애,15,G51,G540,"Endoscopy for Digestive System with Chemotherapy, LOS ≧ 2",06,S,"G54000, G54001, G54002"
+3,안면신경장애,15,G51,G570,Percutaneous Drainage of Digestive System Diseases,06,S,"G57000, G57001, G57002"
+3,안면신경장애,15,G51,P641,"Neonate, Admission Weight 1250-1499g P64100 중증도 구분 없음",15,,P64100
+3,안면신경장애,15,G51,P651,"Neonate, Admission Weight 1500-1999g P65100 중증도 구분 없음",15,,P65100
+3,안면신경장애,15,G51,P652,"Neonate, Admission Weight 1500-1999g P65200 중증도 구분 없음",18-2,,P65200
+3,안면신경장애,15,G51,P672,"Neonate, Admission Weight>2499g without P67200 중증도 구분 없음",15,,P67200
+4,결절성 다발동맥염 및 관련 병태,15,M30,I661,Kawasaki Disease I66101 W Catastrophic or Severe CC,15,,"I66100, I66101"
+4,결절성 다발동맥염 및 관련 병태,15,M30,I663,Angiitis I66302 W Catastrophic CC,08,,"I66300, I66301, I66302"
+4,결절성 다발동맥염 및 관련 병태,15,M30,I667,"Other Connective Tissue Diseases, I66712 W Catastrophic CC",08,,"I66710, I66711, I66712, I66720, I66721, I66722"
+4,결절성 다발동맥염 및 관련 병태,15,M30,P672,"Neonate, Admission Weight>2499g without P67200 중증도 구분 없음",15,,P67200
+5,악성 신생물 이외의 병태에 대한 치료후 추적검사,15,Z09,S640,Other HIV S64001 W Catastrophic CC,18-1,,"S64000, S64001"
+5,악성 신생물 이외의 병태에 대한 치료후 추적검사,15,Z09,Z620,Follow-Up Care after Completed Treatment Z62000 중증도 구분 없음,23,,Z62000
+6,"의심되는 질병 및 병태를 위한 의학적 관찰 및 평가, 배제된",15,Z03,E610,Respiratory Tuberculosis E61003 W Catastrophic CC,04,,"E61000, E61001, E61002, E61003"
+6,"의심되는 질병 및 병태를 위한 의학적 관찰 및 평가, 배제된",15,Z03,F780,Chest Pain F78002 W Catastrophic CC,19,,"F78000, F78001, F78002"
+6,"의심되는 질병 및 병태를 위한 의학적 관찰 및 평가, 배제된",15,Z03,R650,Other Neoplastic Diseases R65003 W Catastrophic CC,17,,"R65000, R65001, R65002, R65003"
+6,"의심되는 질병 및 병태를 위한 의학적 관찰 및 평가, 배제된",15,Z03,U680,Stress Reaction and Other Psychiatric U68001 W Catastrophic or Severe CC,19,,"U68000, U68001"
+6,"의심되는 질병 및 병태를 위한 의학적 관찰 및 평가, 배제된",15,Z03,Z640,Other Factors Influencing Health Status Z64002 W Catastrophic CC,23,,"Z64000, Z64001, Z64002"
+7,손가락 및 발가락의 후천변형,15,M20,I142,"Hip and Femur Procedures, Unilateral",08,S,"I14210, I14211, I14220, I14221"
+7,손가락 및 발가락의 후천변형,15,M20,I211,Foot and Ankle Tendon and Ligament Procedures,08,S,I21100
+7,손가락 및 발가락의 후천변형,15,M20,I213,Other Foot and Ankle Procedures,08,S,"I21300, I21301, I21302"
+7,손가락 및 발가락의 후천변형,15,M20,I251,Major Wrist and Hand Procedures,08,S,"I25100, I25101, I25102"
+7,손가락 및 발가락의 후천변형,15,M20,I760,"Other Musculoskeletal Diseases, Age ≤18 I76011 W Catastrophic or Severe CC",08,,"I76010, I76011, I76020, I76021, I76022"
+8,"난소, 난관 및 넓은인대의 비염증성 장애",14,N83,N620,Menstrual and Other Female Reproductive N62003 W Catastrophic CC,13,,"N62000, N62001, N62002, N62003"
+9,달리 분류되지 않은 경련,14,R56,A092,"Tracheostomy for Face, Mouth and Neck Disorders with Short-Term Ventilator",Pre,S,
+9,달리 분류되지 않은 경련,14,R56,B772,Febrile Convulsions B77201 W Catastrophic CC,01,,"B77200, B77201"
+9,달리 분류되지 않은 경련,14,R56,B773,"Other Seizure, Age ≤18 B77312 W Catastrophic CC",01,,"B77310, B77311, B77312, B77320, B77321, B77322, B77323"
+9,달리 분류되지 않은 경련,14,R56,L662,Kidney and Urinary Tract Signs and L66202 W Catastrophic CC,18-1,,"L66200, L66201, L66202"
+10,골괴사,14,M87,I141,"Hip and Femur Procedures, Bilateral or Multiple",08,S,"I14100, I14101, I14102"
+10,골괴사,14,M87,I160,"Humerus, Tibia, and Fibula Procedures",08,S,"I16010, I16020, I16021, I16022"
+10,골괴사,14,M87,I187,Other Shoulder Procedures,08,S,"I18700, I18701"
+10,골괴사,14,M87,I200,Elbow and Forearm Procedures,08,S,"I20000, I20001, I20002"
+10,골괴사,14,M87,I211,Foot and Ankle Tendon and Ligament Procedures,08,S,I21100
+10,골괴사,14,M87,I213,Other Foot and Ankle Procedures,08,S,"I21300, I21301, I21302"
+10,골괴사,14,M87,I251,Major Wrist and Hand Procedures,08,S,"I25100, I25101, I25102"
+10,골괴사,14,M87,I252,Minor Wrist and Hand Procedures,08,S,"I25200, I25201, I25202, I25203"
+10,골괴사,14,M87,I640,Osteomyelitis I64003 W Catastrophic CC,08,,"I64000, I64001, I64002, I64003"
+10,골괴사,14,M87,I696,,08,,"I69600, I69601, I69602"
+10,골괴사,14,M87,P641,"Neonate, Admission Weight 1250-1499g P64100 중증도 구분 없음",15,,P64100
+10,골괴사,14,M87,P651,"Neonate, Admission Weight 1500-1999g P65100 중증도 구분 없음",15,,P65100
+10,골괴사,14,M87,P661,"Neonate, Admission Weight 2000-2499g P66100 중증도 구분 없음",15,,P66100
+10,골괴사,14,M87,P662,"Neonate, Admission Weight 2000-2499g P66200 중증도 구분 없음",18-2,,P66200
+10,골괴사,14,M87,P671,"Neonate, Admission Weight>2499g without P67100 중증도 구분 없음",06,,P67100
+10,골괴사,14,M87,P672,"Neonate, Admission Weight>2499g without P67200 중증도 구분 없음",15,,P67200
+11,기관지 및 폐의 악성 신생물,14,C34,E012,Major Lung Procedures for Malignancy,04,S,"E01200, E01201"
+11,기관지 및 폐의 악성 신생물,14,C34,E671,Respiratory Neoplasm with Radiation E67103 W Catastrophic CC,15,,"E67100, E67101, E67102, E67103"
+11,기관지 및 폐의 악성 신생물,14,C34,E672,Respiratory Neoplasm with Chemotherapy E67203 W Catastrophic CC,03,,"E67200, E67201, E67202, E67203"
+11,기관지 및 폐의 악성 신생물,14,C34,E673,Respiratory Neoplasm without Radiation E67303 W Catastrophic CC,15,,"E67300, E67301, E67302, E67303"
+11,기관지 및 폐의 악성 신생물,14,C34,P641,"Neonate, Admission Weight 1250-1499g P64100 중증도 구분 없음",15,,P64100
+11,기관지 및 폐의 악성 신생물,14,C34,P651,"Neonate, Admission Weight 1500-1999g P65100 중증도 구분 없음",15,,P65100
+11,기관지 및 폐의 악성 신생물,14,C34,P652,"Neonate, Admission Weight 1500-1999g P65200 중증도 구분 없음",18-2,,P65200
+11,기관지 및 폐의 악성 신생물,14,C34,P661,"Neonate, Admission Weight 2000-2499g P66100 중증도 구분 없음",15,,P66100
+11,기관지 및 폐의 악성 신생물,14,C34,P662,"Neonate, Admission Weight 2000-2499g P66200 중증도 구분 없음",18-2,,P66200
+11,기관지 및 폐의 악성 신생물,14,C34,P671,"Neonate, Admission Weight>2499g without P67100 중증도 구분 없음",06,,P67100
+12,기타 빈혈,13,D64,P641,"Neonate, Admission Weight 1250-1499g P64100 중증도 구분 없음",15,,P64100
+12,기타 빈혈,13,D64,P661,"Neonate, Admission Weight 2000-2499g P66100 중증도 구분 없음",15,,P66100
+12,기타 빈혈,13,D64,P672,"Neonate, Admission Weight>2499g without P67200 중증도 구분 없음",15,,P67200
+12,기타 빈혈,13,D64,Q610,"Red Blood Cell Diseases, Age ≤18 Q61011 W Catastrophic or Severe or Moderate",16,,"Q61010, Q61011, Q61020, Q61021, Q61022, Q61023"
+13,기타 변형성 등병증,13,M48,B171,Spinal Fusion with Myelopathy,01,S,"B17100, B17101, B17102, B17103"
+13,기타 변형성 등병증,13,M48,B173,Laminectomy and Diskectomy with Myelopathy,01,S,"B17300, B17301, B17302"
+13,기타 변형성 등병증,13,M48,B175,Other Spinal Procedures with Myelopathy,01,S,"B17500, B17501"
+13,기타 변형성 등병증,13,M48,I081,Spinal Fusion with Myelopathy,08,S,"I08100, I08101, I08102, I08103"
+13,기타 변형성 등병증,13,M48,I083,Laminectomy and Diskectomy with Myelopathy,08,S,"I08300, I08301, I08302, I08303"
+13,기타 변형성 등병증,13,M48,I085,Other Spinal Procedures with Myelopathy,08,S,"I08500, I08501"
+13,기타 변형성 등병증,13,M48,I640,Osteomyelitis I64003 W Catastrophic CC,08,,"I64000, I64001, I64002, I64003"
+13,기타 변형성 등병증,13,M48,I651,"Connective Tissue Malignancy, Including I65102 W Catastrophic CC",08,,"I65100, I65101, I65102"
+13,기타 변형성 등병증,13,M48,I652,"Connective Tissue Malignancy, Including I65210 중증도 구분 없음",08,,"I65210, I65220, I65221, I65222"
+13,기타 변형성 등병증,13,M48,I653,"Connective Tissue Malignancy, Including I65311 W Catastrophic or Severe or Moderate CC",08,,"I65310, I65311, I65320, I65321, I65322, I65323"
+13,기타 변형성 등병증,13,M48,I681,Non-Surgical Neck and Back Conditions I68113 W Catastrophic CC 중증도,08,,"I68110, I68111, I68112, I68113, I68120, I68121, I68122, I68123"
+13,기타 변형성 등병증,13,M48,I682,Non-Surgical Neck and Back Conditions I68213 W Catastrophic CC,08,,"I68210, I68211, I68212, I68213, I68220, I68221, I68222, I68223"
+13,기타 변형성 등병증,13,M48,P641,"Neonate, Admission Weight 1250-1499g P64100 중증도 구분 없음",15,,P64100
+13,기타 변형성 등병증,13,M48,P651,"Neonate, Admission Weight 1500-1999g P65100 중증도 구분 없음",15,,P65100
+13,기타 변형성 등병증,13,M48,P661,"Neonate, Admission Weight 2000-2499g P66100 중증도 구분 없음",15,,P66100
+13,기타 변형성 등병증,13,M48,P662,"Neonate, Admission Weight 2000-2499g P66200 중증도 구분 없음",18-2,,P66200
+13,기타 변형성 등병증,13,M48,P671,"Neonate, Admission Weight>2499g without P67100 중증도 구분 없음",06,,P67100
+13,기타 변형성 등병증,13,M48,P672,"Neonate, Admission Weight>2499g without P67200 중증도 구분 없음",15,,P67200
+14,윤활막염 및 힘줄윤활막염,13,M65,I141,"Hip and Femur Procedures, Bilateral or Multiple",08,S,"I14100, I14101, I14102"
+14,윤활막염 및 힘줄윤활막염,13,M65,I142,"Hip and Femur Procedures, Unilateral",08,S,"I14210, I14211, I14220, I14221"
+14,윤활막염 및 힘줄윤활막염,13,M65,I160,"Humerus, Tibia, and Fibula Procedures",08,S,"I16010, I16020, I16021, I16022"
+14,윤활막염 및 힘줄윤활막염,13,M65,I187,Other Shoulder Procedures,08,S,"I18700, I18701"
+14,윤활막염 및 힘줄윤활막염,13,M65,I194,Other Knee Joint Procedures,08,S,"I19400, I19401, I19402, I19403"
+14,윤활막염 및 힘줄윤활막염,13,M65,I200,Elbow and Forearm Procedures,08,S,"I20000, I20001, I20002"
+14,윤활막염 및 힘줄윤활막염,13,M65,I211,Foot and Ankle Tendon and Ligament Procedures,08,S,I21100
+14,윤활막염 및 힘줄윤활막염,13,M65,I212,Ankle Osteochondral Lesion Procedures,08,S,"I21200, I21201"
+14,윤활막염 및 힘줄윤활막염,13,M65,I213,Other Foot and Ankle Procedures,08,S,"I21300, I21301, I21302"
+14,윤활막염 및 힘줄윤활막염,13,M65,I251,Major Wrist and Hand Procedures,08,S,"I25100, I25101, I25102"
+14,윤활막염 및 힘줄윤활막염,13,M65,I252,Minor Wrist and Hand Procedures,08,S,"I25200, I25201, I25202, I25203"
+14,윤활막염 및 힘줄윤활막염,13,M65,I721,"Infectious Tendinitis, Myositis and Bursitis I72102 W Catastrophic CC",08,,"I72100, I72101, I72102"
+14,윤활막염 및 힘줄윤활막염,13,M65,I722,"Noninfectious Tendinitis, Myositis and I72211 W Catastrophic or Severe or Moderate",08,,"I72210, I72211, I72220, I72221, I72222, I72223"
+15,고체 및 액체에 의한 폐렴,13,J69,E623,Aspiration Pneumonia E62303 W Catastrophic CC,04,,"E62300, E62301, E62302, E62303"
+15,고체 및 액체에 의한 폐렴,13,J69,E630,Lung Abscess E63002 W Catastrophic CC,18-1,,"E63000, E63001, E63002"
+15,고체 및 액체에 의한 폐렴,13,J69,P651,"Neonate, Admission Weight 1500-1999g P65100 중증도 구분 없음",15,,P65100
+16,만성 콩팥병,13,N18,L611,"Chronic Renal Failure, Peritoneal Dialysis, L61112 W Catastrophic CC",11,,"L61110, L61111, L61112, L61120, L61121"
+16,만성 콩팥병,13,N18,P641,"Neonate, Admission Weight 1250-1499g P64100 중증도 구분 없음",15,,P64100
+16,만성 콩팥병,13,N18,P661,"Neonate, Admission Weight 2000-2499g P66100 중증도 구분 없음",15,,P66100
+16,만성 콩팥병,13,N18,P672,"Neonate, Admission Weight>2499g without P67200 중증도 구분 없음",15,,P67200
+17,자궁경부를 제외한 자궁의 기타 비염증성 장애,12,N85,N620,Menstrual and Other Female Reproductive N62003 W Catastrophic CC,13,,"N62000, N62001, N62002, N62003"
+18,달리 분류되지 않은 기타 관절장애,12,M25,I141,"Hip and Femur Procedures, Bilateral or Multiple",08,S,"I14100, I14101, I14102"
+18,달리 분류되지 않은 기타 관절장애,12,M25,I142,"Hip and Femur Procedures, Unilateral",08,S,"I14210, I14211, I14220, I14221"
+18,달리 분류되지 않은 기타 관절장애,12,M25,I187,Other Shoulder Procedures,08,S,"I18700, I18701"
+18,달리 분류되지 않은 기타 관절장애,12,M25,I194,Other Knee Joint Procedures,08,S,"I19400, I19401, I19402, I19403"
+18,달리 분류되지 않은 기타 관절장애,12,M25,I200,Elbow and Forearm Procedures,08,S,"I20000, I20001, I20002"
+18,달리 분류되지 않은 기타 관절장애,12,M25,I211,Foot and Ankle Tendon and Ligament Procedures,08,S,I21100
+18,달리 분류되지 않은 기타 관절장애,12,M25,I212,Ankle Osteochondral Lesion Procedures,08,S,"I21200, I21201"
+18,달리 분류되지 않은 기타 관절장애,12,M25,I213,Other Foot and Ankle Procedures,08,S,"I21300, I21301, I21302"
+18,달리 분류되지 않은 기타 관절장애,12,M25,I251,Major Wrist and Hand Procedures,08,S,"I25100, I25101, I25102"
+18,달리 분류되지 않은 기타 관절장애,12,M25,I252,Minor Wrist and Hand Procedures,08,S,"I25200, I25201, I25202, I25203"
+18,달리 분류되지 않은 기타 관절장애,12,M25,I695,Gout and Specific Arthropathies I69503 W Catastrophic CC,08,,"I69500, I69501, I69502, I69503"
+18,달리 분류되지 않은 기타 관절장애,12,M25,I710,Musculotendinous Disorders I71003 W Catastrophic CC,08,,"I71000, I71001, I71002, I71003"
+18,달리 분류되지 않은 기타 관절장애,12,M25,I760,"Other Musculoskeletal Diseases, Age ≤18 I76011 W Catastrophic or Severe CC",08,,"I76010, I76011, I76020, I76021, I76022"
+18,달리 분류되지 않은 기타 관절장애,12,M25,P641,"Neonate, Admission Weight 1250-1499g P64100 중증도 구분 없음",15,,P64100
+18,달리 분류되지 않은 기타 관절장애,12,M25,P651,"Neonate, Admission Weight 1500-1999g P65100 중증도 구분 없음",15,,P65100
+18,달리 분류되지 않은 기타 관절장애,12,M25,P652,"Neonate, Admission Weight 1500-1999g P65200 중증도 구분 없음",18-2,,P65200
+18,달리 분류되지 않은 기타 관절장애,12,M25,P661,"Neonate, Admission Weight 2000-2499g P66100 중증도 구분 없음",15,,P66100
+18,달리 분류되지 않은 기타 관절장애,12,M25,P662,"Neonate, Admission Weight 2000-2499g P66200 중증도 구분 없음",18-2,,P66200
+18,달리 분류되지 않은 기타 관절장애,12,M25,P671,"Neonate, Admission Weight>2499g without P67100 중증도 구분 없음",06,,P67100
+18,달리 분류되지 않은 기타 관절장애,12,M25,P672,"Neonate, Admission Weight>2499g without P67200 중증도 구분 없음",15,,P67200
+19,U07의 응급사용,12,U07,E701,Respiratory Failure E70101 W Catastrophic CC,04,,"E70100, E70101"
+19,U07의 응급사용,12,U07,T015,OR Procedures for Other Infectious Diseases,18-2,S,"T01500, T01501"
+20,화농성 관절염,11,M00,I141,"Hip and Femur Procedures, Bilateral or Multiple",08,S,"I14100, I14101, I14102"
+20,화농성 관절염,11,M00,I142,"Hip and Femur Procedures, Unilateral",08,S,"I14210, I14211, I14220, I14221"
+20,화농성 관절염,11,M00,I187,Other Shoulder Procedures,08,S,"I18700, I18701"
+20,화농성 관절염,11,M00,I194,Other Knee Joint Procedures,08,S,"I19400, I19401, I19402, I19403"
+20,화농성 관절염,11,M00,I200,Elbow and Forearm Procedures,08,S,"I20000, I20001, I20002"
+20,화농성 관절염,11,M00,I211,Foot and Ankle Tendon and Ligament Procedures,08,S,I21100
+20,화농성 관절염,11,M00,I212,Ankle Osteochondral Lesion Procedures,08,S,"I21200, I21201"
+20,화농성 관절염,11,M00,I213,Other Foot and Ankle Procedures,08,S,"I21300, I21301, I21302"
+20,화농성 관절염,11,M00,I251,Major Wrist and Hand Procedures,08,S,"I25100, I25101, I25102"
+20,화농성 관절염,11,M00,I252,Minor Wrist and Hand Procedures,08,S,"I25200, I25201, I25202, I25203"
+20,화농성 관절염,11,M00,I670,Septic Arthritis I67002 W Catastrophic CC,08,,"I67000, I67001, I67002"
+20,화농성 관절염,11,M00,P641,"Neonate, Admission Weight 1250-1499g P64100 중증도 구분 없음",15,,P64100
+20,화농성 관절염,11,M00,P651,"Neonate, Admission Weight 1500-1999g P65100 중증도 구분 없음",15,,P65100
+20,화농성 관절염,11,M00,P652,"Neonate, Admission Weight 1500-1999g P65200 중증도 구분 없음",18-2,,P65200
+20,화농성 관절염,11,M00,P661,"Neonate, Admission Weight 2000-2499g P66100 중증도 구분 없음",15,,P66100
+20,화농성 관절염,11,M00,P662,"Neonate, Admission Weight 2000-2499g P66200 중증도 구분 없음",18-2,,P66200
+20,화농성 관절염,11,M00,P671,"Neonate, Admission Weight>2499g without P67100 중증도 구분 없음",06,,P67100
+20,화농성 관절염,11,M00,P672,"Neonate, Admission Weight>2499g without P67200 중증도 구분 없음",15,,P67200
+20,화농성 관절염,11,M00,S640,Other HIV S64001 W Catastrophic CC,18-1,,"S64000, S64001"
+21,급성 림프절염,11,L04,J621,Bullous Diseases J62101 W Catastrophic or Severe CC,09,,"J62100, J62101"
+21,급성 림프절염,11,L04,L120,Other Percutaneous Procedures of Kidney and Urinary Tract Diseases,11,S,"L12000, L12001, L12002"
+21,급성 림프절염,11,L04,P641,"Neonate, Admission Weight 1250-1499g P64100 중증도 구분 없음",15,,P64100
+21,급성 림프절염,11,L04,P651,"Neonate, Admission Weight 1500-1999g P65100 중증도 구분 없음",15,,P65100
+21,급성 림프절염,11,L04,P652,"Neonate, Admission Weight 1500-1999g P65200 중증도 구분 없음",18-2,,P65200
+21,급성 림프절염,11,L04,P661,"Neonate, Admission Weight 2000-2499g P66100 중증도 구분 없음",15,,P66100
+21,급성 림프절염,11,L04,P662,"Neonate, Admission Weight 2000-2499g P66200 중증도 구분 없음",18-2,,P66200
+21,급성 림프절염,11,L04,P671,"Neonate, Admission Weight>2499g without P67100 중증도 구분 없음",06,,P67100
+21,급성 림프절염,11,L04,P672,"Neonate, Admission Weight>2499g without P67200 중증도 구분 없음",15,,P67200
+21,급성 림프절염,11,L04,Q600,"Leukocytes and Blood-Forming Organs, Q60013 W Catastrophic CC",16,,"Q60010, Q60011, Q60012, Q60013, Q60020, Q60021, Q60022, Q60023"
+22,피부 및 피하조직의 모낭낭,10,L72,J700,Other Minor Skin Diseases J70003 W Catastrophic CC,09,,"J70000, J70001, J70002, J70003"
+23,위염 및 십이지장염,10,K29,G213,Open Appendectomy with Complicated Principal Diagnoses,06,S,"G21300, G21301, G21302"
+23,위염 및 십이지장염,10,K29,G503,Gastroscopy for Major Digestive Diseases,06,S,"G50300, G50301, G50302, G50303"
+23,위염 및 십이지장염,10,K29,G672,"Esophagitis and Gastroduodenitis, Age G67211 W Catastrophic or Severe CC",06,,"G67210, G67211, G67220, G67221, G67222"
+23,위염 및 십이지장염,10,K29,P641,"Neonate, Admission Weight 1250-1499g P64100 중증도 구분 없음",15,,P64100
+23,위염 및 십이지장염,10,K29,P651,"Neonate, Admission Weight 1500-1999g P65100 중증도 구분 없음",15,,P65100
+23,위염 및 십이지장염,10,K29,P652,"Neonate, Admission Weight 1500-1999g P65200 중증도 구분 없음",18-2,,P65200
+23,위염 및 십이지장염,10,K29,P661,"Neonate, Admission Weight 2000-2499g P66100 중증도 구분 없음",15,,P66100
+23,위염 및 십이지장염,10,K29,P671,"Neonate, Admission Weight>2499g without P67100 중증도 구분 없음",06,,P67100
+24,전음성 및 감각신경성 청력소실,10,H90,D650,"Hearing Impairment, Age ≤18 D65010 중증도 구분 없음",03,,"D65010, D65020, D65021, D65022"
+24,전음성 및 감각신경성 청력소실,10,H90,F121,Percutaneous Coronary Artery Procedures F12102 W Catastrophic CC,05,,"F12100, F12101, F12102"
+24,전음성 및 감각신경성 청력소실,10,H90,F730,Valvular Diseases F73002 W Catastrophic CC,19,,"F73000, F73001, F73002"
+24,전음성 및 감각신경성 청력소실,10,H90,F800,Other Circulatory System Diseases F80003 W Catastrophic CC,05,,"F80000, F80001, F80002, F80003"
+24,전음성 및 감각신경성 청력소실,10,H90,I011,Bilateral or Multiple Major Joint Procedures(Replacement),08,S,"I01100, I01101"
+24,전음성 및 감각신경성 청력소실,10,H90,I012,Bilateral or Multiple Major Joint Procedures(Except Replacement),08,S,"I01200, I01201, I01202"
+24,전음성 및 감각신경성 청력소실,10,H90,I050,Vascularized Osteocutaneous Free Flap and Limb Reattachment Procedures,08,S,I05000
+24,전음성 및 감각신경성 청력소실,10,H90,P661,"Neonate, Admission Weight 2000-2499g P66100 중증도 구분 없음",15,,P66100
+24,전음성 및 감각신경성 청력소실,10,H90,P672,"Neonate, Admission Weight>2499g without P67200 중증도 구분 없음",15,,P67200
+25,비화농성 중이염,9,H65,D621,Inner and Middle Ear Infections and D62100 중증도 구분 없음,03,,D62100
+25,비화농성 중이염,9,H65,D622,Inner and Middle Ear Infections and D62201 W Catastrophic CC,08,,"D62200, D62201"
+25,비화농성 중이염,9,H65,H671,Other Hepatitis with Complications H67101 W Catastrophic CC,07,,"H67100, H67101"
+25,비화농성 중이염,9,H65,H701,Diseases of Biliary Tract with H70113 W Catastrophic CC,03,,"H70110, H70111, H70112, H70113, H70120, H70121, H70122, H70123"
+25,비화농성 중이염,9,H65,P641,"Neonate, Admission Weight 1250-1499g P64100 중증도 구분 없음",15,,P64100
+25,비화농성 중이염,9,H65,P651,"Neonate, Admission Weight 1500-1999g P65100 중증도 구분 없음",15,,P65100
+25,비화농성 중이염,9,H65,P652,"Neonate, Admission Weight 1500-1999g P65200 중증도 구분 없음",18-2,,P65200
+25,비화농성 중이염,9,H65,P661,"Neonate, Admission Weight 2000-2499g P66100 중증도 구분 없음",15,,P66100
+25,비화농성 중이염,9,H65,P662,"Neonate, Admission Weight 2000-2499g P66200 중증도 구분 없음",18-2,,P66200
+25,비화농성 중이염,9,H65,P671,"Neonate, Admission Weight>2499g without P67100 중증도 구분 없음",06,,P67100
+25,비화농성 중이염,9,H65,P672,"Neonate, Admission Weight>2499g without P67200 중증도 구분 없음",15,,P67200
+26,난소의 악성 신생물,9,C56,N041,Laparoscopic Ovarian and Adnexa Procedures for Malignancy,13,S,"N04100, N04101, N04102"
+26,난소의 악성 신생물,9,C56,N601,Malignant Neoplasms of Female N60102 W Catastrophic or Severe CC,15,,"N60100, N60101, N60102"
+26,난소의 악성 신생물,9,C56,N603,Malignant Neoplasms of Female N60303 W Catastrophic CC,09,,"N60300, N60301, N60302, N60303"
+26,난소의 악성 신생물,9,C56,P641,"Neonate, Admission Weight 1250-1499g P64100 중증도 구분 없음",15,,P64100
+26,난소의 악성 신생물,9,C56,P651,"Neonate, Admission Weight 1500-1999g P65100 중증도 구분 없음",15,,P65100
+26,난소의 악성 신생물,9,C56,P661,"Neonate, Admission Weight 2000-2499g P66100 중증도 구분 없음",15,,P66100
+26,난소의 악성 신생물,9,C56,P671,"Neonate, Admission Weight>2499g without P67100 중증도 구분 없음",06,,P67100
+26,난소의 악성 신생물,9,C56,P672,"Neonate, Admission Weight>2499g without P67200 중증도 구분 없음",15,,P67200
+27,달리 분류되지 않은 생체역학적 병변,9,M99,I681,Non-Surgical Neck and Back Conditions I68113 W Catastrophic CC 중증도,08,,"I68110, I68111, I68112, I68113, I68120, I68121, I68122, I68123"
+27,달리 분류되지 않은 생체역학적 병변,9,M99,I682,Non-Surgical Neck and Back Conditions I68213 W Catastrophic CC,08,,"I68210, I68211, I68212, I68213, I68220, I68221, I68222, I68223"
+27,달리 분류되지 않은 생체역학적 병변,9,M99,I710,Musculotendinous Disorders I71003 W Catastrophic CC,08,,"I71000, I71001, I71002, I71003"
+27,달리 분류되지 않은 생체역학적 병변,9,M99,L622,Non-Infectious Kidney Diseases without L62213 W Catastrophic CC,00,,"L62210, L62211, L62212, L62213, L62220, L62221, L62222, L62223"
+27,달리 분류되지 않은 생체역학적 병변,9,M99,S640,Other HIV S64001 W Catastrophic CC,18-1,,"S64000, S64001"
+28,자반 및 기타 출혈성 병태,9,D69,D800,Pharynx Diseases D80000 중증도 구분 없음,03,,D80000
+28,자반 및 기타 출혈성 병태,9,D69,P641,"Neonate, Admission Weight 1250-1499g P64100 중증도 구분 없음",15,,P64100
+28,자반 및 기타 출혈성 병태,9,D69,P651,"Neonate, Admission Weight 1500-1999g P65100 중증도 구분 없음",15,,P65100
+28,자반 및 기타 출혈성 병태,9,D69,P652,"Neonate, Admission Weight 1500-1999g P65200 중증도 구분 없음",18-2,,P65200
+28,자반 및 기타 출혈성 병태,9,D69,P661,"Neonate, Admission Weight 2000-2499g P66100 중증도 구분 없음",15,,P66100
+28,자반 및 기타 출혈성 병태,9,D69,P672,"Neonate, Admission Weight>2499g without P67200 중증도 구분 없음",15,,P67200
+28,자반 및 기타 출혈성 병태,9,D69,Q600,"Leukocytes and Blood-Forming Organs, Q60013 W Catastrophic CC",16,,"Q60010, Q60011, Q60012, Q60013, Q60020, Q60021, Q60022, Q60023"
+28,자반 및 기타 출혈성 병태,9,D69,Q620,"Coagulation Disorders, Age ≤18 Q62011 W Catastrophic CC",16,,"Q62010, Q62011, Q62020, Q62021, Q62022"
+28,자반 및 기타 출혈성 병태,9,D69,S640,Other HIV S64001 W Catastrophic CC,18-1,,"S64000, S64001"
+29,하지의 정맥류,9,I83,F691,Varicose Vein F69100 중증도 구분 없음,05,,F69100
+29,하지의 정맥류,9,I83,P651,"Neonate, Admission Weight 1500-1999g P65100 중증도 구분 없음",15,,P65100
+29,하지의 정맥류,9,I83,P652,"Neonate, Admission Weight 1500-1999g P65200 중증도 구분 없음",18-2,,P65200
+29,하지의 정맥류,9,I83,P661,"Neonate, Admission Weight 2000-2499g P66100 중증도 구분 없음",15,,P66100
+29,하지의 정맥류,9,I83,P662,"Neonate, Admission Weight 2000-2499g P66200 중증도 구분 없음",18-2,,P66200
+30,췌장의 기타 질환,9,K86,G523,Colonoscopy for Major Digestive Diseases,06,S,"G52300, G52301, G52302, G52303"
+30,췌장의 기타 질환,9,K86,G613,Other Gastrointestinal Hemorrhage without G61313 W Catastrophic CC,00,,"G61310, G61311, G61312, G61313, G61320, G61321, G61322, G61323"
+30,췌장의 기타 질환,9,K86,H641,Diseases of Pancreas except Malignancy H64100 중증도 구분 없음,07,,H64100
+30,췌장의 기타 질환,9,K86,P672,"Neonate, Admission Weight>2499g without P67200 중증도 구분 없음",15,,P67200

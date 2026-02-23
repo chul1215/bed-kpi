@@ -86,13 +86,20 @@ class Aggregator:
         if period:
             filtered_df = filtered_df[filtered_df['period'] == period]
 
-        # 의료진별 집계
-        agg_df = filtered_df.groupby(['doctor', 'department', 'hospital']).agg({
+        # 의료진별 집계 (진료과 통합 - 의사가 진단한 모든 진단명 기준)
+        agg_df = filtered_df.groupby(['doctor', 'hospital']).agg({
             'los_days': 'sum',          # 병상일수 합계
-            'discharge_date': 'count'   # 환자수
+            'discharge_date': 'count',  # 환자수
+            'department': lambda x: ', '.join(sorted(x.unique()))  # 모든 진료과 표시
         }).reset_index()
 
-        agg_df.columns = ['doctor', 'department', 'hospital', 'total_bed_days', 'patient_count']
+        agg_df.columns = ['doctor', 'hospital', 'total_bed_days', 'patient_count', 'department']
+
+        # 김원형 진료과를 SC로 수동 설정
+        agg_df.loc[agg_df['doctor'] == '김원형', 'department'] = 'SC'
+
+        # department 컬럼을 올바른 위치로 이동 (doctor, department, hospital 순서 유지)
+        agg_df = agg_df[['doctor', 'department', 'hospital', 'total_bed_days', 'patient_count']]
 
         # 현재 LOS 계산
         agg_df['current_los'] = agg_df['total_bed_days'] / agg_df['patient_count']

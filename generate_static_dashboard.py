@@ -207,7 +207,7 @@ def generate_static_dashboard():
 
             # 1. 홈 화면
             home_html = dashboard_gen.render_home(
-                summary_kpi, doctor_kpis, insights, hospital, period, doctor_disease_dict
+                summary_kpi, doctor_kpis, disease_kpis, insights, hospital, period, doctor_disease_dict
             )
 
             # 정적 HTML용 네비게이션 스크립트 생성

@@ -103,6 +103,85 @@
     {% endif %}
 </div>
 
+<!-- 진단별 랭킹 TOP 6 -->
+<div class="card mb-4">
+    <div class="card-title">
+        <i class="bi bi-clipboard-pulse"></i>
+        진단별 랭킹 TOP 6 (임팩트 기준)
+    </div>
+
+    {% if disease_top6|length > 0 %}
+    <div class="table-container" style="overflow-x: auto;">
+        <table style="font-size: 13px; width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid rgba(52, 152, 219, 0.3);">
+                    <th style="width: 60px; text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase;">순위</th>
+                    <th style="text-align: left; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase;">진단명</th>
+                    <th style="text-align: right; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase;">환자수</th>
+                    <th style="text-align: right; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase;">현재 LOS</th>
+                    <th style="text-align: right; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase;">목표 LOS</th>
+                    <th style="text-align: right; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase;">LOS 갭</th>
+                    <th style="text-align: right; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase;">추가 재원일수</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in disease_top6 %}
+                <tr style="border-bottom: 1px solid rgba(52, 152, 219, 0.1); transition: background-color 0.12s ease;"
+                    onmouseover="this.style.backgroundColor='rgba(124, 221, 255, 0.07)'"
+                    onmouseout="this.style.backgroundColor='transparent'">
+                    <td style="text-align: center; padding: 12px 10px;">
+                        <strong style="color: #3498db; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px;">{{ loop.index }}</strong>
+                    </td>
+                    <td style="text-align: left; padding: 12px 10px;">
+                        <span style="color: var(--white); font-family: 'Consolas', 'Monaco', monospace; font-weight: 600;">
+                            {{ item.diagnosis if item.diagnosis is defined else item.get('diagnosis', 'N/A') }}
+                        </span>
+                    </td>
+                    <td style="text-align: right; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: var(--white);">
+                        {{ "{:,}".format(item.patient_count if item.patient_count is defined else item.get('patient_count', 0)) }}
+                    </td>
+                    <td style="text-align: right; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: var(--white);">
+                        {% if (item.current_los if item.current_los is defined else item.get('current_los')) is not none %}
+                            {{ "%.1f"|format(item.current_los if item.current_los is defined else item.get('current_los', 0)) }}
+                        {% else %}
+                            <span style="color: #95a5a6;">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #3498db;">
+                        {% if (item.target_los if item.target_los is defined else item.get('target_los')) is not none %}
+                            {{ "%.1f"|format(item.target_los if item.target_los is defined else item.get('target_los', 0)) }}
+                        {% else %}
+                            <span style="color: #95a5a6;">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600;">
+                        {% if (item.los_gap if item.los_gap is defined else item.get('los_gap')) is not none %}
+                            {% if (item.los_gap if item.los_gap is defined else item.get('los_gap', 0)) >= 0 %}
+                                <span style="color: #27ae60;">+{{ "%.2f"|format(item.los_gap if item.los_gap is defined else item.get('los_gap', 0)) }}</span>
+                            {% else %}
+                                <span style="color: #e74c3c;">{{ "%.2f"|format(item.los_gap if item.los_gap is defined else item.get('los_gap', 0)) }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span style="color: #95a5a6;">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: var(--white);">
+                        {% if (item.additional_bed_days if item.additional_bed_days is defined else item.get('additional_bed_days')) is not none %}
+                            {{ "{:,.0f}".format(item.additional_bed_days if item.additional_bed_days is defined else item.get('additional_bed_days', 0)) }}
+                        {% else %}
+                            <span style="color: #95a5a6;">N/A</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-secondary); padding: 20px; text-align: center;">데이터가 없습니다.</p>
+    {% endif %}
+</div>
+
 <!-- 진료과/의료진 선택 및 검색 -->
 <div class="card mb-4">
     <div class="card-title">
@@ -182,9 +261,9 @@ function filterDoctors() {
 
     let filtered = allDoctors;
 
-    // 진료과 필터
+    // 진료과 필터 (여러 진료과를 담당하는 의사 포함)
     if (department) {
-        filtered = filtered.filter(d => d.department === department);
+        filtered = filtered.filter(d => d.department && d.department.includes(department));
     }
 
     // 이름 검색
