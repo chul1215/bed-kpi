@@ -161,12 +161,12 @@ def generate_static_dashboard():
         print(f"{hospital}선병원 데이터 처리 시작")
         print(f"{'=' * 80}")
 
-        # KPI 계산 (4분기 필터링)
+        # KPI 계산 (연간 전체 데이터)
         result = pipeline.run_pipeline(
             str(hira_file),
             str(smc_file),
             hospital,
-            filter_quarter=4  # HIRA 4분기 데이터와 일치
+            filter_quarter=None  # 연간 전체 데이터 사용
         )
 
         print(f"\n✅ KPI 계산 완료:")

@@ -159,15 +159,22 @@ class KPIPipeline:
 
         # 6. 요약 KPI 생성 (기간별)
         logger.info("6. 요약 KPI 생성")
+
+        # 기간별 원본 데이터 추출
+        smc_off_season = smc_df[smc_df['period'] == 'off_season']
+        smc_normal = smc_df[smc_df['period'] == 'normal']
+
         summary_kpi_off = self._calculate_summary_kpi_for_period(
             disease_kpis_off['doctor_kpis'],
             hospital,
-            'off_season'
+            'off_season',
+            smc_off_season
         )
         summary_kpi_normal = self._calculate_summary_kpi_for_period(
             disease_kpis_normal['doctor_kpis'],
             hospital,
-            'normal'
+            'normal',
+            smc_normal
         )
 
         # 7. 인사이트 생성
@@ -293,24 +300,33 @@ class KPIPipeline:
         self,
         doctor_kpis: pd.DataFrame,
         hospital: str,
-        period: str
+        period: str,
+        period_smc_df: pd.DataFrame = None
     ) -> Dict:
         """기간별 요약 KPI 계산"""
 
         if len(doctor_kpis) > 0:
             valid_doctors = doctor_kpis[doctor_kpis['status'] == 'calculated']
 
-            # 단순 평균 재원일수 (환자수 가중치 없이)
-            simple_avg_current_los = valid_doctors['current_los'].mean() if len(valid_doctors) > 0 else 0
-            simple_avg_target_los = valid_doctors['target_los'].mean() if len(valid_doctors) > 0 else 0
+            # 병원별 전체 평균 재원일수 (원본 환자 데이터 기반)
+            if period_smc_df is not None and len(period_smc_df) > 0:
+                total_bed_days = period_smc_df['los_days'].sum()
+                patient_count = len(period_smc_df)
+                simple_avg_current_los = total_bed_days / patient_count if patient_count > 0 else 0
+            else:
+                # 원본 데이터 없으면 doctor_kpis에서 계산
+                total_bed_days = doctor_kpis['total_bed_days'].sum()
+                patient_count = doctor_kpis['patient_count'].sum()
+                simple_avg_current_los = total_bed_days / patient_count if patient_count > 0 else 0
+
+            # 심평원 전체 평균 재원일수 (고정값)
+            simple_avg_target_los = 7.82
 
             total_additional_bed_days = valid_doctors['additional_bed_days'].sum() if len(valid_doctors) > 0 else 0
-            patient_count = doctor_kpis['patient_count'].sum()
 
             # 가동률 계산
             bed_count = 300 if hospital == "대전" else 250
             period_days = 122 if period == 'off_season' else 243  # 비수기 122일, 통상기간 243일
-            total_bed_days = doctor_kpis['total_bed_days'].sum()
             available_bed_days = bed_count * period_days
 
             current_utilization_rate = (total_bed_days / available_bed_days) * 100 if available_bed_days > 0 else 0
@@ -318,7 +334,7 @@ class KPIPipeline:
             target_utilization_rate = (target_bed_days / available_bed_days) * 100 if available_bed_days > 0 else 0
         else:
             simple_avg_current_los = 0
-            simple_avg_target_los = 0
+            simple_avg_target_los = 7.82
             total_additional_bed_days = 0
             patient_count = 0
             current_utilization_rate = 0
