@@ -483,15 +483,17 @@ class KPICalculator:
 
         if valid_kpis.empty:
             return {
-                'average_los_gap': 0,
+                'simple_avg_current_los': 0,
+                'simple_avg_target_los': 0,
                 'total_additional_bed_days': 0,
                 'current_utilization_rate': 0,
                 'target_utilization_rate': 0,
                 'patient_count': 0
             }
 
-        # 평균 LOS 갭
-        average_los_gap = valid_kpis['los_gap'].mean()
+        # 단순 평균 재원일수 (환자수 가중치 없이)
+        simple_avg_current_los = valid_kpis['current_los'].mean()
+        simple_avg_target_los = valid_kpis['target_los'].mean()
 
         # 추가 병상일수 합계
         total_additional_bed_days = valid_kpis['additional_bed_days'].sum()
@@ -509,7 +511,8 @@ class KPICalculator:
         total_patient_count = valid_kpis['patient_count'].sum()
 
         return {
-            'average_los_gap': round(average_los_gap, 2),
+            'simple_avg_current_los': round(simple_avg_current_los, 2),
+            'simple_avg_target_los': round(simple_avg_target_los, 2),
             'total_additional_bed_days': round(total_additional_bed_days, 0),
             'current_utilization_rate': round(current_utilization_rate, 1),
             'target_utilization_rate': round(target_utilization_rate, 1),

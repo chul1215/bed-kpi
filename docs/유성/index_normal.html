@@ -401,7 +401,19 @@
     <!-- 메인 컨텐츠 -->
     <main class="container" style="padding-top: 32px; padding-bottom: 32px;">
 <!-- Summary KPI 카드 -->
-<div class="kpi-grid">
+<div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="kpi-card">
+        <div class="kpi-label">평균 재원일수 갭</div>
+        <div class="kpi-value">
+                <span style="color: #e74c3c;">-0.00</span>
+            <span class="kpi-unit">일</span>
+        </div>
+        <div class="kpi-change secondary">
+            <i class="bi bi-calendar-check"></i>
+            단순 평균 비교 (환자수 무관)
+        </div>
+    </div>
+
     <div class="kpi-card">
         <div class="kpi-label">추가 재원일수</div>
         <div class="kpi-value">

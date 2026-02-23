@@ -93,7 +93,8 @@ class DashboardGenerator:
 
         # Summary 키 매핑
         summary = {
-            'avg_los_gap': summary_kpi.get('average_los_gap', 0),
+            'simple_avg_current_los': summary_kpi.get('simple_avg_current_los', 0),
+            'simple_avg_target_los': summary_kpi.get('simple_avg_target_los', 0),
             'total_additional_bed_days': summary_kpi.get('total_additional_bed_days', 0),
             'patient_count': summary_kpi.get('patient_count', 0),
             'occupancy_improvement': summary_kpi.get('target_utilization_rate', 0) - summary_kpi.get('current_utilization_rate', 0)

@@ -4,7 +4,26 @@
 
 {% block content %}
 <!-- Summary KPI 카드 -->
-<div class="kpi-grid">
+<div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="kpi-card">
+        <div class="kpi-label">평균 재원일수 갭</div>
+        <div class="kpi-value">
+            {% set current = summary.simple_avg_current_los if summary.simple_avg_current_los is not none else 0 %}
+            {% set target = summary.simple_avg_target_los if summary.simple_avg_target_los is not none else 0 %}
+            {% set gap = target - current %}
+            {% if gap >= 0 %}
+                <span style="color: #27ae60;">+{{ "%.2f"|format(gap) }}</span>
+            {% else %}
+                <span style="color: #e74c3c;">{{ "%.2f"|format(gap) }}</span>
+            {% endif %}
+            <span class="kpi-unit">일</span>
+        </div>
+        <div class="kpi-change secondary">
+            <i class="bi bi-calendar-check"></i>
+            단순 평균 비교 (환자수 무관)
+        </div>
+    </div>
+
     <div class="kpi-card">
         <div class="kpi-label">추가 재원일수</div>
         <div class="kpi-value">

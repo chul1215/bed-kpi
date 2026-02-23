@@ -299,7 +299,11 @@ class KPIPipeline:
 
         if len(doctor_kpis) > 0:
             valid_doctors = doctor_kpis[doctor_kpis['status'] == 'calculated']
-            avg_los_gap = valid_doctors['los_gap'].mean() if len(valid_doctors) > 0 else 0
+
+            # 단순 평균 재원일수 (환자수 가중치 없이)
+            simple_avg_current_los = valid_doctors['current_los'].mean() if len(valid_doctors) > 0 else 0
+            simple_avg_target_los = valid_doctors['target_los'].mean() if len(valid_doctors) > 0 else 0
+
             total_additional_bed_days = valid_doctors['additional_bed_days'].sum() if len(valid_doctors) > 0 else 0
             patient_count = doctor_kpis['patient_count'].sum()
 
@@ -313,14 +317,16 @@ class KPIPipeline:
             target_bed_days = total_bed_days + total_additional_bed_days
             target_utilization_rate = (target_bed_days / available_bed_days) * 100 if available_bed_days > 0 else 0
         else:
-            avg_los_gap = 0
+            simple_avg_current_los = 0
+            simple_avg_target_los = 0
             total_additional_bed_days = 0
             patient_count = 0
             current_utilization_rate = 0
             target_utilization_rate = 0
 
         return {
-            'average_los_gap': avg_los_gap,
+            'simple_avg_current_los': simple_avg_current_los,
+            'simple_avg_target_los': simple_avg_target_los,
             'total_additional_bed_days': total_additional_bed_days,
             'current_utilization_rate': current_utilization_rate,
             'target_utilization_rate': target_utilization_rate,

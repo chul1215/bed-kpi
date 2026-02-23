@@ -150,6 +150,9 @@ class FileParser:
 
             logger.info(f"SMC 파일 읽기 완료: {len(df)}건")
 
+            # ADRG 컬럼 있는지 확인
+            has_adrg_col = 'ADRG' in df.columns
+
             # 필수 컬럼 확인
             required_cols = list(RequiredColumns.SMC.keys())
             missing_cols = [col for col in required_cols if col not in df.columns]
@@ -180,13 +183,26 @@ class FileParser:
             df['퇴원과'] = df['퇴원과'].astype(str).str.strip()
             df['진단명'] = df['진단명'].astype(str).str.strip()
 
-            # 5. NaN 값이 있는 행 제거
+            # 5. ADRG 컬럼 정제 (있는 경우)
+            if has_adrg_col:
+                df['ADRG'] = df['ADRG'].astype(str).str.strip()
+                logger.info(f"ADRG 컬럼 발견: {df['ADRG'].nunique()}개 고유 코드")
+
+            # 6. NaN 값이 있는 행 제거
             df = df.dropna(subset=['퇴원일자', '평균재원', '진단명', '의사명'])
 
             logger.info(f"SMC 데이터 정제 완료: {len(df)}건")
 
-            # 컬럼명 변경
-            df = df.rename(columns=RequiredColumns.SMC)
+            # 컬럼명 변경 (ADRG 제외, 나중에 추가)
+            rename_map = RequiredColumns.SMC.copy()
+            if has_adrg_col and 'ADRG' not in rename_map:
+                # ADRG 컬럼은 그대로 유지 (나중에 adrg_code로 변경)
+                pass
+            df = df.rename(columns=rename_map)
+
+            # ADRG 컬럼을 adrg_code로 변경
+            if has_adrg_col and 'ADRG' in df.columns:
+                df = df.rename(columns={'ADRG': 'adrg_code'})
 
             # 기준월 추출 (YYYY-MM 형식)
             df['month'] = df['discharge_date'].dt.to_period('M').astype(str)

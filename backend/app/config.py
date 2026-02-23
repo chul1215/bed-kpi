@@ -30,7 +30,7 @@ class Settings(BaseSettings):
 
     # 사전 식립 데이터 경로 (프로젝트 루트 기준)
     PRELOADED_HIRA_FILE: Path = PROJECT_ROOT / "data/hira/2025_4분기_종합병원_ADRG별_평균재원)_20260220111626.xlsx"
-    PRELOADED_SMC_FILE: Path = PROJECT_ROOT / "data/smc/25년도 대전, 유성 의사별 퇴원진단(26.01.28_방하나).xlsx"
+    PRELOADED_SMC_FILE: Path = PROJECT_ROOT / "data/smc/25년도_대전_유성_의사별_퇴원진단_KDRG46_ADRG추가.xlsx"  # ADRG 코드 포함
     PRELOADED_KDRG_FILE: Path = PROJECT_ROOT / "data/KDRG 버전4.4_질병군명칭_20221101(변동없음).xlsx"
     ENABLE_PRELOADED_DATA: bool = True  # 사전 식립 데이터 활성화
 
