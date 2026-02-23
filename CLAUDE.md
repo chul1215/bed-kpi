@@ -99,12 +99,12 @@ backend/app/
 - `parse_smc_file(filter_quarter=None)`: SMC 데이터 파싱 + 분기 필터링 (Sheet1, 33,853건)
 - `validate_files()`: 데이터 유효성 검증
 
-**kdrg_matcher.py** - ICD-10 + 진단명 기반 DRG 매칭:
-- `load_kdrg_table()`: KDRG 테이블 로드
-- `load_icd10_mapping()`: ICD-10 → ADRG 자동 매핑 로드 (282개)
-- `load_manual_mapping()`: 진단명 수동 매핑 로드 (164개)
-- `match_smc_to_hira()`: SMC와 HIRA 매칭 (ICD-10 우선 → 진단명)
-- 매칭 우선순위: ICD-10 자동 → 수동 매핑 → 진단명 직접 일치
+**drg_matcher.py** - ADRG 코드 + 진단명 하이브리드 매칭 (98.1% 달성):
+- `load_hira_adrg_los()`: HIRA ADRG별 평균 재원일수 로드 (ADRG명 + ADRG 코드)
+- `load_manual_mapping()`: 진단명 수동 매핑 로드 (411개)
+- `get_target_los(diagnosis, adrg_code)`: 하이브리드 매칭으로 목표 LOS 조회
+- `match_smc_to_hira()`: SMC와 HIRA 매칭 (ADRG 코드 74.3% + 진단명 23.8%)
+- 매칭 우선순위: ADRG 코드 직접 → 수동 매핑 → 진단명 직접/부분 일치
 
 **kpi_pipeline.py** - 통합 파이프라인:
 - `run_pipeline(hira, smc, hospital, filter_quarter)`: 전체 KPI 계산 파이프라인
@@ -114,8 +114,10 @@ backend/app/
 **kpi_calculator.py** - KPI 산출 (양방향 유지):
 - `calculate_disease_kpi()`: 질환별 KPI (LOS 갭 = target_los - current_los)
 - `calculate_doctor_kpi()`: 의료진별 KPI (가중 평균 목표 LOS, None 반환 시 status='no_target_los')
-- `calculate_summary_kpi_for_period()`: 요약 KPI (추가 재원일수, 가동률 갭)
-  - **중요**: 평균 LOS 갭은 환자수 고려 안 함 → 추가 재원일수와 부호 다를 수 있음
+- `calculate_summary_kpi()`: 요약 KPI 계산
+  - **심평원 고정값**: 7.82일 (HIRA 전체 평균)
+  - **병원 평균**: 연간 전체 환자의 기간별 평균 재원일수
+  - **평균 재원일수 갭**: 목표(7.82) - 현재(병원 평균)
 
 **aggregator.py** - 데이터 집계:
 - `aggregate_by_disease()`: 질환 단위 집계
@@ -128,14 +130,13 @@ backend/app/
 - 통상기간: 1-2월, 5-10월
 
 **dashboard_generator.py** - HTML 대시보드 생성:
-- `render_home()`: 홈 화면 (KPI 카드 2개 + TOP 6 랭킹 + 검색)
-  - KPI 카드: 추가 재원일수, 가동률 개선 가능
-  - 평균 LOS 갭 카드 삭제됨 (환자수 미고려로 혼란 방지)
+- `render_home()`: 홈 화면 (KPI 카드 3개 + TOP 6 랭킹 + 검색)
+  - KPI 카드: 평균 재원일수 갭, 추가 재원일수, 가동률 개선 가능
+  - 평균 재원일수 갭: 심평원(7.82일) vs 병원 전체 평균 단순 비교
 - `render_department()`: 진료과 뷰
 - `render_doctor()`: 의료진 상세
 - `render_disease()`: 질환 상세
 - NaN → None → "N/A" 처리 로직 포함
-- 주요 인사이트 카드 삭제됨
 
 ---
 
@@ -167,13 +168,24 @@ utilization_gap = (additional_bed_days / available_bed_days) * 100
 # 음수: 재원일수 줄여야 함 (가동률 감소, 이미 효율적)
 ```
 
-### KPI 카드 부호 해석
+### KPI 카드 부호 해석 및 계산법
 
-**추가 재원일수 & 가동률 갭**:
-- **➕ 양수**: 재원일수를 늘려야 함 (현재 LOS < 목표 LOS)
-- **➖ 음수**: 재원일수를 줄여야 함 (현재 LOS > 목표 LOS, 이미 효율적)
+**평균 재원일수 갭** (상단 카드):
+- 계산: 심평원 전체 평균(7.82일) - 병원 전체 평균
+- **➕ 양수**: 재원일수를 늘려야 함 (현재 < 목표)
+- **➖ 음수**: 재원일수를 줄여야 함 (현재 > 목표)
+- **특징**: 환자수 무관한 단순 평균 비교
 
-**중요**: 두 카드의 부호는 항상 일치 (가동률 갭 = 추가 재원일수 / 가용병상일수)
+**추가 재원일수 & 가동률 개선** (하단 섹션):
+- 계산: LOS 갭 × 환자수의 합계 (환자수 가중)
+- **➕ 양수**: 재원일수를 늘려야 함
+- **➖ 음수**: 재원일수를 줄여야 함
+- **특징**: 환자수 가중 임팩트 (랭킹용)
+
+**중요**:
+- 상단 카드: 단순 평균 비교 (환자수 무관)
+- 하단 섹션: 환자수 가중 임팩트 (랭킹 테이블용)
+- 가동률 갭 = 추가 재원일수 / 가용병상일수
 
 ### Data Specifications
 
@@ -188,23 +200,23 @@ utilization_gap = (additional_bed_days / available_bed_days) * 100
 - 의료진명에 공백 포함 가능 (예: "홍길동 교수") → 공백 전 이름만 추출
 - 컬럼: 구분(병원), 퇴원일자, 평균재원(=재원일수), 퇴원과, 진단명, 의사명
 
-**DRG 매칭 전략 (ICD-10 + 진단명 기반):**
-- **현재 상태 (2026-02-23)**: 96.3% 매칭률 달성
-  - ICD-10 자동 매핑: 282개 (KDRG 4.6 전체 코드)
-  - 진단명 수동 매핑: 164개
-  - 총 매핑: 446개
-  - 매칭 환자: 7,768명 / 8,063명
-  - **전체 160명 의료진 모두 80% 이상 매칭률** ✅
-- **매칭 방법**:
-  1. ICD-10 코드 기반 자동 매칭 (우선순위 높음)
+**DRG 매칭 전략 (ADRG 코드 + 진단명 하이브리드):**
+- **현재 상태 (2026-02-23)**: **98.1% 매칭률 달성** ✅
+  - ADRG 코드 직접 매칭: 74.3% (25,167명)
+  - 진단명 매핑: 23.8% (8,066명)
+  - 총 매칭: 33,233명 / 33,853명
+  - 대전 97.7%, 유성 98.6%
+- **매칭 방법 (우선순위)**:
+  1. **ADRG 코드 직접 매칭** (SMC ADRG → HIRA ADRG 3자리) ← 최우선
   2. 진단명 수동 매핑 테이블 (`diagnosis_kdrg44_mapping.xlsx`)
-  3. 진단명 직접/부분 일치
-- **주요 파일**:
-  - `data/mapping/icd10_to_adrg_from_kdrg46.xlsx`: ICD-10 → ADRG 자동 매핑
-  - `data/mapping/diagnosis_kdrg44_mapping.xlsx`: 진단명 수동 매핑
-- **매칭 개선 스크립트**:
-  - `add_top10_mappings.py`: TOP 10 진단명 매핑 추가
-  - `add_all_icd10_mappings.py`: ICD-10 있는 전체 진단명 매핑 추가
+  3. 진단명 = ADRG명 직접 일치
+  4. 진단명 부분 일치
+- **주요 데이터 파일**:
+  - HIRA: `2025_4분기_종합병원_ADRG별_평균재원)_20260220111626.xlsx`
+  - SMC: `25년도_대전_유성_의사별_퇴원진단_KDRG46_ADRG추가.xlsx` (ADRG 코드 포함)
+  - 진단명 매핑: `data/mapping/diagnosis_kdrg44_mapping.xlsx` (411개)
+- **테스트 스크립트**:
+  - `test_adrg_matching.py`: ADRG 하이브리드 매칭 검증
 
 ### Data Filtering Rules
 
@@ -265,19 +277,21 @@ LOS_RANGE = (0.5, 100)  # 재원일수 정상 범위
 - [x] 진단명 기반 DRG 매칭 적용 (46개 진단명, 32명 의료진 데이터 표시)
 
 ### 📊 현재 상태 (2026-02-23)
-- **DRG 매칭**: 96.3% 매칭률 (7,768명 / 8,063명)
-  - ICD-10 자동: 282개, 진단명 수동: 164개
-  - **전체 160명 의료진 모두 80% 이상** ✅
-- **환자 커버리지**: 96.3%
+- **DRG 매칭**: **98.1% 매칭률** (33,233명 / 33,853명) ✅
+  - ADRG 코드: 74.3% (25,167명)
+  - 진단명: 23.8% (8,066명)
+  - 대전 97.7%, 유성 98.6%
 - **정적 HTML**: 88개 파일 생성, 즉시 실행 가능
 - **배포 준비**: GitHub Pages 배포 가능 상태
-- **데이터 필터링**: 환자수 6명 미만 질환 제외 (통계적 유의성)
+- **데이터 범위**: 연간 전체 데이터 (filter_quarter=None)
+- **Summary KPI**: 심평원 고정값(7.82일) vs 병원 전체 평균 단순 비교
 
 ### 향후 개선 사항 (선택적)
-- [x] DRG 매핑 테이블 확장 → **96.3% 달성** ✅
-- [x] ICD-10 코드 기반 자동 매핑 → **282개 코드 적용** ✅
+- [x] DRG 매핑 테이블 확장 → **98.1% 달성** ✅
+- [x] ADRG 코드 기반 하이브리드 매칭 → **완료** ✅
 - [x] 환자수 6명 미만 질환 필터링 → **적용 완료** ✅
-- [ ] HIRA 연간 데이터 확보 (현재: 4분기만)
+- [x] 심평원 vs 병원 평균 단순 비교 KPI → **완료** ✅
+- [ ] HIRA 연간 데이터 확보 (현재: 4분기만) → 예상 99%+ 매칭률
 - [ ] 데이터베이스 연동 (SQLite/PostgreSQL)
 - [ ] 엑셀 다운로드 기능
 - [ ] DRG 매핑 관리 UI
@@ -353,7 +367,7 @@ When editing planning documents or implementing features, ensure consistency:
 ### Generate Static Dashboard (서버 없이 직접 실행 가능)
 
 ```bash
-# 정적 HTML 생성 (진단명 기반 DRG 매칭 적용)
+# 정적 HTML 생성 (ADRG 코드 + 진단명 하이브리드 매칭)
 python3 generate_static_dashboard.py
 ```
 
@@ -362,10 +376,11 @@ python3 generate_static_dashboard.py
 - 홈, 진료과, 의료진 상세(10명), 질환 상세(10개)
 
 **중요 특징**:
+- **연간 전체 데이터 사용** (filter_quarter=None)
+- ADRG 코드 + 진단명 하이브리드 매칭 (98.1%)
 - 파일 경로 기반 네비게이션 (URL 파라미터 없이 작동)
 - NaN 값 안전 처리 (None → "N/A")
-- 진단명 기반 DRG 매칭 (46개 진단명)
-- 진료과/의료진 검색 기능
+- 심평원(7.82일) vs 병원 평균 단순 비교 KPI
 
 ### 로컬에서 확인
 
@@ -614,7 +629,8 @@ disease_target_map = {
 **완료 보고서**:
 - [TOP10_매핑_개선_완료_보고서.md](TOP10_매핑_개선_완료_보고서.md) - 1단계: TOP 10 진단명 매핑 (95.0% 달성)
 - [2단계_ICD10_전체_매핑_완료_보고서.md](2단계_ICD10_전체_매핑_완료_보고서.md) - 2단계: ICD-10 전체 매핑 (96.3% 달성)
-- [실행방법.md](실행방법.md) - 사용자 실행 가이드
+- [3단계_ADRG코드_하이브리드_매칭_완료_보고서.md](3단계_ADRG코드_하이브리드_매칭_완료_보고서.md) - 3단계: ADRG 코드 하이브리드 (98.1% 달성)
+- [실행방법_업데이트.md](실행방법_업데이트.md) - 사용자 실행 가이드 (최신)
 
 **기획 문서** (plan/ 폴더):
 - `병상가동 KPI 산출 프로그램 PRD.md` - 요구사항 정의
