@@ -105,13 +105,7 @@ def generate_static_dashboard_adrg():
     # 2. 매핑 파일 로드
     print("\n[2] 매핑 파일 로드")
 
-    # ICD-10 자동 매핑
-    icd10_mapping_file = PROJECT_ROOT / 'data' / 'mapping' / 'icd10_to_adrg_from_kdrg46.xlsx'
-    if icd10_mapping_file.exists():
-        mapper.load_icd10_to_adrg_mapping(icd10_mapping_file)
-        print(f"✅ ICD-10 자동 매핑: {len(mapper.icd10_to_adrg)}개")
-
-    # 진단명 수동 매핑
+    # 진단명 수동 매핑만 사용 (ICD-10 매핑 제거됨)
     manual_mapping_file = PROJECT_ROOT / 'data' / 'mapping' / 'diagnosis_adrg_mapping.xlsx'
     if manual_mapping_file.exists():
         mapper.load_manual_diagnosis_mapping(manual_mapping_file)
