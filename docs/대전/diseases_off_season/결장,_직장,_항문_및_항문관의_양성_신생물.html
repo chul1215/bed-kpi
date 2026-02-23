@@ -416,7 +416,7 @@
         <div style="text-align: center;">
             <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 8px; font-weight: 600;">HIRA 기준 LOS</div>
             <div style="font-size: 24px; font-weight: bold; color: #2c3e50;">
-                19.3일
+                4.0일
             </div>
         </div>
         <div style="text-align: center;">
@@ -428,7 +428,7 @@
         <div style="text-align: center;">
             <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 8px; font-weight: 600;">갭</div>
             <div style="font-size: 24px; font-weight: bold;">
-                    <span class="positive">+17.1일</span>
+                    <span class="positive">+1.8일</span>
             </div>
         </div>
     </div>
@@ -462,10 +462,10 @@
                             <td>247명</td>
                             <td>7.6일</td>
                             <td>
-                                        <span class="negative">nan일</span>
+                                        <span class="positive">+0.9일</span>
                             </td>
                             <td>
-                                    nan일
+                                    218일
                             </td>
                         </tr>
                         <tr>
@@ -475,10 +475,10 @@
                             <td>168명</td>
                             <td>7.0일</td>
                             <td>
-                                        <span class="negative">nan일</span>
+                                        <span class="positive">+1.7일</span>
                             </td>
                             <td>
-                                    nan일
+                                    280일
                             </td>
                         </tr>
                         <tr>
@@ -488,10 +488,10 @@
                             <td>145명</td>
                             <td>6.6일</td>
                             <td>
-                                        <span class="negative">nan일</span>
+                                        <span class="positive">+1.4일</span>
                             </td>
                             <td>
-                                    nan일
+                                    204일
                             </td>
                         </tr>
                         <tr>
@@ -501,10 +501,10 @@
                             <td>141명</td>
                             <td>6.8일</td>
                             <td>
-                                        <span class="negative">nan일</span>
+                                        <span class="positive">+2.8일</span>
                             </td>
                             <td>
-                                    nan일
+                                    396일
                             </td>
                         </tr>
                         <tr>
@@ -514,10 +514,10 @@
                             <td>138명</td>
                             <td>5.6일</td>
                             <td>
-                                        <span class="negative">nan일</span>
+                                        <span class="positive">+2.1일</span>
                             </td>
                             <td>
-                                    nan일
+                                    294일
                             </td>
                         </tr>
                 </tbody>
@@ -614,7 +614,7 @@
                     </tr>
                     <tr>
                         <td colspan="13" style="text-align: center; padding: 10px; color: #7f8c8d; font-size: 12px;">
-                            ─────────────────────── HIRA 기준: 19.3일 ───────────────────────
+                            ─────────────────────── HIRA 기준: 4.0일 ───────────────────────
                         </td>
                     </tr>
                 </tbody>
@@ -652,19 +652,21 @@
 
     <!-- 스크립트 -->
     <script>
-        // 병원 전환
-        function switchHospital(hospital) {
-            const urlParams = new URLSearchParams(window.location.search);
-            urlParams.set('hospital', hospital);
-            window.location.search = urlParams.toString();
+
+        // 정적 HTML용 네비게이션 (서브디렉토리에서)
+        function switchHospital(targetHospital) {
+            const currentPeriod = 'off_season';
+            const hospitalMap = {'대전': '대전', '유성': '유성'};
+            const path = `../../${hospitalMap[targetHospital]}/index_${currentPeriod}.html`;
+            window.location.href = path;
         }
 
-        // 기간 전환
-        function switchPeriod(period) {
-            const urlParams = new URLSearchParams(window.location.search);
-            urlParams.set('period', period);
-            window.location.search = urlParams.toString();
+        function switchPeriod(targetPeriod) {
+            const currentHospital = '대전';
+            const path = `../index_${targetPeriod}.html`;
+            window.location.href = path;
         }
+    
     </script>
 </body>
 </html>

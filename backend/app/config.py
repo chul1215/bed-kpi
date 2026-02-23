@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     # 사전 식립 데이터 경로 (프로젝트 루트 기준)
     PRELOADED_HIRA_FILE: Path = PROJECT_ROOT / "data/hira/2025_4분기_종합병원_ADRG별_평균재원)_20260220111626.xlsx"
     PRELOADED_SMC_FILE: Path = PROJECT_ROOT / "data/smc/25년도 대전, 유성 의사별 퇴원진단(26.01.28_방하나).xlsx"
-    PRELOADED_KDRG_FILE: Path = PROJECT_ROOT / "data/KDRG v4.6 전체코드.xlsx"
+    PRELOADED_KDRG_FILE: Path = PROJECT_ROOT / "data/KDRG 버전4.4_질병군명칭_20221101(변동없음).xlsx"
     ENABLE_PRELOADED_DATA: bool = True  # 사전 식립 데이터 활성화
 
     # 데이터 처리 설정
@@ -40,8 +40,8 @@ class Settings(BaseSettings):
     # 기간 분류
     OFF_SEASON_MONTHS: list[int] = [3, 4, 11, 12]  # 비수기
 
-    # DRG 매칭 설정
-    DRG_MAPPING_FILE: Path = Path("./data/mapping/diagnosis_drg_mapping.xlsx")
+    # DRG 매칭 설정 (KDRG 4.4 기반)
+    DRG_MAPPING_FILE: Path = Path("./data/mapping/diagnosis_kdrg44_mapping.xlsx")
     FUZZY_MATCH_THRESHOLD: int = 80  # 퍼지 매칭 최소 신뢰도 (%)
 
     # 병원 설정

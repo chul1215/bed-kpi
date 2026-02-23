@@ -50,13 +50,24 @@ def test_complete_pipeline():
     print(f"  ✅ 비수기: {stats['off_season']['count']:,}건")
     print(f"  ✅ 통상기간: {stats['normal']['count']:,}건")
 
-    # 3. DRG 매칭 (초기 매핑 생성)
-    print("\n[3/6] DRG 매핑 테이블 생성...")
+    # 3. DRG 매칭
+    print("\n[3/6] DRG 매칭...")
     mapping_file = Path("../data/mapping/diagnosis_drg_mapping.xlsx")
     mapping_file.parent.mkdir(parents=True, exist_ok=True)
 
-    DRGMatcher.create_initial_mapping(smc_df, hira_df, mapping_file)
-    print(f"  ✅ 초기 매핑 테이블 생성: {mapping_file}")
+    matcher = DRGMatcher()
+
+    # 수동 매핑 테이블 로드 (있으면)
+    if mapping_file.exists():
+        matcher.load_manual_mapping(mapping_file)
+        print(f"  ✅ 수동 매핑 테이블 로드: {len(matcher.diagnosis_to_adrg)}개")
+
+    # SMC-HIRA 매칭
+    smc_matched, disease_target_map = matcher.match_smc_to_hira(smc_df, hira_df)
+    print(f"  ✅ 매칭 완료: {len(disease_target_map)}개 진단명")
+
+    # 진단명 컬럼에 target_los 추가
+    smc_df['target_los'] = smc_df['diagnosis'].map(disease_target_map)
 
     # 4. 데이터 집계 (비수기, 대전병원 기준)
     print("\n[4/6] 데이터 집계 (비수기, 대전병원)...")
@@ -68,41 +79,49 @@ def test_complete_pipeline():
     print(f"  ✅ 의료진 집계: {len(doctor_agg)}명")
     print(f"  ✅ 진료과 집계: {len(department_agg)}개 과")
 
-    # 5. KPI 계산 (샘플)
+    # 5. KPI 계산
     print("\n[5/6] KPI 계산...")
 
-    # HIRA 데이터를 DRG 코드로 매핑
-    hira_by_code = dict(zip(hira_df['drg_code_3digit'], hira_df['target_los']))
-
-    # 질환별 KPI 샘플
+    # 질환별 KPI
     disease_kpis = []
-    for _, row in disease_agg.head(5).iterrows():
-        # 샘플: 첫 5개 질환만 (실제로는 모든 질환)
-        # 목표 LOS는 기본값 (실제로는 DRG 매핑에서 가져옴)
-        target_los = 9.5  # 샘플 값
-        kpi = KPICalculator.calculate_disease_kpi(row, target_los)
+    for _, row in disease_agg.iterrows():
+        kpi = KPICalculator.calculate_disease_kpi(row)
         disease_kpis.append(kpi)
 
-    print(f"  ✅ 질환별 KPI 계산 (샘플 5개): {len(disease_kpis)}개")
+    disease_kpis_df = pd.DataFrame(disease_kpis)
+    calculated_count = len(disease_kpis_df[disease_kpis_df['status'] == 'calculated'])
+    no_target_count = len(disease_kpis_df[disease_kpis_df['status'] == 'no_target_los'])
 
-    # 요약 KPI
-    disease_kpis_df = pd.DataFrame([
-        {**d, 'los_gap': 1.5 if d.get('los_gap') is None else d['los_gap']}
-        for d in disease_kpis
-    ])
-    disease_kpis_df['status'] = 'calculated'
+    print(f"  ✅ 질환별 KPI: {calculated_count}개 계산, {no_target_count}개 목표 없음")
 
-    summary_kpi = KPICalculator.calculate_summary_kpi(
-        disease_kpis_df,
-        bed_count=300,
-        period_days=122  # 비수기
-    )
+    # 의료진-질환 집계 (의료진 KPI용)
+    doctor_disease_agg = Aggregator.aggregate_by_doctor_disease(smc_df, hospital='대전', period='off_season')
 
-    print(f"  ✅ 요약 KPI:")
-    print(f"     - 평균 LOS 갭: {summary_kpi['average_los_gap']:.2f}일")
-    print(f"     - 추가 병상일수: {summary_kpi['total_additional_bed_days']:.0f}일")
-    print(f"     - 현재 가동률: {summary_kpi['current_utilization_rate']:.1f}%")
-    print(f"     - 목표 가동률: {summary_kpi['target_utilization_rate']:.1f}%")
+    # 의료진별 KPI
+    doctor_kpis = []
+    for _, row in doctor_agg.iterrows():
+        kpi = KPICalculator.calculate_doctor_kpi(row, disease_target_map, doctor_disease_agg)
+        doctor_kpis.append(kpi)
+
+    doctor_kpis_df = pd.DataFrame(doctor_kpis)
+    doctor_calculated = len(doctor_kpis_df[doctor_kpis_df['status'] == 'calculated'])
+
+    print(f"  ✅ 의료진별 KPI: {doctor_calculated}명 계산")
+
+    # 요약 KPI (계산된 질환만)
+    calculated_disease_kpis = disease_kpis_df[disease_kpis_df['status'] == 'calculated']
+    if len(calculated_disease_kpis) > 0:
+        summary_kpi = KPICalculator.calculate_summary_kpi(
+            calculated_disease_kpis,
+            bed_count=300,
+            period_days=122  # 비수기
+        )
+
+        print(f"  ✅ 요약 KPI:")
+        print(f"     - 평균 LOS 갭: {summary_kpi['average_los_gap']:.2f}일")
+        print(f"     - 추가 병상일수: {summary_kpi['total_additional_bed_days']:.0f}일")
+        print(f"     - 현재 가동률: {summary_kpi['current_utilization_rate']:.1f}%")
+        print(f"     - 목표 가동률: {summary_kpi['target_utilization_rate']:.1f}%")
 
     # 6. 정합성 검증
     print("\n[6/6] 정합성 검증...")

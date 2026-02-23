@@ -52,15 +52,19 @@ class PeriodClassifier:
         if date_column not in df.columns:
             raise ValueError(f"'{date_column}' 컬럼이 존재하지 않습니다")
 
-        df['period'] = df[date_column].apply(PeriodClassifier.classify_period)
+        # 복사본 생성
+        result_df = df.copy()
+
+        # pandas Series에 vectorized 연산 적용
+        result_df['period'] = result_df[date_column].apply(lambda d: PeriodClassifier.classify_period(d))
 
         logger.info(
             f"기간 분류 완료 - "
-            f"비수기: {len(df[df['period'] == Period.OFF_SEASON])}건, "
-            f"통상기간: {len(df[df['period'] == Period.NORMAL])}건"
+            f"비수기: {len(result_df[result_df['period'] == Period.OFF_SEASON])}건, "
+            f"통상기간: {len(result_df[result_df['period'] == Period.NORMAL])}건"
         )
 
-        return df
+        return result_df
 
     @staticmethod
     def get_period_stats(df: pd.DataFrame) -> dict:

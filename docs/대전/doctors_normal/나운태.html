@@ -424,7 +424,7 @@
             <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
                 <div style="font-size: 12px; margin-bottom: 8px; opacity: 0.9;">LOS 갭</div>
                 <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">
-                        nan
+                        +4.3
                 </div>
                 <div style="font-size: 11px; opacity: 0.85;">일</div>
             </div>
@@ -432,7 +432,7 @@
         <div class="col-md-4">
             <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
                 <div style="font-size: 12px; margin-bottom: 8px; opacity: 0.9;">추가병상일</div>
-                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">nan</div>
+                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">185</div>
                 <div style="font-size: 11px; opacity: 0.85;">일</div>
             </div>
         </div>
@@ -465,60 +465,60 @@
                             <td style="text-align: left;">기타 의학적 관리를 위하여 보건서비스와 접하고 있는 사람</td>
                             <td>98명</td>
                             <td>2.8일</td>
-                            <td>5.2일</td>
+                            <td>10.8일</td>
                             <td>
-                                        <span class="positive">+2.4일</span>
+                                        <span class="positive">+8.0일</span>
                             </td>
                             <td>
-                                    237일
+                                    783일
                             </td>
                         </tr>
                         <tr>
                             <td style="text-align: left;">결장, 직장, 항문 및 항문관의 양성 신생물</td>
                             <td>63명</td>
                             <td>2.1일</td>
-                            <td>19.3일</td>
+                            <td>4.0일</td>
                             <td>
-                                        <span class="positive">+17.2일</span>
+                                        <span class="positive">+1.9일</span>
                             </td>
                             <td>
-                                    1083일
+                                    119일
                             </td>
                         </tr>
                         <tr>
                             <td style="text-align: left;">무릎관절증</td>
                             <td>52명</td>
                             <td>17.4일</td>
-                            <td>nan일</td>
+                            <td>14.2일</td>
                             <td>
-                                        <span class="negative">nan일</span>
+                                        <span class="negative">-3.2일</span>
                             </td>
                             <td>
-                                    nan일
+                                    -166일
                             </td>
                         </tr>
                         <tr>
                             <td style="text-align: left;">감염성 및 상세불명 기원의 기타 위장염 및 결장염</td>
                             <td>33명</td>
                             <td>6.9일</td>
-                            <td>11.7일</td>
+                            <td>4.2일</td>
                             <td>
-                                        <span class="positive">+4.7일</span>
+                                        <span class="negative">-2.7일</span>
                             </td>
                             <td>
-                                    156일
+                                    -89일
                             </td>
                         </tr>
                         <tr>
                             <td style="text-align: left;">기타 정형외과적 추적치료를 위하여 보건서비스와 접하고 있는 사람</td>
                             <td>31명</td>
                             <td>4.4일</td>
-                            <td>8.0일</td>
+                            <td>3.0일</td>
                             <td>
-                                        <span class="positive">+3.6일</span>
+                                        <span class="negative">-1.4일</span>
                             </td>
                             <td>
-                                    112일
+                                    -44일
                             </td>
                         </tr>
                 </tbody>
@@ -539,9 +539,9 @@
             <div>
                 <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">목표 병상일수</div>
                 <div style="font-size: 18px; font-weight: bold;">
-                    nan일
+                    400일
                     (
-                        nan%
+                        +86.0%
                     )
                 </div>
             </div>
@@ -551,7 +551,7 @@
         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
             <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">기간 가동률 추정</div>
             <div style="font-size: 16px; font-weight: bold;">
-                현재 0.3% → 목표 nan%
+                현재 0.3% → 목표 0.5%
             </div>
         </div>
     </div>
@@ -582,19 +582,21 @@
 
     <!-- 스크립트 -->
     <script>
-        // 병원 전환
-        function switchHospital(hospital) {
-            const urlParams = new URLSearchParams(window.location.search);
-            urlParams.set('hospital', hospital);
-            window.location.search = urlParams.toString();
+
+        // 정적 HTML용 네비게이션 (서브디렉토리에서)
+        function switchHospital(targetHospital) {
+            const currentPeriod = 'normal';
+            const hospitalMap = {'대전': '대전', '유성': '유성'};
+            const path = `../../${hospitalMap[targetHospital]}/index_${currentPeriod}.html`;
+            window.location.href = path;
         }
 
-        // 기간 전환
-        function switchPeriod(period) {
-            const urlParams = new URLSearchParams(window.location.search);
-            urlParams.set('period', period);
-            window.location.search = urlParams.toString();
+        function switchPeriod(targetPeriod) {
+            const currentHospital = '대전';
+            const path = `../index_${targetPeriod}.html`;
+            window.location.href = path;
         }
+    
     </script>
 </body>
 </html>

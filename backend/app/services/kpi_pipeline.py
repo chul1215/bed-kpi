@@ -11,7 +11,7 @@ import logging
 
 from app.services.file_parser import FileParser
 from app.services.period_classifier import PeriodClassifier
-from app.services.drg_matcher import DRGMatcher
+from app.services.kdrg_matcher import KDRGMatcher
 from app.services.aggregator import Aggregator
 from app.services.kpi_calculator import KPICalculator
 
@@ -26,12 +26,12 @@ class KPIPipeline:
         초기화
 
         Args:
-            kdrg_file_path: KDRG v4.6 전체코드.xlsx 파일 경로
+            kdrg_file_path: KDRG 버전4.4_질병군명칭_20221101(변동없음).xlsx 파일 경로
         """
         self.file_parser = FileParser()
         self.period_classifier = PeriodClassifier()
         self.kdrg_file_path = kdrg_file_path
-        self.drg_matcher = None  # run_pipeline에서 초기화
+        self.kdrg_matcher = None  # run_pipeline에서 초기화
         self.aggregator = Aggregator()
         self.kpi_calculator = KPICalculator()
 
@@ -86,23 +86,28 @@ class KPIPipeline:
         normal_count = len(smc_df[smc_df['period'] == 'normal'])
         logger.info(f"비수기: {off_season_count}건, 통상기간: {normal_count}건")
 
-        # 4. DRG 매칭 (진단명 기반)
-        logger.info("4. 진단명 기반 DRG 매칭")
+        # 4. KDRG 4.4 매칭 (진단명 기반)
+        logger.info("4. KDRG 4.4 진단명 기반 DRG 매칭")
 
-        # DRG Matcher 초기화
-        self.drg_matcher = DRGMatcher(self.kdrg_file_path)
+        # KDRG Matcher 초기화
+        self.kdrg_matcher = KDRGMatcher()
+
+        # KDRG 4.4 테이블 로드
+        if self.kdrg_file_path:
+            self.kdrg_matcher.load_kdrg_table(self.kdrg_file_path)
+            logger.info(f"KDRG 4.4 로드 완료: {self.kdrg_file_path}")
 
         # 수동 매핑 파일 로드
         from app.config import PROJECT_ROOT
-        mapping_file = PROJECT_ROOT / "data" / "mapping" / "diagnosis_drg_mapping.xlsx"
+        mapping_file = PROJECT_ROOT / "data" / "mapping" / "diagnosis_kdrg44_mapping.xlsx"
         if mapping_file.exists():
-            self.drg_matcher.load_manual_mapping(mapping_file)
-            logger.info(f"수동 매핑 로드 완료: {mapping_file}")
+            self.kdrg_matcher.load_manual_mapping(mapping_file)
+            logger.info(f"KDRG 4.4 수동 매핑 로드 완료: {mapping_file}")
         else:
             logger.warning(f"매핑 파일 없음: {mapping_file}")
 
         # 진단명 기반 매칭
-        smc_df, disease_target_map = self.drg_matcher.match_smc_to_hira(smc_df, hira_df)
+        smc_df, disease_target_map = self.kdrg_matcher.match_smc_to_hira(smc_df, hira_df)
 
         matched_count = sum(1 for d in smc_df['diagnosis'].unique() if d in disease_target_map)
         total_diagnoses = len(smc_df['diagnosis'].unique())
