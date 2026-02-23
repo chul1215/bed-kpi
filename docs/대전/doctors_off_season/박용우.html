@@ -448,77 +448,86 @@
             </div>
         </div>
 
-        <div class="table-responsive">
-            <table class="table">
+        <div class="table-responsive" style="overflow-x: auto;">
+            <table class="table" style="font-size: 13px; width: 100%; border-collapse: collapse;">
                 <thead>
-                    <tr>
-                        <th style="text-align: left;">질환명</th>
-                        <th>환자수</th>
-                        <th>현 LOS</th>
-                        <th>목표 LOS</th>
-                        <th>LOS 갭</th>
-                        <th>추가병상일</th>
+                    <tr style="border-bottom: 2px solid rgba(52, 152, 219, 0.3);">
+                        <th style="text-align: left; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">질환명</th>
+                        <th style="text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">환자수</th>
+                        <th style="text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            평균재원일수<br><span style="font-size: 11px; font-weight: 400; color: #95a5a6; text-transform: none;">(병원 / 심평원)</span>
+                        </th>
+                        <th style="text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">LOS 갭</th>
+                        <th style="text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">추가재원일수(일)</th>
                     </tr>
                 </thead>
                 <tbody>
-                        <tr>
-                            <td style="text-align: left;">기타 의학적 관리를 위하여 보건서비스와 접하고 있는 사람</td>
-                            <td>175명</td>
-                            <td>3.4일</td>
-                            <td>10.8일</td>
-                            <td>
-                                        <span class="positive">+7.4일</span>
+                        <tr style="border-bottom: 1px solid rgba(52, 152, 219, 0.1); transition: background-color 0.12s ease; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='rgba(124, 221, 255, 0.07)'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="text-align: left; padding: 12px 10px; color: #2c3e50; font-weight: 500;">결장, 직장, 항문 및 항문관의 양성 신생물</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">28</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace;">
+                                <span style="font-weight: 600; color: #2c3e50;">2.0</span>
+                                <span style="color: #95a5a6; margin: 0 4px;">/</span>
+                                <span style="color: #3498db; font-weight: 500;">4.0</span>
                             </td>
-                            <td>
-                                    1299일
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600;">
+                                        <span style="color: #27ae60;">+1.9</span>
                             </td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: left;">결장, 직장, 항문 및 항문관의 양성 신생물</td>
-                            <td>163명</td>
-                            <td>2.1일</td>
-                            <td>4.0일</td>
-                            <td>
-                                        <span class="positive">+1.8일</span>
-                            </td>
-                            <td>
-                                    294일
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">
+                                    55
                             </td>
                         </tr>
-                        <tr>
-                            <td style="text-align: left;">무릎관절증</td>
-                            <td>136명</td>
-                            <td>18.2일</td>
-                            <td>14.2일</td>
-                            <td>
-                                        <span class="negative">-4.0일</span>
+                        <tr style="border-bottom: 1px solid rgba(52, 152, 219, 0.1); transition: background-color 0.12s ease; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='rgba(124, 221, 255, 0.07)'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="text-align: left; padding: 12px 10px; color: #2c3e50; font-weight: 500;">기타 염증성 간질환</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">7</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace;">
+                                <span style="font-weight: 600; color: #2c3e50;">10.1</span>
+                                <span style="color: #95a5a6; margin: 0 4px;">/</span>
+                                <span style="color: #3498db; font-weight: 500;">14.5</span>
                             </td>
-                            <td>
-                                    -543일
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600;">
+                                        <span style="color: #27ae60;">+4.4</span>
                             </td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: left;">기타 정형외과적 추적치료를 위하여 보건서비스와 접하고 있는 사람</td>
-                            <td>60명</td>
-                            <td>3.6일</td>
-                            <td>3.0일</td>
-                            <td>
-                                        <span class="negative">-0.6일</span>
-                            </td>
-                            <td>
-                                    -36일
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">
+                                    31
                             </td>
                         </tr>
-                        <tr>
-                            <td style="text-align: left;">뇌경색증</td>
-                            <td>54명</td>
-                            <td>8.0일</td>
-                            <td>nan일</td>
-                            <td>
-                                        <span class="negative">nan일</span>
+                        <tr style="border-bottom: 1px solid rgba(52, 152, 219, 0.1); transition: background-color 0.12s ease; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='rgba(124, 221, 255, 0.07)'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="text-align: left; padding: 12px 10px; color: #2c3e50; font-weight: 500;">장의 기타 질환</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">6</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace;">
+                                <span style="font-weight: 600; color: #2c3e50;">2.0</span>
+                                <span style="color: #95a5a6; margin: 0 4px;">/</span>
+                                <span style="color: #3498db; font-weight: 500;">5.1</span>
                             </td>
-                            <td>
-                                    nan일
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600;">
+                                        <span style="color: #27ae60;">+3.1</span>
+                            </td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">
+                                    18
+                            </td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(52, 152, 219, 0.1); transition: background-color 0.12s ease; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='rgba(124, 221, 255, 0.07)'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="text-align: left; padding: 12px 10px; color: #2c3e50; font-weight: 500;">위궤양</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">6</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace;">
+                                <span style="font-weight: 600; color: #2c3e50;">11.5</span>
+                                <span style="color: #95a5a6; margin: 0 4px;">/</span>
+                                <span style="color: #3498db; font-weight: 500;">14.5</span>
+                            </td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600;">
+                                        <span style="color: #27ae60;">+3.0</span>
+                            </td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">
+                                    18
                             </td>
                         </tr>
                 </tbody>

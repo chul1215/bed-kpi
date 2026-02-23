@@ -99,11 +99,12 @@ backend/app/
 - `parse_smc_file(filter_quarter=None)`: SMC 데이터 파싱 + 분기 필터링 (Sheet1, 33,853건)
 - `validate_files()`: 데이터 유효성 검증
 
-**drg_matcher.py** - 진단명 기반 DRG 매칭:
-- `load_manual_mapping(file)`: 수동 매핑 테이블 로드
-- `match_smc_to_hira()`: SMC 진단명과 HIRA ADRG명 매칭
-- `get_target_los(diagnosis)`: 진단명으로 목표 LOS 조회 (수동 → 직접 → 부분 일치)
-- `generate_mapping_template()`: 상위 N개 진단명 매핑 템플릿 생성
+**kdrg_matcher.py** - ICD-10 + 진단명 기반 DRG 매칭:
+- `load_kdrg_table()`: KDRG 테이블 로드
+- `load_icd10_mapping()`: ICD-10 → ADRG 자동 매핑 로드 (282개)
+- `load_manual_mapping()`: 진단명 수동 매핑 로드 (164개)
+- `match_smc_to_hira()`: SMC와 HIRA 매칭 (ICD-10 우선 → 진단명)
+- 매칭 우선순위: ICD-10 자동 → 수동 매핑 → 진단명 직접 일치
 
 **kpi_pipeline.py** - 통합 파이프라인:
 - `run_pipeline(hira, smc, hospital, filter_quarter)`: 전체 KPI 계산 파이프라인
@@ -113,7 +114,8 @@ backend/app/
 **kpi_calculator.py** - KPI 산출 (양방향 유지):
 - `calculate_disease_kpi()`: 질환별 KPI (LOS 갭 = target_los - current_los)
 - `calculate_doctor_kpi()`: 의료진별 KPI (가중 평균 목표 LOS, None 반환 시 status='no_target_los')
-- `calculate_summary_kpi()`: 요약 KPI (평균 갭, 추가 재원일수, 가동률)
+- `calculate_summary_kpi_for_period()`: 요약 KPI (추가 재원일수, 가동률 갭)
+  - **중요**: 평균 LOS 갭은 환자수 고려 안 함 → 추가 재원일수와 부호 다를 수 있음
 
 **aggregator.py** - 데이터 집계:
 - `aggregate_by_disease()`: 질환 단위 집계
@@ -126,11 +128,14 @@ backend/app/
 - 통상기간: 1-2월, 5-10월
 
 **dashboard_generator.py** - HTML 대시보드 생성:
-- `render_home()`: 홈 화면 (KPI 카드 + TOP 6 랭킹 + 검색)
+- `render_home()`: 홈 화면 (KPI 카드 2개 + TOP 6 랭킹 + 검색)
+  - KPI 카드: 추가 재원일수, 가동률 개선 가능
+  - 평균 LOS 갭 카드 삭제됨 (환자수 미고려로 혼란 방지)
 - `render_department()`: 진료과 뷰
 - `render_doctor()`: 의료진 상세
 - `render_disease()`: 질환 상세
 - NaN → None → "N/A" 처리 로직 포함
+- 주요 인사이트 카드 삭제됨
 
 ---
 
@@ -155,7 +160,20 @@ additional_bed_days = los_gap * patient_count
 
 # 의료진 목표 LOS (가중 평균)
 doctor_target_los = Σ(disease_target_los × disease_patient_count) / total_patient_count
+
+# 가동률 갭
+utilization_gap = (additional_bed_days / available_bed_days) * 100
+# 양수: 재원일수 늘려야 함 (가동률 증가)
+# 음수: 재원일수 줄여야 함 (가동률 감소, 이미 효율적)
 ```
+
+### KPI 카드 부호 해석
+
+**추가 재원일수 & 가동률 갭**:
+- **➕ 양수**: 재원일수를 늘려야 함 (현재 LOS < 목표 LOS)
+- **➖ 음수**: 재원일수를 줄여야 함 (현재 LOS > 목표 LOS, 이미 효율적)
+
+**중요**: 두 카드의 부호는 항상 일치 (가동률 갭 = 추가 재원일수 / 가용병상일수)
 
 ### Data Specifications
 
@@ -170,25 +188,35 @@ doctor_target_los = Σ(disease_target_los × disease_patient_count) / total_pati
 - 의료진명에 공백 포함 가능 (예: "홍길동 교수") → 공백 전 이름만 추출
 - 컬럼: 구분(병원), 퇴원일자, 평균재원(=재원일수), 퇴원과, 진단명, 의사명
 
-**DRG 매칭 전략 (진단명 기반):**
-- **현재 상태**: 46개 진단명 매칭 (수동 15개 + 자동 31개)
-- **방법**: HIRA ADRG명과 SMC 진단명을 직접 매칭 (ICD-10 코드 불필요)
-- **매핑 파일**: `data/mapping/diagnosis_drg_mapping.xlsx` (수동 매핑 테이블)
-- **템플릿**: `data/mapping/diagnosis_drg_mapping_template.xlsx` (상위 100개 진단명 + 제안 ADRG)
-- **결과**: 대전 비수기 기준 32명/42명 의료진에 데이터 표시 (76%)
-- **주요 매핑 예시**:
-  - 협심증 → 협심증
-  - 급성 충수염 → 복잡한 주진단이 없는 충수절제술
-  - 담석증 → 복강경을 이용한 전담낭절제술
-  - 상세불명 병원체의 폐렴 → 세균성 폐렴
-- **매칭률 향상**: 템플릿 파일에서 상위 진단명을 확인하여 `diagnosis_drg_mapping.xlsx`에 추가
+**DRG 매칭 전략 (ICD-10 + 진단명 기반):**
+- **현재 상태 (2026-02-23)**: 96.3% 매칭률 달성
+  - ICD-10 자동 매핑: 282개 (KDRG 4.6 전체 코드)
+  - 진단명 수동 매핑: 164개
+  - 총 매핑: 446개
+  - 매칭 환자: 7,768명 / 8,063명
+  - **전체 160명 의료진 모두 80% 이상 매칭률** ✅
+- **매칭 방법**:
+  1. ICD-10 코드 기반 자동 매칭 (우선순위 높음)
+  2. 진단명 수동 매핑 테이블 (`diagnosis_kdrg44_mapping.xlsx`)
+  3. 진단명 직접/부분 일치
+- **주요 파일**:
+  - `data/mapping/icd10_to_adrg_from_kdrg46.xlsx`: ICD-10 → ADRG 자동 매핑
+  - `data/mapping/diagnosis_kdrg44_mapping.xlsx`: 진단명 수동 매핑
+- **매칭 개선 스크립트**:
+  - `add_top10_mappings.py`: TOP 10 진단명 매핑 추가
+  - `add_all_icd10_mappings.py`: ICD-10 있는 전체 진단명 매핑 추가
 
 ### Data Filtering Rules
 
 ```python
-MIN_PATIENT_COUNT = 6  # 환자수 6명 미만 제외
+MIN_PATIENT_COUNT = 6  # 환자수 6명 미만 제외 (통계적 유의성)
 LOS_RANGE = (0.5, 100)  # 재원일수 정상 범위
 ```
+
+**필터링 적용 방식**:
+- **질환별 KPI 표시**: 6명 이상 질환만 (통계적으로 유의미)
+- **의료진/진료과 KPI 계산**: 모든 환자 포함 (실제 성과 반영)
+- **disease_target_map**: 모든 질환 포함 (의료진 KPI 계산에 필요)
 
 ---
 
@@ -208,7 +236,9 @@ LOS_RANGE = (0.5, 100)  # 재원일수 정상 범위
 ### ✅ Day 2 완료: HTML 대시보드 (와이어프레임 기반)
 - [x] dashboard_generator.py (Jinja2 템플릿 렌더링 ✅)
 - [x] 공통 헤더 (base.html - 병원/기간 토글, 네비게이션 ✅)
-- [x] 홈 화면 (index.html - KPI 카드 3종 + 의사별 질환 TOP 6 ✅)
+- [x] 홈 화면 (index.html - KPI 카드 2개 + 의사별 질환 TOP 6 ✅)
+  - KPI 카드: 추가 재원일수, 가동률 개선 가능 (평균 LOS 갭 삭제)
+  - 주요 인사이트 카드 삭제
 - [x] 진료과 뷰 (department.html - 진료과 랭킹 + 드릴다운 ✅)
 - [x] 의료진 상세 (doctor.html - KPI 카드 + 질환별 상세 ✅)
 - [x] 질환 뷰 (disease.html - HIRA 기준 + 담당 의료진 분포 ✅)
@@ -234,19 +264,19 @@ LOS_RANGE = (0.5, 100)  # 재원일수 정상 범위
 - [x] NaN 값 안전 처리 (None → "N/A")
 - [x] 진단명 기반 DRG 매칭 적용 (46개 진단명, 32명 의료진 데이터 표시)
 
-### 📊 현재 상태 (2026-02-22)
-- **DRG 매칭**: 46개 진단명 매칭 완료 (14.2%)
-- **환자 커버리지**: ~30% (추정)
-- **의료진 데이터**: 대전 비수기 기준 32명/42명 (76%)
+### 📊 현재 상태 (2026-02-23)
+- **DRG 매칭**: 96.3% 매칭률 (7,768명 / 8,063명)
+  - ICD-10 자동: 282개, 진단명 수동: 164개
+  - **전체 160명 의료진 모두 80% 이상** ✅
+- **환자 커버리지**: 96.3%
 - **정적 HTML**: 88개 파일 생성, 즉시 실행 가능
 - **배포 준비**: GitHub Pages 배포 가능 상태
+- **데이터 필터링**: 환자수 6명 미만 질환 제외 (통계적 유의성)
 
 ### 향후 개선 사항 (선택적)
-- [ ] DRG 매핑 테이블 확장 (현재 46개 → 목표 100개+)
-  - 상위 100개 진단명 매핑 시 환자 커버리지 60%+ 예상
-  - `diagnosis_drg_mapping_template.xlsx` 참조
-- [ ] 병원 시스템에서 ICD-10 코드 포함 데이터 확보
-  - DRG 청구 데이터는 ICD-10 코드 포함되어 있어야 함
+- [x] DRG 매핑 테이블 확장 → **96.3% 달성** ✅
+- [x] ICD-10 코드 기반 자동 매핑 → **282개 코드 적용** ✅
+- [x] 환자수 6명 미만 질환 필터링 → **적용 완료** ✅
 - [ ] HIRA 연간 데이터 확보 (현재: 4분기만)
 - [ ] 데이터베이스 연동 (SQLite/PostgreSQL)
 - [ ] 엑셀 다운로드 기능
@@ -496,6 +526,36 @@ def get_target_los(self, diagnosis: str) -> float | None:
     return None
 ```
 
+### 환자수 필터링과 KPI 계산 (Critical!)
+
+**문제**: 평균 LOS 갭과 추가 재원일수의 부호가 다를 수 있음
+
+**원인**:
+- **평균 LOS 갭**: 의료진 수 기준 단순 평균 (환자수 무관)
+- **추가 재원일수**: LOS 갭 × 환자수의 합계 (환자수 가중)
+
+**예시**: 유성 비수기
+- 평균 LOS 갭: -0.00일 (양수 26명 + 음수 25명 의료진)
+- 추가 재원일수: +2,082일 (환자 많은 의료진이 양수)
+
+**해결**: 평균 LOS 갭 카드 삭제, 추가 재원일수와 가동률 갭만 표시
+
+**필터링 원칙**:
+```python
+# kpi_pipeline.py
+# 1. 전체 disease_target_map 먼저 생성 (모든 질환 포함)
+all_disease_kpis = calculate_all_diseases(period_df)
+disease_target_map = {d: los for d, los in ... if pd.notna(los)}
+
+# 2. 질환별 KPI 표시만 필터링 (6명 이상)
+disease_kpis = all_disease_kpis[
+    all_disease_kpis['patient_count'] >= MIN_PATIENT_COUNT
+]
+
+# 3. 의료진 KPI는 전체 데이터 사용
+doctor_kpis = calculate_doctors(period_df, disease_target_map)
+```
+
 ### 정적 HTML 네비게이션 (Static HTML Navigation)
 
 **문제**: URL 파라미터 방식은 정적 파일(file://)에서 작동하지 않음
@@ -552,10 +612,15 @@ disease_target_map = {
 ## 참고 문서
 
 **완료 보고서**:
-- [DIAGNOSIS_MATCHING_COMPLETE.md](DIAGNOSIS_MATCHING_COMPLETE.md) - 진단명 기반 매칭 완료 보고
+- [TOP10_매핑_개선_완료_보고서.md](TOP10_매핑_개선_완료_보고서.md) - 1단계: TOP 10 진단명 매핑 (95.0% 달성)
+- [2단계_ICD10_전체_매핑_완료_보고서.md](2단계_ICD10_전체_매핑_완료_보고서.md) - 2단계: ICD-10 전체 매핑 (96.3% 달성)
 - [실행방법.md](실행방법.md) - 사용자 실행 가이드
 
 **기획 문서** (plan/ 폴더):
 - `병상가동 KPI 산출 프로그램 PRD.md` - 요구사항 정의
 - `선메디컬센터 시기별 병상가동 KPI 산출 프로그램 기획안.md` - 기획 의도
 - `병상가동 KPI 프로그램 와이어프레임.md` - UI 설계
+
+**매핑 개선 스크립트**:
+- `add_top10_mappings.py` - TOP 10 미매칭 진단명 수동 매핑
+- `add_all_icd10_mappings.py` - ICD-10 있는 전체 진단명 매핑

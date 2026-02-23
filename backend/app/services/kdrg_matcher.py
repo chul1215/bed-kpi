@@ -20,6 +20,8 @@ class KDRGMatcher:
         self.kdrg_df: pd.DataFrame | None = None
         self.kdrg_adrg_map: Dict[str, str] = {}  # ADRG코드 → 질병군명칭
         self.diagnosis_to_adrg: Dict[str, str] = {}  # 수동 매핑: 진단명 → ADRG명
+        self.icd10_to_adrg: Dict[str, str] = {}  # ICD-10 코드 → ADRG코드 매핑 (KDRG 4.6)
+        self.adrg_code_to_hira: Dict[str, float] = {}  # ADRG코드 → 목표 LOS
         self.adrg_to_hira: Dict[str, float] = {}  # ADRG명 → 목표 LOS
 
     def load_kdrg_table(self, file_path: Path | str) -> None:
@@ -77,6 +79,39 @@ class KDRGMatcher:
             logger.error(f"수동 매핑 로드 실패: {e}")
             raise
 
+    def load_icd10_mapping(self, file_path: Path | str) -> None:
+        """
+        ICD-10 → ADRG 매핑 테이블 로드 (KDRG 4.6)
+
+        Args:
+            file_path: ICD-10 매핑 엑셀 파일 경로 (icd10_to_adrg_from_kdrg46.xlsx)
+        """
+        try:
+            if not Path(file_path).exists():
+                logger.warning(f"ICD-10 매핑 파일 없음: {file_path}")
+                return
+
+            mapping_df = pd.read_excel(file_path)
+
+            # 필수 컬럼 확인
+            if 'icd10_code' not in mapping_df.columns or 'adrg_code' not in mapping_df.columns:
+                logger.error("ICD-10 매핑 파일에 'icd10_code', 'adrg_code' 컬럼 필요")
+                return
+
+            # ICD-10 코드 → ADRG 코드 매핑
+            for _, row in mapping_df.iterrows():
+                icd10_code = str(row['icd10_code']).strip()
+                adrg_code = str(row['adrg_code']).strip()
+
+                if pd.notna(icd10_code) and pd.notna(adrg_code):
+                    self.icd10_to_adrg[icd10_code] = adrg_code
+
+            logger.info(f"ICD-10 매핑 로드: {len(self.icd10_to_adrg)}개")
+
+        except Exception as e:
+            logger.error(f"ICD-10 매핑 로드 실패: {e}")
+            raise
+
     def match_smc_to_hira(
         self,
         smc_df: pd.DataFrame,
@@ -85,14 +120,15 @@ class KDRGMatcher:
         """
         SMC 진단명과 HIRA ADRG 매칭
 
-        매칭 전략:
-        1. 수동 매핑 테이블 우선
-        2. 진단명과 ADRG명 직접 일치
-        3. 진단명이 ADRG명에 포함 (부분 일치)
-        4. ADRG명이 진단명에 포함 (부분 일치)
+        매칭 전략 (우선순위):
+        1. ICD-10 코드 매칭 (KDRG 4.6 기반) ⭐ 신규
+        2. 수동 매핑 테이블 (진단명 → ADRG명)
+        3. 진단명과 ADRG명 직접 일치
+        4. 진단명이 ADRG명에 포함 (부분 일치)
+        5. ADRG명이 진단명에 포함 (부분 일치)
 
         Args:
-            smc_df: SMC 데이터프레임
+            smc_df: SMC 데이터프레임 (icd10_code 컬럼 포함 시 우선 사용)
             hira_df: HIRA 데이터프레임
 
         Returns:
@@ -101,23 +137,52 @@ class KDRGMatcher:
         # HIRA ADRG명 → 목표 LOS 매핑
         self.adrg_to_hira = dict(zip(hira_df['adrg_name'], hira_df['target_los']))
 
+        # HIRA ADRG코드 → 목표 LOS 매핑 (4단DRG번호 3자리 추출)
+        if 'adrg_code' in hira_df.columns:
+            self.adrg_code_to_hira = dict(zip(hira_df['adrg_code'], hira_df['target_los']))
+        else:
+            # 4단DRG번호에서 ADRG 코드 추출 (앞 3자리)
+            hira_df['adrg_code'] = hira_df['drg_code'].astype(str).str[:3]
+            self.adrg_code_to_hira = dict(zip(hira_df['adrg_code'], hira_df['target_los']))
+
         # 매칭 결과 저장
         disease_target_map = {}
 
         # SMC 고유 진단명
         unique_diagnoses = smc_df['diagnosis'].unique()
 
-        matched_count = 0
+        # ICD-10 기반 매칭 통계
+        icd10_matched = 0
+        diagnosis_matched = 0
+
         for diagnosis in unique_diagnoses:
-            target_los = self.get_target_los(diagnosis)
+            # ICD-10 코드가 있으면 우선 사용
+            if 'icd10_code' in smc_df.columns:
+                # 해당 진단명의 ICD-10 코드 조회
+                icd10_codes = smc_df[smc_df['diagnosis'] == diagnosis]['icd10_code'].unique()
+                if len(icd10_codes) > 0 and pd.notna(icd10_codes[0]):
+                    icd10_code = str(icd10_codes[0]).strip()
+                    target_los = self.get_target_los_by_icd10(icd10_code)
+                    if target_los is not None:
+                        disease_target_map[diagnosis] = target_los
+                        icd10_matched += 1
+                        continue
+
+            # ICD-10 매칭 실패 시 진단명 기반 매칭
+            target_los = self.get_target_los_by_diagnosis(diagnosis)
             if target_los is not None:
                 disease_target_map[diagnosis] = target_los
-                matched_count += 1
+                diagnosis_matched += 1
 
+        total_matched = icd10_matched + diagnosis_matched
         logger.info(
-            f"매칭 완료: {matched_count}/{len(unique_diagnoses)} "
-            f"({matched_count/len(unique_diagnoses)*100:.1f}%)"
+            f"매칭 완료: {total_matched}/{len(unique_diagnoses)} "
+            f"({total_matched/len(unique_diagnoses)*100:.1f}%)"
         )
+        if icd10_matched > 0:
+            logger.info(f"  - ICD-10 기반: {icd10_matched}개")
+        if diagnosis_matched > 0:
+            logger.info(f"  - 진단명 기반: {diagnosis_matched}개")
 
         # SMC 데이터프레임에 target_los 추가
         smc_matched = smc_df.copy()
@@ -125,9 +190,37 @@ class KDRGMatcher:
 
         return smc_matched, disease_target_map
 
-    def get_target_los(self, diagnosis: str) -> float | None:
+    def get_target_los_by_icd10(self, icd10_code: str) -> float | None:
         """
-        진단명에 대한 목표 LOS 조회
+        ICD-10 코드로 목표 LOS 조회 (KDRG 4.6 기반)
+
+        Args:
+            icd10_code: ICD-10 코드 (예: I63, K80, M17)
+
+        Returns:
+            목표 LOS (매칭 실패 시 None)
+        """
+        icd10_code = str(icd10_code).strip()
+
+        # ICD-10 → ADRG 코드 매핑
+        if icd10_code in self.icd10_to_adrg:
+            adrg_code = self.icd10_to_adrg[icd10_code]  # 예: B011, B012
+
+            # ADRG 코드 → 목표 LOS (정확한 매칭 우선)
+            if adrg_code in self.adrg_code_to_hira:
+                return self.adrg_code_to_hira[adrg_code]
+
+            # 앞 3자리로 재시도 (HIRA는 B01, KDRG 4.6은 B011)
+            if len(adrg_code) >= 3:
+                adrg_code_3 = adrg_code[:3]
+                if adrg_code_3 in self.adrg_code_to_hira:
+                    return self.adrg_code_to_hira[adrg_code_3]
+
+        return None
+
+    def get_target_los_by_diagnosis(self, diagnosis: str) -> float | None:
+        """
+        진단명으로 목표 LOS 조회 (기존 방식)
 
         Args:
             diagnosis: 진단명
@@ -149,10 +242,25 @@ class KDRGMatcher:
 
         # 3. 부분 일치 (진단명 in ADRG명 or ADRG명 in 진단명)
         for adrg_name, target_los in self.adrg_to_hira.items():
+            # NaN 값 체크 (HIRA 파일에 NaN이 있을 수 있음)
+            if not isinstance(adrg_name, str):
+                continue
             if diagnosis in adrg_name or adrg_name in diagnosis:
                 return target_los
 
         return None
+
+    def get_target_los(self, diagnosis: str) -> float | None:
+        """
+        진단명에 대한 목표 LOS 조회 (하위 호환성 유지)
+
+        Args:
+            diagnosis: 진단명
+
+        Returns:
+            목표 LOS (매칭 실패 시 None)
+        """
+        return self.get_target_los_by_diagnosis(diagnosis)
 
     def generate_mapping_template(
         self,

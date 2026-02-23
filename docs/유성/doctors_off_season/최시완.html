@@ -424,7 +424,7 @@
             <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
                 <div style="font-size: 12px; margin-bottom: 8px; opacity: 0.9;">LOS 갭</div>
                 <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">
-                        +8.0
+                        +10.1
                 </div>
                 <div style="font-size: 11px; opacity: 0.85;">일</div>
             </div>
@@ -432,7 +432,7 @@
         <div class="col-md-4">
             <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
                 <div style="font-size: 12px; margin-bottom: 8px; opacity: 0.9;">추가병상일</div>
-                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">487</div>
+                <div style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">613</div>
                 <div style="font-size: 11px; opacity: 0.85;">일</div>
             </div>
         </div>
@@ -448,77 +448,52 @@
             </div>
         </div>
 
-        <div class="table-responsive">
-            <table class="table">
+        <div class="table-responsive" style="overflow-x: auto;">
+            <table class="table" style="font-size: 13px; width: 100%; border-collapse: collapse;">
                 <thead>
-                    <tr>
-                        <th style="text-align: left;">질환명</th>
-                        <th>환자수</th>
-                        <th>현 LOS</th>
-                        <th>목표 LOS</th>
-                        <th>LOS 갭</th>
-                        <th>추가병상일</th>
+                    <tr style="border-bottom: 2px solid rgba(52, 152, 219, 0.3);">
+                        <th style="text-align: left; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">질환명</th>
+                        <th style="text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">환자수</th>
+                        <th style="text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            평균재원일수<br><span style="font-size: 11px; font-weight: 400; color: #95a5a6; text-transform: none;">(병원 / 심평원)</span>
+                        </th>
+                        <th style="text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">LOS 갭</th>
+                        <th style="text-align: center; padding: 12px 10px; font-weight: 600; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">추가재원일수(일)</th>
                     </tr>
                 </thead>
                 <tbody>
-                        <tr>
-                            <td style="text-align: left;">기타 의학적 관리를 위하여 보건서비스와 접하고 있는 사람</td>
-                            <td>205명</td>
-                            <td>4.1일</td>
-                            <td>10.8일</td>
-                            <td>
-                                        <span class="positive">+6.7일</span>
+                        <tr style="border-bottom: 1px solid rgba(52, 152, 219, 0.1); transition: background-color 0.12s ease; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='rgba(124, 221, 255, 0.07)'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="text-align: left; padding: 12px 10px; color: #2c3e50; font-weight: 500;">급성 심근경색증</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">9</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace;">
+                                <span style="font-weight: 600; color: #2c3e50;">3.0</span>
+                                <span style="color: #95a5a6; margin: 0 4px;">/</span>
+                                <span style="color: #3498db; font-weight: 500;">32.4</span>
                             </td>
-                            <td>
-                                    1377일
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600;">
+                                        <span style="color: #27ae60;">+29.4</span>
                             </td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: left;">담석증</td>
-                            <td>136명</td>
-                            <td>6.2일</td>
-                            <td>5.5일</td>
-                            <td>
-                                        <span class="negative">-0.8일</span>
-                            </td>
-                            <td>
-                                    -103일
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">
+                                    264
                             </td>
                         </tr>
-                        <tr>
-                            <td style="text-align: left;">유방의 악성 신생물</td>
-                            <td>105명</td>
-                            <td>3.2일</td>
-                            <td>9.5일</td>
-                            <td>
-                                        <span class="positive">+6.4일</span>
+                        <tr style="border-bottom: 1px solid rgba(52, 152, 219, 0.1); transition: background-color 0.12s ease; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='rgba(124, 221, 255, 0.07)'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="text-align: left; padding: 12px 10px; color: #2c3e50; font-weight: 500;">만성 허혈심장병</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">33</td>
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace;">
+                                <span style="font-weight: 600; color: #2c3e50;">2.2</span>
+                                <span style="color: #95a5a6; margin: 0 4px;">/</span>
+                                <span style="color: #3498db; font-weight: 500;">10.0</span>
                             </td>
-                            <td>
-                                    668일
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600;">
+                                        <span style="color: #27ae60;">+7.8</span>
                             </td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: left;">호소증상 및 보고된 진단명이 없는 사람의 일반적 검사 및 조사</td>
-                            <td>100명</td>
-                            <td>1.8일</td>
-                            <td>10.8일</td>
-                            <td>
-                                        <span class="positive">+9.1일</span>
-                            </td>
-                            <td>
-                                    906일
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: left;">무릎관절증</td>
-                            <td>96명</td>
-                            <td>15.9일</td>
-                            <td>14.2일</td>
-                            <td>
-                                        <span class="negative">-1.8일</span>
-                            </td>
-                            <td>
-                                    -169일
+                            <td style="text-align: center; padding: 12px 10px; font-family: 'Consolas', 'Monaco', monospace; font-weight: 600; color: #34495e;">
+                                    258
                             </td>
                         </tr>
                 </tbody>
@@ -539,9 +514,9 @@
             <div>
                 <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">목표 병상일수</div>
                 <div style="font-size: 18px; font-weight: bold;">
-                    688일
+                    814일
                     (
-                        +242.2%
+                        +305.1%
                     )
                 </div>
             </div>
@@ -551,7 +526,7 @@
         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
             <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">기간 가동률 추정</div>
             <div style="font-size: 16px; font-weight: bold;">
-                현재 0.5% → 목표 1.9%
+                현재 0.5% → 목표 2.2%
             </div>
         </div>
     </div>

@@ -8,6 +8,7 @@ from __future__ import annotations
 import pandas as pd
 import logging
 from typing import Dict, List, Tuple
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 

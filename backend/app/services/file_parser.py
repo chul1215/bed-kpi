@@ -90,8 +90,9 @@ class FileParser:
             # NaN 값이 있는 행 제거
             df = df.dropna(subset=['target_los'])
 
-            # DRG 코드 3자리 추출 (매칭용)
-            df['drg_code_3digit'] = df['drg_code'].str[:3]
+            # DRG 코드 3자리 추출 (ADRG 코드로 사용)
+            df['adrg_code'] = df['drg_code'].str[:3]
+            df['drg_code_3digit'] = df['drg_code'].str[:3]  # 하위 호환성
 
             logger.info(f"HIRA 데이터 파싱 완료: 최종 {len(df)}건")
 

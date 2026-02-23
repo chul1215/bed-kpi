@@ -11,8 +11,70 @@ sys.path.insert(0, str(backend_path))
 
 from app.services.kpi_pipeline import KPIPipeline
 from app.services.dashboard_generator import DashboardGenerator
+from app.services.kpi_calculator import KPICalculator
+from app.services.aggregator import Aggregator
 from app.config import settings
 import json
+import pandas as pd
+
+def calculate_doctor_disease_kpis(
+    doctor_name: str,
+    smc_matched,
+    disease_target_map: dict,
+    hospital: str,
+    period: str
+):
+    """
+    특정 의료진의 질환별 KPI 계산
+
+    Args:
+        doctor_name: 의료진명
+        smc_matched: 매칭된 SMC 데이터프레임
+        disease_target_map: 진단명 → 목표 LOS 매핑
+        hospital: 병원명
+        period: 기간
+
+    Returns:
+        질환별 KPI 데이터프레임
+    """
+    # 해당 의료진 + 병원 + 기간 필터링
+    doctor_data = smc_matched[
+        (smc_matched['doctor'] == doctor_name) &
+        (smc_matched['hospital'] == hospital) &
+        (smc_matched['period'] == period)
+    ]
+
+    if len(doctor_data) == 0:
+        return pd.DataFrame()
+
+    # 질환별 집계
+    disease_agg = doctor_data.groupby('diagnosis').agg({
+        'los_days': ['sum', 'count', 'mean']
+    }).reset_index()
+    disease_agg.columns = ['diagnosis', 'total_bed_days', 'patient_count', 'current_los']
+
+    # 환자수 6명 미만 필터링
+    disease_agg = disease_agg[disease_agg['patient_count'] >= settings.MIN_PATIENT_COUNT]
+
+    # 목표 LOS 추가
+    disease_agg['target_los'] = disease_agg['diagnosis'].map(disease_target_map)
+
+    # KPI 계산
+    disease_kpis = []
+    for _, row in disease_agg.iterrows():
+        kpi = KPICalculator.calculate_disease_kpi(row)
+        disease_kpis.append(kpi)
+
+    result_df = pd.DataFrame(disease_kpis)
+
+    # additional_bed_days 기준 정렬 (None 제외)
+    if len(result_df) > 0 and 'status' in result_df.columns:
+        result_df = result_df[result_df['status'] == 'calculated']
+        if len(result_df) > 0:
+            result_df = result_df.sort_values('additional_bed_days', ascending=False)
+
+    return result_df
+
 
 def generate_static_dashboard():
     """정적 HTML 대시보드 생성"""
@@ -36,6 +98,59 @@ def generate_static_dashboard():
     print(f"  - HIRA: {hira_file.name}")
     print(f"  - SMC: {smc_file.name}")
     print(f"  - KDRG: {kdrg_file.name}")
+
+    # HIRA 및 KDRG 매칭 준비 (전역으로 한번만 수행)
+    from app.services.file_parser import FileParser
+    from app.services.kdrg_matcher import KDRGMatcher
+    from app.services.period_classifier import PeriodClassifier
+    from app.config import PROJECT_ROOT
+
+    # HIRA 파싱
+    hira_df = FileParser.parse_hira_file(str(hira_file))
+
+    # SMC 파싱 (4분기만)
+    smc_df = FileParser.parse_smc_file(str(smc_file), filter_quarter=4)
+
+    # KDRG Matcher 초기화 및 매칭
+    kdrg_matcher = KDRGMatcher()
+    kdrg_matcher.load_kdrg_table(str(kdrg_file))
+
+    # ICD-10 매핑 로드 (KDRG 4.6 기반) - 최우선
+    icd10_mapping_file = PROJECT_ROOT / "data" / "mapping" / "icd10_to_adrg_from_kdrg46.xlsx"
+    if icd10_mapping_file.exists():
+        print(f"\n✅ ICD-10 매핑 로드: {icd10_mapping_file.name}")
+        kdrg_matcher.load_icd10_mapping(icd10_mapping_file)
+    else:
+        print(f"\n⚠️  ICD-10 매핑 파일 없음: {icd10_mapping_file}")
+
+    # 수동 진단명 매핑 로드 (ICD-10 매칭 실패 시 폴백)
+    mapping_file = PROJECT_ROOT / "data" / "mapping" / "diagnosis_kdrg44_mapping.xlsx"
+    if mapping_file.exists():
+        kdrg_matcher.load_manual_mapping(mapping_file)
+
+    # ICD-10 코드 포함된 데이터 로드 (병원별 시트)
+    from app.services.hospital_summary_parser import HospitalSummaryParser
+    hospital_summary_df = HospitalSummaryParser.parse_hospital_summary(
+        PROJECT_ROOT / 'data' / 'smc' / '25년도 대전, 유성 의사별 퇴원진단(26.01.28_방하나).xlsx'
+    )
+    print(f"\n✅ 병원별 시트 로드: {len(hospital_summary_df)}건 (ICD-10 코드 100% 포함)")
+
+    # Sheet1 데이터에 ICD-10 코드 매핑 (진단명 기준)
+    diagnosis_to_icd10 = dict(zip(
+        hospital_summary_df['diagnosis'],
+        hospital_summary_df['icd10_code']
+    ))
+    smc_df['icd10_code'] = smc_df['diagnosis'].map(diagnosis_to_icd10)
+
+    # ICD-10 커버리지 확인
+    icd10_coverage = smc_df['icd10_code'].notna().sum()
+    print(f"   ICD-10 커버리지: {icd10_coverage:,}명 / {len(smc_df):,}명 ({icd10_coverage/len(smc_df)*100:.1f}%)")
+
+    # ICD-10 + 진단명 기반 매칭 (전체 데이터)
+    smc_matched, disease_target_map = kdrg_matcher.match_smc_to_hira(smc_df, hira_df)
+
+    # 기간 추가
+    smc_matched = PeriodClassifier.add_period_column(smc_matched, 'discharge_date')
 
     # 대전/유성 병원별로 생성
     for hospital in ["대전", "유성"]:
@@ -66,16 +181,33 @@ def generate_static_dashboard():
             period_name = "비수기" if period == "off_season" else "통상기간"
             print(f"\n{period_name} HTML 생성 중...")
 
-            # 데이터 추출
-            summary_kpi = result['summary_kpi']
+            # 데이터 추출 (기간별)
+            summary_kpi = result[f'summary_kpi_{period}']
             doctor_kpis = result[f'doctor_kpis_{period}']
             disease_kpis = result[f'disease_kpis_{period}']
             department_kpis = result[f'department_kpis_{period}']
             insights = result[f'insights_{period}']
 
+            # 의료진별 질환 데이터 생성 (토글용) - 모든 의료진
+            doctor_disease_dict = {}
+            valid_doctors = doctor_kpis[doctor_kpis['status'] == 'calculated']
+
+            # 모든 의료진에 대해 질환 데이터 생성
+            for _, doctor_row in valid_doctors.iterrows():
+                doctor_name = doctor_row['doctor']
+                doctor_disease_kpis = calculate_doctor_disease_kpis(
+                    doctor_name,
+                    smc_matched,
+                    disease_target_map,
+                    hospital,
+                    period
+                )
+                if len(doctor_disease_kpis) > 0:
+                    doctor_disease_dict[doctor_name] = doctor_disease_kpis.head(10).to_dict('records')
+
             # 1. 홈 화면
             home_html = dashboard_gen.render_home(
-                summary_kpi, doctor_kpis, insights, hospital, period
+                summary_kpi, doctor_kpis, insights, hospital, period, doctor_disease_dict
             )
 
             # 정적 HTML용 네비게이션 스크립트 생성
@@ -192,9 +324,17 @@ def generate_static_dashboard():
                 doctor_name = doctor_row['doctor']
                 doctor_kpi = doctor_row.to_dict()
 
-                # 해당 의료진의 질환 데이터 (샘플)
+                # 해당 의료진의 질환별 KPI 계산 (전역 smc_matched, disease_target_map 사용)
+                doctor_disease_kpis = calculate_doctor_disease_kpis(
+                    doctor_name,
+                    smc_matched,
+                    disease_target_map,
+                    hospital,
+                    period
+                )
+
                 doctor_html = dashboard_gen.render_doctor(
-                    doctor_name, doctor_kpi, disease_kpis.head(5), hospital, period
+                    doctor_name, doctor_kpi, doctor_disease_kpis, hospital, period
                 )
 
                 # 정적 HTML용 네비게이션 스크립트 주입

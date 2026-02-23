@@ -34,7 +34,8 @@ class DashboardGenerator:
         doctor_kpis: pd.DataFrame,
         insights: List[str],
         hospital: str = '대전',
-        period: str = 'off_season'
+        period: str = 'off_season',
+        doctor_disease_data: Dict[str, List[Dict]] = None
     ) -> str:
         """
         홈 화면 렌더링
@@ -45,6 +46,7 @@ class DashboardGenerator:
             insights: 인사이트 리스트
             hospital: 병원명
             period: 기간
+            doctor_disease_data: 의료진별 질환 데이터 (토글용)
 
         Returns:
             렌더링된 HTML 문자열
@@ -93,7 +95,8 @@ class DashboardGenerator:
             doctor_all_data=doctor_all_data,
             department_list=department_list,
             department_summary=department_summary,
-            insights=insights
+            insights=insights,
+            doctor_disease_data=doctor_disease_data or {}
         )
 
         return html
