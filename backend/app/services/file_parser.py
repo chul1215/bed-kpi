@@ -191,6 +191,13 @@ class FileParser:
             # 6. NaN 값이 있는 행 제거
             df = df.dropna(subset=['퇴원일자', '평균재원', '진단명', '의사명'])
 
+            # 7. FM 진료과 제외
+            df_before_fm = len(df)
+            df = df[df['퇴원과'] != 'FM']
+            fm_excluded = df_before_fm - len(df)
+            if fm_excluded > 0:
+                logger.info(f"FM 진료과 제외: {fm_excluded}건")
+
             logger.info(f"SMC 데이터 정제 완료: {len(df)}건")
 
             # 컬럼명 변경 (ADRG 제외, 나중에 추가)
