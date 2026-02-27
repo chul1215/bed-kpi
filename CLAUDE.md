@@ -2,7 +2,9 @@
 
 ## 프로젝트 개요
 
-대전선병원·유성선병원 의사별 TOP7 진단 기준, 비수기·통상기간 목표 재원일수를 산출하고 조정 대상을 시각화하는 **단일 HTML 대시보드**.
+대전선병원·유성선병원 의사별 TOP7 진단 기준, 비수기·통상기간 목표 재원일수를 산출하고 조정 대상을 시각화하는 **HTML 대시보드**.
+
+- **배포**: GitHub Pages — https://chul1215.github.io/bed-kpi/
 
 ## 핵심 비즈니스 로직
 
@@ -76,18 +78,14 @@ vs_hira (저장값) = cur - hira   (병원 - 심평원)
 ## 파일 구조
 
 ```
-index.html            # 단일 파일 (HTML + CSS + JS 인라인)
+index.html            # UI + 로직 (24KB)
 ├── <style>           # CSS 변수 기반 다크 테마
 │   └── 색상 변수: --dj(파랑), --ys(초록), --bg, --card 등
 ├── <nav>             # 병원 탭 전환 (대전/유성)
 ├── <div#p-dj>        # 대전 패널 (JS 동적 생성)
 ├── <div#p-ys>        # 유성 패널 (JS 동적 생성)
+├── <script src="data.js">  # 외부 데이터 로드
 └── <script>          # 전체 로직
-    ├── RAW (const)   # 인라인 JSON 데이터
-    │   ├── data.대전[]        (255건, 43의사)
-    │   ├── data.유성[]        (286건, 50의사, FM제외)
-    │   ├── summary.대전       (beds, occ, direction, doc_dept 등)
-    │   └── summary.유성
     ├── sw()          # 병원 탭 전환 (curPg 리셋 + af() 호출)
     ├── render()      # 패널 HTML 생성 (요약카드 + 필터 + 테이블)
     │   └── annual_ratio 계산 → window['annual_ratio_'+h] 저장
@@ -98,6 +96,12 @@ index.html            # 단일 파일 (HTML + CSS + JS 인라인)
     ├── renderPagi()  # 페이지네이션 UI
     ├── gp()          # 페이지 이동 (af() 선호출 후 페이지 이동)
     └── ds()          # 컬럼 정렬 토글 (ASC/DESC)
+
+data.js               # RAW 데이터 (203KB, 별도 분리)
+├── RAW.data.대전[]          (255건, 43의사)
+├── RAW.data.유성[]          (286건, 50의사, FM제외)
+├── RAW.summary.대전         (beds, occ, direction, doc_dept 등)
+└── RAW.summary.유성
 ```
 
 ---
@@ -202,11 +206,12 @@ DOM ID 규칙: `sel-대전`, `inp-유성`, `tbody-대전` 등 **한글 사용** 
 
 ## 개발 시 주의사항
 
-1. **데이터 갱신**: Python 스크립트로 RAW JSON 재생성 후 교체
+1. **데이터 갱신**: Python 스크립트로 RAW JSON 재생성 → `data.js` 파일 교체 (`const RAW = {...};` 형태)
 2. **direction**: 현재 두 병원 모두 `연장`. 방향 바뀌면 needAdj, pill 색상, vs_hira 색상 로직 모두 영향
 3. **심평원 매칭**: 548/548건 완료. 신규 진단 추가 시 `data/hira/입원일수_20260224163001.xlsx`에서 수동 매핑
 4. **null 정렬 처리**: `sDir>0 ? 9999 : -9999`로 치환
-5. **외부 의존성 없음**: CDN, 라이브러리 미사용. 순수 Vanilla JS
+5. **외부 의존성 없음**: CDN, 라이브러리 미사용. 순수 Vanilla JS + data.js
+6. **데이터 분리**: RAW 데이터는 `data.js`로 분리 (GitHub 렌더링 제한 대응, index.html 161KB→24KB)
 6. **gp() 버그 수정됨**: 페이지 이동 시 af(h) 선호출로 병원 교차 오염 방지
 7. **sw() 버그 수정됨**: 탭 전환 시 curPg=1 리셋 + af(h) 호출
 
@@ -252,7 +257,7 @@ for hosp, cfg in config.items():
 
 ## 확장 포인트
 
-- [ ] 데이터를 외부 JSON/API로 분리
+- [x] ~~데이터를 외부 파일로 분리~~ — data.js로 분리 완료
 - [ ] 라이트 모드 지원
 - [ ] CSV/Excel 내보내기
 - [ ] 의사별 상세 드릴다운 (시계열 차트)
@@ -272,7 +277,5 @@ for hosp, cfg in config.items():
 open index.html
 # 또는
 python3 -m http.server 8000  # http://localhost:8000
+# GitHub Pages: https://chul1215.github.io/bed-kpi/
 ```
-
-# currentDate
-Today's date is 2026-02-25.
