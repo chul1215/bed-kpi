@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "ollama": {
+      "type": "stdio",
+      "command": "/Users/chul/.npm-global/node_modules/.bin/ollama-mcp",
+      "env": {
+        "OLLAMA_HOST": "http://localhost:11434"
+      }
+    }
+  }
+}
