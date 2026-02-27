@@ -537,14 +537,9 @@
   </nav>
   <div class="panel active" id="p-dj"></div>
   <div class="panel" id="p-ys"></div>
+  <script src="data.js"></script>
   <script>
-    let RAW, DATA, SUM;
-    const DATA_URL = 'data.json';
-    async function loadData() {
-      const resp = await fetch(DATA_URL);
-      RAW = await resp.json();
-      DATA = RAW.data; SUM = RAW.summary;
-    }
+    const DATA = RAW.data, SUM = RAW.summary;
     let curH = '대전', sCol = null, sDir = 1, curPg = 1, filt = [];
     const PG = 25;
 
@@ -820,10 +815,8 @@
       af(h);
     }
 
-    loadData().then(() => {
-      render('대전'); render('유성');
-      document.getElementById('p-ys').classList.remove('active');
-    });
+    render('대전'); render('유성');
+    document.getElementById('p-ys').classList.remove('active');
   </script>
 </body>
 
