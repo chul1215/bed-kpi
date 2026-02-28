@@ -1015,8 +1015,9 @@
         const tgtA = parseFloat((r.cur * annualRatio).toFixed(2));
         const diffA = parseFloat((r.cur - tgtA).toFixed(2));
         const vsH = r.vs_hira != null ? (-r.vs_hira).toFixed(2) : '';
+        const diagEscaped = r.diag.replace(/"/g, '""');
         lines.push([
-          r.doctor, docDept[r.doctor] || '', `"${r.diag}"`, r.n,
+          r.doctor, docDept[r.doctor] || '', `"${diagEscaped}"`, r.n,
           r.off_n, r.cur_off, r.tgt_off, r.diff_off,
           r.norm_n, r.cur_norm, r.tgt_norm, r.diff_norm,
           r.cur, tgtA, diffA,
