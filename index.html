@@ -185,7 +185,7 @@
       font-size: 13px; cursor: pointer; outline: none; font-family: inherit;
       transition: border-color .2s;
     }
-    .ctrl-sel:focus { border-color: var(--dj); }
+    .ctrl-sel:focus { border-color: var(--hosp-color, var(--dj)); }
 
     .ctrl-inp-wrap { position: relative; display: inline-flex; align-items: center; }
     .ctrl-inp-icon {
@@ -199,7 +199,7 @@
       border-radius: 9px; font-size: 13px; outline: none;
       min-width: 195px; font-family: inherit; transition: border-color .2s;
     }
-    .ctrl-inp:focus { border-color: var(--dj); }
+    .ctrl-inp:focus { border-color: var(--hosp-color, var(--dj)); }
     .ctrl-inp::placeholder { color: var(--muted); }
 
     /* ── TOGGLE ── */
@@ -366,10 +366,8 @@
     }
     .modal-hdr-icon {
       width: 52px; height: 52px; border-radius: 14px;
-      background: linear-gradient(135deg, #137fec, #2dd4bf);
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
-      box-shadow: 0 6px 20px rgba(19,127,236,0.35);
     }
     .modal-hdr-icon .material-symbols-outlined { font-size: 28px; color: #fff; }
     .modal-ai-badge {
@@ -421,7 +419,7 @@
     /* ── KPI STATS GRID ── */
     .mdoc-kpi-grid {
       display: grid; grid-template-columns: repeat(5, 1fr);
-      gap: 10px; margin-bottom: 28px;
+      gap: 10px; margin-bottom: 20px;
     }
     @media (max-width: 750px) { .mdoc-kpi-grid { grid-template-columns: repeat(3, 1fr); } }
     .mdoc-kpi-card {
@@ -433,46 +431,16 @@
     .mdoc-kpi-val { font-size: 18px; font-weight: 800; color: #fff; }
     .mdoc-kpi-val span { font-size: 11px; font-weight: 400; color: var(--muted); }
 
-    /* ── GAUGE + SEAS GRID ── */
-    .mdoc-mid-grid {
-      display: grid; grid-template-columns: 260px 1fr;
-      gap: 18px; margin-bottom: 28px; align-items: stretch;
-    }
-    @media (max-width: 700px) { .mdoc-mid-grid { grid-template-columns: 1fr; } }
-
+    /* ── SEASONAL PANEL ── */
     .mdoc-panel {
       background: #131c26; border: 1px solid var(--border);
-      border-radius: 14px; overflow: hidden;
+      border-radius: 14px; overflow: hidden; margin-bottom: 28px;
     }
     .mdoc-panel-hdr {
       padding: 12px 18px; border-bottom: 1px solid var(--border);
       font-size: 10px; font-weight: 700; color: var(--muted);
       letter-spacing: 1.5px; text-transform: uppercase;
     }
-
-    /* ── GAUGE ── */
-    .mdoc-gauge-body {
-      padding: 24px 18px; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 16px;
-    }
-    .mdoc-gauge-wrap { position: relative; width: 128px; height: 128px; }
-    .mdoc-gauge-wrap svg { transform: rotate(-90deg); }
-    .mdoc-gauge-center {
-      position: absolute; inset: 0;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-    }
-    .mdoc-gauge-pct { font-size: 24px; font-weight: 900; color: #fff; }
-    .mdoc-gauge-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
-    .mdoc-gauge-bar-row { width: 100%; }
-    .mdoc-gauge-bar-lbl { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 5px; }
-    .mdoc-gauge-bar-bg { width: 100%; height: 5px; background: var(--border); border-radius: 4px; overflow: hidden; }
-    .mdoc-gauge-bar-fill { height: 100%; border-radius: 4px; }
-    .mdoc-gauge-gap {
-      font-size: 11px; font-weight: 600; color: #fa6238;
-      display: flex; align-items: center; gap: 4px;
-      margin-top: 6px;
-    }
-    .mdoc-gauge-gap .material-symbols-outlined { font-size: 15px; }
 
     /* ── SEASONAL TABLE ── */
     .mdoc-seas-tbl { width: 100%; border-collapse: collapse; }
@@ -492,7 +460,7 @@
     .mdoc-seas-tbl tbody tr:last-child td { border-bottom: none; }
     .mdoc-seas-tbl tbody tr.highlight td { background: rgba(19,127,236,0.04); }
     .seas-badge {
-      display: inline-block; padding: 2px 9px; border-radius: 20px;
+      display: inline-block; padding: 2px 8px; border-radius: 6px;
       font-size: 10px; font-weight: 700;
     }
     .seas-badge.need { background: rgba(250,98,56,0.12); color: #fa6238; border: 1px solid rgba(250,98,56,0.22); }
@@ -526,7 +494,7 @@
     .hira-safe  { color: #0bda5b; font-size: 11px; font-weight: 700; }
     .hira-over  { color: #fa6238; font-size: 11px; font-weight: 700; }
     .hira-match { color: var(--muted); font-size: 11px; }
-    .risk-badge { display: inline-block; padding: 1px 7px; border-radius: 5px; font-size: 10px; font-weight: 700; }
+    .risk-badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; }
     .risk-safe  { background: rgba(11,218,91,0.12); color: #0bda5b; border: 1px solid rgba(11,218,91,0.22); }
     .risk-over  { background: rgba(250,98,56,0.12); color: #fa6238; border: 1px solid rgba(250,98,56,0.22); }
     .risk-match { background: rgba(129,140,248,0.12); color: var(--indigo); border: 1px solid rgba(129,140,248,0.2); }
@@ -680,6 +648,7 @@
       const badgeIcon = s.cur_occ >= s.tgt_occ ? 'trending_up' : 'trending_flat';
       const badgeTxt = `목표 ${s.tgt_occ}% | ${s.beds}병상`;
 
+      panel.style.setProperty('--hosp-color', colHex);
       panel.innerHTML = `
   <div class="panel-hdr">
     <div class="panel-badge" style="background:${colHex}18;border:1px solid ${colHex}30;color:${col}">
@@ -1137,11 +1106,6 @@
         return `<span class="pill p-pos">+${Math.abs(d).toFixed(2)}일</span>`;
       };
 
-      // Gauge (hospital-level occupancy)
-      const gaugePct = s.cur_occ;
-      const gaugeOffset = (100 - gaugePct).toFixed(1);
-      const gapPct = (s.tgt_occ - s.cur_occ).toFixed(1);
-
       // Seasonal comparison rows
       const seasData = [
         { lbl: '비수기 (85%)', sub: '3·4·11·12월', cur: wOff, tgt: wTgtOff, diff: dOff },
@@ -1230,13 +1194,13 @@
       box.innerHTML = `
         <div class="modal-hdr">
           <div style="display:flex;align-items:center;gap:16px">
-            <div class="modal-hdr-icon">
+            <div class="modal-hdr-icon" style="background:linear-gradient(135deg,${colHex},${colHex}99);box-shadow:0 6px 20px ${colHex}55">
               <span class="material-symbols-outlined">auto_awesome</span>
             </div>
             <div>
               <div style="display:flex;align-items:center;gap:0">
                 <div class="modal-title">${doctor} 의료진 KPI 분석 리포트</div>
-                <span class="modal-ai-badge">AI Generated</span>
+                <span class="modal-ai-badge">AI ROOMi Generated</span>
               </div>
               <div class="modal-meta-row">
                 <span class="modal-meta-item"><span class="material-symbols-outlined">medical_services</span>${dept} · ${h}선병원</span>
@@ -1279,47 +1243,16 @@
             </div>
           </div>
 
-          <!-- ② Gauge + Seasonal -->
+          <!-- ② Seasonal -->
           <div class="mdoc-sec-hdr">Bed Utilization Goal</div>
-          <div class="mdoc-mid-grid">
-            <div class="mdoc-panel">
-              <div class="mdoc-panel-hdr">병상가동률 현황</div>
-              <div class="mdoc-gauge-body">
-                <div class="mdoc-gauge-wrap">
-                  <svg width="128" height="128" viewBox="0 0 36 36">
-                    <circle cx="18" cy="18" r="16" fill="none" stroke="#233648" stroke-width="3"/>
-                    <circle cx="18" cy="18" r="16" fill="none" stroke="${colHex}" stroke-width="3"
-                      stroke-dasharray="100" stroke-dashoffset="${gaugeOffset}" stroke-linecap="round"/>
-                  </svg>
-                  <div class="mdoc-gauge-center">
-                    <div class="mdoc-gauge-pct">${gaugePct}%</div>
-                    <div class="mdoc-gauge-sub">현재</div>
-                  </div>
-                </div>
-                <div class="mdoc-gauge-bar-row">
-                  <div class="mdoc-gauge-bar-lbl">
-                    <span style="color:var(--sub)">목표</span>
-                    <span style="color:#fff;font-weight:700">${s.tgt_occ}%</span>
-                  </div>
-                  <div class="mdoc-gauge-bar-bg">
-                    <div class="mdoc-gauge-bar-fill" style="width:${s.tgt_occ}%;background:${colHex}55"></div>
-                  </div>
-                  <div class="mdoc-gauge-gap">
-                    <span class="material-symbols-outlined">warning</span>
-                    ${gapPct}%p Gap to achieve target
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="mdoc-panel">
-              <div class="mdoc-panel-hdr">Seasonal Performance — 의사 가중평균 재원일수</div>
-              <table class="mdoc-seas-tbl">
-                <thead><tr>
-                  <th>기간</th><th>현재</th><th>목표</th><th>차이</th><th>상태</th>
-                </tr></thead>
-                <tbody>${seasRows}</tbody>
-              </table>
-            </div>
+          <div class="mdoc-panel">
+            <div class="mdoc-panel-hdr">Seasonal Performance — 의사 가중평균 재원일수</div>
+            <table class="mdoc-seas-tbl">
+              <thead><tr>
+                <th>기간</th><th>현재</th><th>목표</th><th>차이</th><th>상태</th>
+              </tr></thead>
+              <tbody>${seasRows}</tbody>
+            </table>
           </div>
 
           <!-- ③ TOP7 Chart -->
