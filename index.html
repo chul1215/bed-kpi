@@ -1000,7 +1000,8 @@
     function exportCSV(h) {
       const annualRatio = window['annual_ratio_' + h] || 1;
       const s = SUM[h];
-      const rows = filt.length ? filt : DATA[h];
+      const rows = filt.length ? filt : (DATA[h] || []);
+      if (!rows.length) { alert('다운로드할 데이터가 없습니다.'); return; }
       const headers = [
         '의사명','진료과','진단명','총환자수',
         '비수기환자수','비수기현재(일)','비수기목표(일)','비수기차이(일)',
