@@ -210,6 +210,15 @@
     .ctrl-inp:focus { border-color: var(--hosp-color, var(--dj)); }
     .ctrl-inp::placeholder { color: var(--muted); }
 
+    .csv-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--card2); border: 1px solid var(--border);
+      color: var(--sub); padding: 6px 12px; border-radius: 9px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: all .15s; white-space: nowrap;
+    }
+    .csv-btn:hover { color: var(--text); border-color: var(--hosp-color, var(--dj)); }
+
     /* ── TOGGLE ── */
     .tgl {
       display: flex; background: var(--card2);
@@ -745,6 +754,10 @@
       <button class="tgl-btn ${cls}" onclick="sm('${h}','need')">${dir}필요</button>
       <button class="tgl-btn ${cls}" onclick="sm('${h}','hira')">심평원有</button>
     </div>
+    <button class="csv-btn" onclick="exportCSV('${h}')" title="현재 필터 기준으로 CSV 내보내기">
+      <span class="material-symbols-outlined" style="font-size:15px">download</span>
+      CSV
+    </button>
   </div>
 
   <div class="leg-row">
@@ -982,6 +995,42 @@
           btn.innerHTML = orig;
           btn.disabled = false;
         });
+    }
+
+    function exportCSV(h) {
+      const annualRatio = window['annual_ratio_' + h] || 1;
+      const s = SUM[h];
+      const rows = filt.length ? filt : DATA[h];
+      const headers = [
+        '의사명','진료과','진단명','총환자수',
+        '비수기환자수','비수기현재(일)','비수기목표(일)','비수기차이(일)',
+        '통상환자수','통상현재(일)','통상목표(일)','통상차이(일)',
+        '연간현재(일)','연간목표(일)','연간차이(일)',
+        '심평원(일)','vs심평원(일)'
+      ];
+      const docDept = s.doc_dept || {};
+      const lines = ['\uFEFF' + headers.join(',')];
+      rows.forEach(r => {
+        const tgtA = parseFloat((r.cur * annualRatio).toFixed(2));
+        const diffA = parseFloat((r.cur - tgtA).toFixed(2));
+        const vsH = r.vs_hira != null ? (-r.vs_hira).toFixed(2) : '';
+        lines.push([
+          r.doctor, docDept[r.doctor] || '', `"${r.diag}"`, r.n,
+          r.off_n, r.cur_off, r.tgt_off, r.diff_off,
+          r.norm_n, r.cur_norm, r.tgt_norm, r.diff_norm,
+          r.cur, tgtA, diffA,
+          r.hira ?? '', vsH
+        ].join(','));
+      });
+      const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const mode = window['mode_' + h] || 'all';
+      const modeLabel = mode === 'need' ? '_조정필요' : mode === 'hira' ? '_심평원有' : '';
+      a.href = url;
+      a.download = `${h}선병원_KPI${modeLabel}_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
     }
 
     function dlSummary(h) {
