@@ -5,538 +5,649 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>선메디컬센터 병상가동률 개선 KPI 산출 시뮬레이터</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
   <style>
     :root {
-      --dj: #3b82f6;
+      --dj: #137fec;
       --ys: #10b981;
       --gold: #f59e0b;
-      --red: #f87171;
-      --green: #34d399;
+      --red: #fa6238;
+      --green: #0bda5b;
       --purple: #a78bfa;
       --indigo: #818cf8;
-      --bg: #07090f;
-      --card: #0e1118;
-      --card2: #111620;
-      --border: #1a2235;
-      --text: #e8eef8;
-      --muted: #4a5568;
-      --sub: #8899aa;
+      --bg: #101922;
+      --card: #182635;
+      --card2: #111a22;
+      --border: #233648;
+      --text: #e2eaf4;
+      --muted: #4a5c6e;
+      --sub: #7a92a8;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+      font-family: 'Inter', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+      min-height: 100vh;
     }
 
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--card2); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #324d67; }
+
+    /* ── NAV ── */
     .nav {
       position: sticky;
       top: 0;
       z-index: 200;
-      background: rgba(7, 9, 15, 0.97);
-      backdrop-filter: blur(12px);
+      background: rgba(16, 25, 34, 0.96);
+      backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
       padding: 0 28px;
       display: flex;
       align-items: center;
-      gap: 4px;
+      justify-content: space-between;
+      height: 64px;
     }
 
-    .nav-logo {
-      font-size: 13px;
-      font-weight: 900;
-      padding: 14px 16px 14px 0;
-      background: linear-gradient(90deg, var(--dj), #8b5cf6);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      white-space: nowrap;
+    .nav-brand { display: flex; align-items: center; gap: 12px; }
+
+    .nav-brand-icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: rgba(19, 127, 236, 0.18);
+      color: var(--dj);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nav-brand-icon .material-symbols-outlined { font-size: 22px; }
+
+    .nav-title { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -0.3px; }
+    .nav-subtitle { font-size: 11px; color: var(--sub); font-weight: 500; margin-top: 1px; }
+
+    .nav-pills {
+      display: flex;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px; gap: 3px;
     }
 
     .hosp-btn {
-      padding: 14px 18px;
-      font-size: 13px;
-      font-weight: 700;
+      padding: 7px 20px;
+      font-size: 13px; font-weight: 600;
       color: var(--sub);
-      border: none;
-      background: none;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
+      border: none; background: none;
+      cursor: pointer; border-radius: 7px;
       transition: all .2s;
+      font-family: inherit;
     }
+    .hosp-btn:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.04); }
+    .hosp-btn.dj.active { color: #fff; background: var(--dj); box-shadow: 0 2px 10px rgba(19,127,236,0.35); }
+    .hosp-btn.ys.active { color: #fff; background: var(--ys); box-shadow: 0 2px 10px rgba(16,185,129,0.35); }
 
-    .hosp-btn.dj.active {
-      color: var(--dj);
-      border-bottom-color: var(--dj);
+    /* ── PANEL ── */
+    .panel { display: none; padding: 28px 28px 40px; }
+    .panel.active { display: block; }
+
+    /* ── PANEL HEADER ── */
+    .panel-hdr { margin-bottom: 24px; }
+    .panel-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      border-radius: 20px; padding: 4px 13px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+      margin-bottom: 10px;
     }
+    .panel-h2 { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 4px; }
+    .panel-desc { font-size: 12px; color: var(--sub); }
 
-    .hosp-btn.ys.active {
-      color: var(--ys);
-      border-bottom-color: var(--ys);
-    }
-
-    .panel {
-      display: none;
-      padding: 32px 28px;
-    }
-
-    .panel.active {
-      display: block;
-    }
-
+    /* ── SUMMARY CARDS ── */
     .sum-row {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
     }
+    @media (max-width: 1100px) { .sum-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px)  { .sum-row { grid-template-columns: 1fr; } }
 
     .sum-card {
-      flex: 1;
-      min-width: 155px;
       background: var(--card);
-      border-radius: 12px;
-      padding: 16px 18px;
+      border-radius: 14px; padding: 18px 20px;
       border: 1px solid var(--border);
-      position: relative;
-      overflow: hidden;
+      position: relative; overflow: hidden;
+      transition: border-color .2s, transform .15s;
     }
+    .sum-card:hover { border-color: rgba(255,255,255,0.1); transform: translateY(-1px); }
 
-    .sum-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
+    .sum-card-icon {
+      position: absolute; top: 12px; right: 14px;
+      font-size: 54px; opacity: 0.07;
+      transition: opacity .2s;
+      line-height: 1;
+      font-variation-settings: 'FILL' 1, 'wght' 300;
     }
+    .sum-card:hover .sum-card-icon { opacity: 0.14; }
 
-    .sum-card.dj::before {
-      background: linear-gradient(90deg, var(--dj), #6366f1);
+    .sum-lbl { font-size: 11px; color: var(--sub); font-weight: 500; margin-bottom: 6px; }
+
+    .sum-val { font-size: 26px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
+
+    .sum-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border-radius: 6px;
+      font-size: 11px; font-weight: 600;
+      margin-bottom: 10px;
     }
+    .sum-badge .material-symbols-outlined { font-size: 14px; line-height: 1; }
 
-    .sum-card.ys::before {
-      background: linear-gradient(90deg, var(--ys), #06b6d4);
-    }
+    .sum-sub { font-size: 11px; color: var(--sub); line-height: 1.75; margin-bottom: 12px; }
+    .sum-sub strong { color: var(--text); font-weight: 600; }
 
-    .sum-card.off::before {
-      background: linear-gradient(90deg, var(--indigo), #8b5cf6);
-    }
+    .sum-progress { width: 100%; height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .sum-progress-fill { height: 100%; border-radius: 4px; transition: width .7s ease; }
 
-    .sum-card.norm::before {
-      background: linear-gradient(90deg, var(--gold), #fb923c);
-    }
-
-    .sum-card.hira::before {
-      background: linear-gradient(90deg, var(--green), #06b6d4);
-    }
-
-    .sum-lbl {
-      font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 1px;
-      margin-bottom: 6px;
-    }
-
-    .sum-val {
-      font-size: 20px;
-      font-weight: 800;
-      margin-bottom: 3px;
-    }
-
-    .sum-sub {
-      font-size: 11px;
-      color: var(--sub);
-      line-height: 1.6;
-    }
-
-    .sum-tag {
-      display: inline-block;
-      padding: 1px 7px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 700;
-      margin-bottom: 5px;
-    }
-
-    .tag-off {
-      background: rgba(129, 140, 248, 0.2);
-      color: var(--indigo);
-    }
-
-    .tag-norm {
-      background: rgba(245, 158, 11, 0.15);
-      color: var(--gold);
-    }
-
-    .tag-hira {
-      background: rgba(52, 211, 153, 0.15);
-      color: var(--green);
-    }
-
+    /* ── NOTICE ── */
     .notice {
-      background: rgba(245, 158, 11, 0.06);
-      border: 1px solid rgba(245, 158, 11, 0.18);
-      border-radius: 10px;
-      padding: 11px 15px;
-      margin-bottom: 18px;
-      font-size: 12px;
-      color: var(--sub);
-      line-height: 1.8;
+      background: rgba(245,158,11,0.05);
+      border: 1px solid rgba(245,158,11,0.14);
+      border-radius: 10px; padding: 11px 16px;
+      margin-bottom: 18px; font-size: 12px; color: var(--sub); line-height: 1.8;
     }
+    .notice strong { color: var(--gold); }
 
-    .notice strong {
-      color: var(--gold);
+    /* ── SECTION HEADING ── */
+    .sec {
+      font-size: 10px; font-weight: 700; letter-spacing: 2px;
+      color: var(--muted); text-transform: uppercase;
+      margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
     }
+    .sec::after { content:''; flex:1; height:1px; background:var(--border); }
 
-    .ctrl-row {
-      display: flex;
-      gap: 9px;
+    /* ── CONTROL PANEL ── */
+    .ctrl-panel {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 16px;
       margin-bottom: 14px;
-      flex-wrap: wrap;
-      align-items: center;
+      display: flex; flex-wrap: wrap; gap: 10px;
+      align-items: center; justify-content: space-between;
     }
+    .ctrl-left { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
     .ctrl-sel {
-      background: var(--card2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 7px 11px;
-      border-radius: 8px;
-      font-size: 13px;
-      cursor: pointer;
-      outline: none;
+      background: var(--card2); border: 1px solid var(--border);
+      color: var(--text); padding: 8px 12px; border-radius: 9px;
+      font-size: 13px; cursor: pointer; outline: none; font-family: inherit;
+      transition: border-color .2s;
     }
+    .ctrl-sel:focus { border-color: var(--dj); }
 
+    .ctrl-inp-wrap { position: relative; display: inline-flex; align-items: center; }
+    .ctrl-inp-icon {
+      position: absolute; left: 10px;
+      color: var(--muted); font-size: 18px;
+      pointer-events: none; line-height: 1;
+    }
     .ctrl-inp {
-      background: var(--card2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 7px 11px;
-      border-radius: 8px;
-      font-size: 13px;
-      outline: none;
-      min-width: 170px;
+      background: var(--card2); border: 1px solid var(--border);
+      color: var(--text); padding: 8px 12px 8px 34px;
+      border-radius: 9px; font-size: 13px; outline: none;
+      min-width: 195px; font-family: inherit; transition: border-color .2s;
     }
+    .ctrl-inp:focus { border-color: var(--dj); }
+    .ctrl-inp::placeholder { color: var(--muted); }
 
-    .ctrl-inp::placeholder {
-      color: var(--muted);
-    }
-
+    /* ── TOGGLE ── */
     .tgl {
-      display: flex;
-      background: var(--card2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
+      display: flex; background: var(--card2);
+      border: 1px solid var(--border); border-radius: 9px;
+      overflow: hidden; padding: 3px; gap: 3px;
     }
-
     .tgl-btn {
-      padding: 6px 11px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--sub);
-      border: none;
-      background: none;
-      cursor: pointer;
-      transition: all .15s;
+      padding: 6px 14px; font-size: 12px; font-weight: 600;
+      color: var(--sub); border: none; background: none;
+      cursor: pointer; border-radius: 6px; transition: all .15s;
+      font-family: inherit; white-space: nowrap;
     }
+    .tgl-btn:hover:not(.on) { color: var(--text); background: rgba(255,255,255,0.04); }
+    .tgl-btn.on { color: #fff; }
+    .tgl-btn.on.dj { background: var(--dj); }
+    .tgl-btn.on.ys { background: var(--ys); }
 
-    .tgl-btn.on {
-      color: #fff;
-    }
-
-    .tgl-btn.on.dj {
-      background: var(--dj);
-    }
-
-    .tgl-btn.on.ys {
-      background: var(--ys);
-    }
-
-    .chips {
-      display: flex;
-      gap: 7px;
-      flex-wrap: wrap;
-      margin-left: auto;
-    }
-
+    /* ── CHIPS ── */
+    .chips { display: flex; gap: 7px; flex-wrap: wrap; }
     .chip {
-      padding: 4px 9px;
-      border-radius: 5px;
-      font-size: 11px;
-      font-weight: 700;
-      background: var(--card2);
-      border: 1px solid var(--border);
+      padding: 5px 11px; border-radius: 7px; font-size: 11px; font-weight: 600;
+      background: var(--card2); border: 1px solid var(--border);
     }
 
+    /* ── LEGEND ── */
     .leg-row {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-      align-items: center;
+      display: flex; gap: 14px; flex-wrap: wrap;
+      margin-bottom: 12px; align-items: center;
     }
+    .leg-item { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--sub); }
+    .leg-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
 
-    .leg-item {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      color: var(--sub);
-    }
-
-    .leg-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-    }
-
-    .tbl-wrap {
-      overflow-x: auto;
-      border-radius: 12px;
+    /* ── TABLE ── */
+    .tbl-outer {
       border: 1px solid var(--border);
-      margin-bottom: 12px;
+      border-radius: 14px; overflow: hidden;
+      margin-bottom: 0;
     }
+    .tbl-scroll { overflow-x: auto; }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 900px;
-    }
+    table { width:100%; border-collapse:collapse; min-width:900px; }
 
     thead th {
-      background: var(--card2);
-      padding: 9px 11px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .7px;
-      color: var(--sub);
-      text-align: center;
+      background: var(--card2); padding: 11px 12px;
+      font-size: 10px; font-weight: 700; letter-spacing: .8px;
+      color: var(--sub); text-align: center;
       border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-      cursor: pointer;
-      user-select: none;
+      white-space: nowrap; cursor: pointer; user-select: none;
+      transition: color .15s;
     }
-
-    thead th:hover {
-      color: var(--text);
-    }
-
-    thead th.asc::after {
-      content: " ▲";
-      color: var(--gold);
-    }
-
-    thead th.desc::after {
-      content: " ▼";
-      color: var(--gold);
-    }
+    thead th:hover { color: var(--text); }
+    thead th.asc::after  { content:" ▲"; color:var(--gold); }
+    thead th.desc::after { content:" ▼"; color:var(--gold); }
 
     td {
-      padding: 9px 11px;
-      font-size: 12px;
+      padding: 10px 12px; font-size: 12px;
       border-bottom: 1px solid var(--border);
-      text-align: center;
-      background: var(--card);
-      vertical-align: middle;
+      text-align: center; background: var(--card); vertical-align: middle;
     }
+    tbody tr:hover td { background: rgba(255,255,255,0.025); }
+    tbody tr:last-child td { border-bottom: none; }
+    td.left { text-align: left; }
+    th.left { text-align: left; }
 
-    tbody tr:hover td {
-      background: var(--card2);
-    }
+    /* ── TABLE CELL ── */
+    .pcell { display:flex; flex-direction:column; gap:3px; align-items:center; }
+    .prow  { display:flex; align-items:center; gap:4px; white-space:nowrap; }
+    .pl    { font-size:10px; color:var(--muted); width:22px; text-align:right; flex-shrink:0; }
+    .pc    { font-size:11px; color:var(--sub); }
+    .pa    { font-size:10px; color:var(--muted); }
+    .pt-off  { font-size:12px; font-weight:700; color:var(--indigo); }
+    .pt-norm { font-size:12px; font-weight:700; color:var(--gold); }
 
-    tbody tr:last-child td {
-      border-bottom: none;
-    }
-
-    td.left {
-      text-align: left;
-    }
-
-    th.left {
-      text-align: left;
-    }
-
-    .pcell {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      align-items: center;
-    }
-
-    .prow {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      white-space: nowrap;
-    }
-
-    .pl {
-      font-size: 10px;
-      color: var(--muted);
-      width: 22px;
-      text-align: right;
-      flex-shrink: 0;
-    }
-
-    .pc {
-      font-size: 11px;
-      color: var(--sub);
-    }
-
-    .pa {
-      font-size: 10px;
-      color: var(--muted);
-    }
-
-    .pt-off {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--indigo);
-    }
-
-    .pt-norm {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--gold);
-    }
-
+    /* ── PILLS ── */
     .pill {
-      display: inline-block;
-      padding: 1px 6px;
-      border-radius: 8px;
-      font-size: 10px;
-      font-weight: 700;
-      white-space: nowrap;
+      display:inline-block; padding:2px 7px; border-radius:6px;
+      font-size:10px; font-weight:700; white-space:nowrap;
     }
+    .p-neg  { background:rgba(250,98,56,0.13);  color:var(--red);   border:1px solid rgba(250,98,56,0.22); }
+    .p-pos  { background:rgba(11,218,91,0.11);  color:var(--green); border:1px solid rgba(11,218,91,0.22); }
+    .p-zero { background:rgba(167,139,250,0.11); color:var(--purple); border:1px solid rgba(167,139,250,0.2); }
 
-    .p-neg {
-      background: rgba(248, 113, 113, 0.15);
-      color: var(--red);
-    }
+    /* ── MINI BAR ── */
+    .bar-wrap { display:inline-block; width:58px; vertical-align:middle; }
+    .bar-bg   { background:var(--border); border-radius:3px; height:5px; margin-top:2px; }
+    .bar-fill { height:100%; border-radius:3px; }
 
-    .p-pos {
-      background: rgba(52, 211, 153, 0.15);
-      color: var(--green);
-    }
+    /* ── HIRA ── */
+    .hv  { color:var(--green); font-weight:700; }
+    .hna { color:var(--muted); font-size:11px; }
+    .vo  { color:var(--red);   font-size:11px; }
+    .vu  { color:var(--green); font-size:11px; }
 
-    .p-zero {
-      background: rgba(139, 92, 246, 0.15);
-      color: var(--purple);
-    }
-
-    .bar-wrap {
-      display: inline-block;
-      width: 58px;
-      vertical-align: middle;
-    }
-
-    .bar-bg {
-      background: var(--border);
-      border-radius: 3px;
-      height: 4px;
-      margin-top: 2px;
-    }
-
-    .bar-fill {
-      height: 100%;
-      border-radius: 3px;
-    }
-
-    .hv {
-      color: var(--green);
-      font-weight: 700;
-    }
-
-    .hna {
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    .vo {
-      color: var(--red);
-      font-size: 11px;
-    }
-
-    .vu {
-      color: var(--green);
-      font-size: 11px;
-    }
-
+    /* ── PAGINATION ── */
     .pagi {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 5px;
-      padding-top: 6px;
+      display:flex; justify-content:center; align-items:center;
+      gap:4px; padding:12px 16px;
+      background: var(--card2);
+      border-top: 1px solid var(--border);
+      min-height: 48px;
     }
+    .pagi:empty { display:none; }
 
     .pg-btn {
-      background: var(--card2);
-      border: 1px solid var(--border);
-      color: var(--sub);
-      padding: 5px 10px;
-      border-radius: 5px;
-      font-size: 11px;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--sub); padding: 5px 12px; border-radius: 7px;
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      font-family: inherit; transition: all .15s;
+    }
+    .pg-btn:hover { background: var(--card); color: var(--text); }
+    .pg-btn.act   { background: var(--dj); color: #fff; border-color: var(--dj); }
+
+    .pg-info { font-size: 11px; color: var(--muted); padding: 0 4px; }
+
+    /* ── NO DATA ── */
+    .no-data { text-align:center; padding:36px; color:var(--muted); }
+
+    /* ── DOCTOR LINK ── */
+    .doc-link {
       cursor: pointer;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 1px;
+      transition: color .15s, border-color .15s;
     }
+    .doc-link:hover { color: var(--dj); border-color: var(--dj); }
 
-    .pg-btn:hover,
-    .pg-btn.act {
-      background: var(--dj);
-      color: #fff;
-      border-color: var(--dj);
-    }
-
-    .pg-info {
-      font-size: 11px;
-      color: var(--muted);
-      padding: 0 5px;
-    }
-
-    .sec {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 12px;
-      display: flex;
+    /* ── MODAL OVERLAY ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 900;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
       align-items: center;
-      gap: 8px;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+
+    .modal-box {
+      background: #0c1520;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: 100%; max-width: 1040px;
+      max-height: calc(100vh - 40px);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+      animation: modal-in .22s ease;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    @keyframes modal-in {
+      from { opacity:0; transform:translateY(18px) scale(.97); }
+      to   { opacity:1; transform:translateY(0) scale(1); }
     }
 
-    .sec::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
+    /* ── MODAL HEADER ── */
+    .modal-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 28px; gap: 16px;
+      background: #131c26;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .modal-hdr-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: linear-gradient(135deg, #137fec, #2dd4bf);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 6px 20px rgba(19,127,236,0.35);
+    }
+    .modal-hdr-icon .material-symbols-outlined { font-size: 28px; color: #fff; }
+    .modal-ai-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 5px;
+      background: rgba(19,127,236,0.2); color: #137fec;
+      font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+      margin-left: 8px; vertical-align: middle;
+    }
+    .modal-title { font-size: 20px; font-weight: 900; letter-spacing: -0.4px; color: #fff; }
+    .modal-meta-row {
+      display: flex; align-items: center; gap: 14px;
+      margin-top: 5px; flex-wrap: wrap;
+    }
+    .modal-meta-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; color: var(--sub);
+    }
+    .modal-meta-item .material-symbols-outlined { font-size: 15px; }
+    .modal-meta-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--muted); }
+    .modal-hdr-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .modal-close {
+      width: 36px; height: 36px; border-radius: 9px;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--sub); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s; font-family: inherit;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+
+    /* ── MODAL SCROLL ── */
+    .modal-scroll {
+      flex: 1; overflow-y: auto; padding: 28px 32px;
+      background: rgba(10,15,20,0.5);
+    }
+    .modal-scroll::-webkit-scrollbar { width: 6px; }
+    .modal-scroll::-webkit-scrollbar-track { background: transparent; }
+    .modal-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+    /* ── SECTION HEADING ── */
+    .mdoc-sec-hdr {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 10px; font-weight: 800; letter-spacing: 2.5px;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .mdoc-sec-hdr::before { content:''; width: 24px; height: 1px; background: var(--border); flex-shrink:0; }
+
+    /* ── KPI STATS GRID ── */
+    .mdoc-kpi-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 10px; margin-bottom: 28px;
+    }
+    @media (max-width: 750px) { .mdoc-kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+    .mdoc-kpi-card {
+      background: #131c26; border: 1px solid var(--border);
+      border-radius: 12px; padding: 13px 15px;
+    }
+    .mdoc-kpi-card.accent { border-color: rgba(19,127,236,0.35); background: rgba(19,127,236,0.06); }
+    .mdoc-kpi-lbl { font-size: 10px; color: var(--muted); font-weight: 500; margin-bottom: 4px; }
+    .mdoc-kpi-val { font-size: 18px; font-weight: 800; color: #fff; }
+    .mdoc-kpi-val span { font-size: 11px; font-weight: 400; color: var(--muted); }
+
+    /* ── GAUGE + SEAS GRID ── */
+    .mdoc-mid-grid {
+      display: grid; grid-template-columns: 260px 1fr;
+      gap: 18px; margin-bottom: 28px; align-items: stretch;
+    }
+    @media (max-width: 700px) { .mdoc-mid-grid { grid-template-columns: 1fr; } }
+
+    .mdoc-panel {
+      background: #131c26; border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+    }
+    .mdoc-panel-hdr {
+      padding: 12px 18px; border-bottom: 1px solid var(--border);
+      font-size: 10px; font-weight: 700; color: var(--muted);
+      letter-spacing: 1.5px; text-transform: uppercase;
     }
 
-    .no-data {
-      text-align: center;
-      padding: 32px;
-      color: var(--muted);
+    /* ── GAUGE ── */
+    .mdoc-gauge-body {
+      padding: 24px 18px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 16px;
     }
+    .mdoc-gauge-wrap { position: relative; width: 128px; height: 128px; }
+    .mdoc-gauge-wrap svg { transform: rotate(-90deg); }
+    .mdoc-gauge-center {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .mdoc-gauge-pct { font-size: 24px; font-weight: 900; color: #fff; }
+    .mdoc-gauge-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
+    .mdoc-gauge-bar-row { width: 100%; }
+    .mdoc-gauge-bar-lbl { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 5px; }
+    .mdoc-gauge-bar-bg { width: 100%; height: 5px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .mdoc-gauge-bar-fill { height: 100%; border-radius: 4px; }
+    .mdoc-gauge-gap {
+      font-size: 11px; font-weight: 600; color: #fa6238;
+      display: flex; align-items: center; gap: 4px;
+      margin-top: 6px;
+    }
+    .mdoc-gauge-gap .material-symbols-outlined { font-size: 15px; }
+
+    /* ── SEASONAL TABLE ── */
+    .mdoc-seas-tbl { width: 100%; border-collapse: collapse; }
+    .mdoc-seas-tbl thead th {
+      background: rgba(0,0,0,0.25); padding: 10px 16px;
+      font-size: 10px; font-weight: 700; letter-spacing: .7px;
+      color: var(--muted); text-align: left;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    .mdoc-seas-tbl th:not(:first-child) { text-align: center; }
+    .mdoc-seas-tbl td {
+      padding: 13px 16px; font-size: 13px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle; color: var(--text);
+    }
+    .mdoc-seas-tbl td:not(:first-child) { text-align: center; }
+    .mdoc-seas-tbl tbody tr:last-child td { border-bottom: none; }
+    .mdoc-seas-tbl tbody tr.highlight td { background: rgba(19,127,236,0.04); }
+    .seas-badge {
+      display: inline-block; padding: 2px 9px; border-radius: 20px;
+      font-size: 10px; font-weight: 700;
+    }
+    .seas-badge.need { background: rgba(250,98,56,0.12); color: #fa6238; border: 1px solid rgba(250,98,56,0.22); }
+    .seas-badge.ok   { background: rgba(11,218,91,0.1);  color: #0bda5b; border: 1px solid rgba(11,218,91,0.2); }
+    .seas-badge.warn { background: rgba(255,171,0,0.1);  color: #ffab00; border: 1px solid rgba(255,171,0,0.2); }
+
+    /* ── CHART PANEL ── */
+    .mdoc-chart-panel { background: #131c26; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 28px; }
+    .mdoc-chart-inner { padding: 16px; overflow-x: auto; }
+
+    /* ── DIAGNOSIS TABLE ── */
+    .mdoc-diag-panel { background: #131c26; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 28px; }
+    .mdoc-diag-scroll { overflow-x: auto; }
+    .mdoc-tbl { width: 100%; border-collapse: collapse; min-width: 600px; }
+    .mdoc-tbl thead th {
+      background: rgba(0,0,0,0.25); padding: 10px 14px;
+      font-size: 10px; font-weight: 700; letter-spacing: .7px;
+      color: var(--muted); text-align: center;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    .mdoc-tbl thead th:first-child { text-align: left; }
+    .mdoc-tbl td {
+      padding: 10px 14px; font-size: 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: center; background: #131c26; vertical-align: middle;
+    }
+    .mdoc-tbl td.left { text-align: left; }
+    .mdoc-tbl tbody tr:hover td { background: rgba(255,255,255,0.02); }
+    .mdoc-tbl tbody tr:last-child td { border-bottom: none; }
+
+    .hira-safe  { color: #0bda5b; font-size: 11px; font-weight: 700; }
+    .hira-over  { color: #fa6238; font-size: 11px; font-weight: 700; }
+    .hira-match { color: var(--muted); font-size: 11px; }
+    .risk-badge { display: inline-block; padding: 1px 7px; border-radius: 5px; font-size: 10px; font-weight: 700; }
+    .risk-safe  { background: rgba(11,218,91,0.12); color: #0bda5b; border: 1px solid rgba(11,218,91,0.22); }
+    .risk-over  { background: rgba(250,98,56,0.12); color: #fa6238; border: 1px solid rgba(250,98,56,0.22); }
+    .risk-match { background: rgba(129,140,248,0.12); color: var(--indigo); border: 1px solid rgba(129,140,248,0.2); }
+
+    /* ── AI EVAL + TASKS ── */
+    .mdoc-bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 28px; }
+    @media (max-width: 700px) { .mdoc-bottom-grid { grid-template-columns: 1fr; } }
+
+    .mdoc-ai-panel {
+      background: rgba(19,127,236,0.04); border: 1px solid rgba(19,127,236,0.18);
+      border-radius: 14px; padding: 20px 22px;
+    }
+    .mdoc-ai-panel.ys { background: rgba(16,185,129,0.04); border-color: rgba(16,185,129,0.18); }
+    .mdoc-ai-title {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 13px; font-weight: 700; color: #fff;
+      margin-bottom: 14px;
+    }
+    .mdoc-ai-quote {
+      background: rgba(0,0,0,0.25); border-left: 3px solid;
+      border-radius: 6px; padding: 12px 14px;
+      font-size: 12px; color: #c5d5e8; font-style: italic; line-height: 1.8;
+      margin-bottom: 14px;
+    }
+    .mdoc-ai-bullet { display: flex; gap: 10px; margin-bottom: 12px; }
+    .mdoc-ai-bullet:last-child { margin-bottom: 0; }
+    .mdoc-ai-bullet-title { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+    .mdoc-ai-bullet-text  { font-size: 11px; color: var(--sub); line-height: 1.7; }
+
+    .mdoc-tasks-panel {
+      background: rgba(11,218,91,0.03); border: 1px solid rgba(11,218,91,0.15);
+      border-radius: 14px; padding: 20px 22px;
+    }
+    .mdoc-task-title { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 14px; }
+    .mdoc-task-item { display: flex; gap: 10px; margin-bottom: 14px; }
+    .mdoc-task-item:last-child { margin-bottom: 0; }
+    .mdoc-task-icon {
+      width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+      background: rgba(11,218,91,0.12); color: #0bda5b;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .mdoc-task-icon .material-symbols-outlined { font-size: 14px; }
+    .mdoc-task-name { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+    .mdoc-task-desc { font-size: 11px; color: var(--sub); line-height: 1.7; }
+
+    /* ── BANNER ── */
+    .mdoc-banner {
+      position: relative; overflow: hidden;
+      border-radius: 14px; padding: 22px 24px;
+      display: flex; align-items: center; gap: 20px;
+    }
+    .mdoc-banner-glow {
+      position: absolute; right: -30px; top: -30px;
+      width: 160px; height: 160px;
+      border-radius: 50%; filter: blur(50px); pointer-events: none;
+    }
+    .mdoc-banner-icon {
+      width: 56px; height: 56px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .mdoc-banner-icon .material-symbols-outlined { font-size: 32px; color: #fff; }
+    .mdoc-banner-title { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    .mdoc-banner-text  { font-size: 12px; color: #c5d5e8; line-height: 1.75; max-width: 560px; }
+    .mdoc-banner-num {
+      text-align: right; flex-shrink: 0; margin-left: auto;
+      display: none;
+    }
+    @media (min-width: 640px) { .mdoc-banner-num { display: block; } }
+    .mdoc-banner-num-lbl { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .mdoc-banner-num-val { font-size: 30px; font-weight: 900; color: #2dd4bf; }
+
+    /* ── MODAL FOOTER ── */
+    .modal-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 28px; flex-shrink: 0;
+      background: #131c26; border-top: 1px solid var(--border);
+    }
+    .modal-footer-copy { font-size: 11px; color: var(--muted); }
+    .modal-footer-btns { display: flex; gap: 10px; }
+    .modal-btn-dismiss {
+      padding: 8px 20px; border-radius: 9px;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--sub); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all .15s; font-family: inherit;
+    }
+    .modal-btn-dismiss:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+    .modal-btn-apply {
+      padding: 8px 22px; border-radius: 9px;
+      background: #137fec; border: none;
+      color: #fff; font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: background .15s; font-family: inherit;
+      box-shadow: 0 4px 12px rgba(19,127,236,0.3);
+    }
+    .modal-btn-apply:hover { background: #1070d0; }
   </style>
 </head>
 
 <body>
   <nav class="nav">
-    <span class="nav-logo">선메디컬센터 병상가동률 개선 KPI 산출 시뮬레이터</span>
-    <button class="hosp-btn dj active" onclick="sw('대전')">대전선병원</button>
-    <button class="hosp-btn ys" onclick="sw('유성')">유성선병원</button>
+    <div class="nav-brand">
+      <div class="nav-brand-icon">
+        <span class="material-symbols-outlined">monitor_heart</span>
+      </div>
+      <div>
+        <div class="nav-title">Sun Medical Center</div>
+        <div class="nav-subtitle">KPI Simulator &amp; Bed Utilization Dashboard</div>
+      </div>
+    </div>
+    <div class="nav-pills">
+      <button class="hosp-btn dj active" onclick="sw('대전')">대전선병원</button>
+      <button class="hosp-btn ys" onclick="sw('유성')">유성선병원</button>
+    </div>
   </nav>
   <div class="panel active" id="p-dj"></div>
   <div class="panel" id="p-ys"></div>
+
+  <!-- ── DOCTOR REPORT MODAL ── -->
+  <div class="modal-overlay" id="doc-modal" onclick="closeDoc(event)">
+    <div class="modal-box" id="doc-modal-box"></div>
+  </div>
   <script src="data.js"></script>
   <script>
     const DATA = RAW.data, SUM = RAW.summary;
@@ -555,6 +666,7 @@
 
     function render(h) {
       const s = SUM[h], col = h === '대전' ? 'var(--dj)' : 'var(--ys)', cls = h === '대전' ? 'dj' : 'ys';
+      const colHex = h === '대전' ? '#137fec' : '#10b981';
       const offLbl = s.off_months.map(m => m + '월').join('·');
       const normLbl = s.norm_months.map(m => m + '월').join('·');
       const dir = s.direction;
@@ -564,36 +676,64 @@
       window['annual_ratio_' + h] = s.cur_total > 0 ? (s.avail * s.tgt_occ / 100) / s.cur_total : 1;
 
       const panel = document.getElementById(h === '대전' ? 'p-dj' : 'p-ys');
+      const occPct = Math.min(100, Math.round((s.cur_occ / s.tgt_occ) * 100));
+      const badgeIcon = s.cur_occ >= s.tgt_occ ? 'trending_up' : 'trending_flat';
+      const badgeTxt = `목표 ${s.tgt_occ}% | ${s.beds}병상`;
 
       panel.innerHTML = `
-  <div style="margin-bottom:22px;">
-    <span style="display:inline-flex;align-items:center;gap:5px;background:${col}18;border:1px solid ${col}33;border-radius:14px;padding:3px 12px;font-size:11px;font-weight:700;color:${col};letter-spacing:1px;margin-bottom:9px;">
-      🎯 의사별 TOP7 진단 · 비수기(3·4·11·12월) 85% / 통상 90% · FM 제외
-    </span>
-    <h2 style="font-size:22px;font-weight:900;letter-spacing:-0.4px;margin-bottom:2px;">${h}선병원</h2>
-    <p style="color:var(--sub);font-size:12px;">진단별 환자수 6명 이상 · 상위 7개 진단 전체 표시 · <span style="color:var(--red);">음수(−)</span> = 줄여야 함 · <span style="color:var(--green);">양수(+)</span> = 늘려야 함</p>
+  <div class="panel-hdr">
+    <div class="panel-badge" style="background:${colHex}18;border:1px solid ${colHex}30;color:${col}">
+      <span class="material-symbols-outlined" style="font-size:13px">target</span>
+      의사별 TOP7 진단 &nbsp;·&nbsp; 비수기(3·4·11·12월) 85% / 통상 90% &nbsp;·&nbsp; FM 제외
+    </div>
+    <h2 class="panel-h2">${h}선병원</h2>
+    <p class="panel-desc">진단별 환자수 6명 이상 · 상위 7개 진단 전체 표시 &nbsp;|&nbsp; <span style="color:var(--red);">음수(−)</span> = 줄여야 함 &nbsp;·&nbsp; <span style="color:var(--green);">양수(+)</span> = 늘려야 함</p>
   </div>
 
   <div class="sum-row">
     <div class="sum-card ${cls}">
+      <span class="material-symbols-outlined sum-card-icon">bed</span>
       <div class="sum-lbl">허가병상 · 현재가동률</div>
-      <div class="sum-val" style="color:${col}">${s.beds}병상 · ${s.cur_occ}%</div>
-      <div class="sum-sub">목표 <strong style="color:${col}">${s.tgt_occ}%</strong> &nbsp;|&nbsp; ${s.cur_total.toLocaleString()}일 입원<br>현재 평균재원 <strong style="color:${col}">${curAvg}일</strong> &nbsp;(${(s.n_off + s.n_norm).toLocaleString()}명)</div>
+      <div class="sum-val" style="color:${col}">${s.cur_occ}%</div>
+      <div class="sum-badge" style="background:${colHex}18;color:${col}">
+        <span class="material-symbols-outlined">${badgeIcon}</span>
+        ${badgeTxt}
+      </div>
+      <div class="sum-sub">총 <strong>${s.cur_total.toLocaleString()}일</strong> 입원 &nbsp;·&nbsp; ${(s.n_off + s.n_norm).toLocaleString()}명<br>평균재원 <strong>${curAvg}일</strong></div>
+      <div class="sum-progress"><div class="sum-progress-fill" style="width:${occPct}%;background:${col}"></div></div>
     </div>
     <div class="sum-card off">
-      <div class="sum-lbl"><span class="sum-tag tag-off">비수기 85% 목표</span></div>
+      <span class="material-symbols-outlined sum-card-icon">calendar_month</span>
+      <div class="sum-lbl">비수기 목표 (85%)</div>
       <div class="sum-val" style="color:var(--indigo)">${s.tgt_off_avg}일</div>
-      <div class="sum-sub">${offLbl} · ${s.off_days}일<br>현재 ${s.cur_off_avg}일 · ${s.n_off.toLocaleString()}명</div>
+      <div class="sum-badge" style="background:rgba(129,140,248,0.12);color:var(--indigo)">
+        <span class="material-symbols-outlined">schedule</span>
+        현재 ${s.cur_off_avg}일 · ${s.n_off.toLocaleString()}명
+      </div>
+      <div class="sum-sub">${offLbl} &nbsp;·&nbsp; <strong>${s.off_days}일</strong></div>
+      <div class="sum-progress"><div class="sum-progress-fill" style="width:85%;background:var(--indigo)"></div></div>
     </div>
     <div class="sum-card norm">
-      <div class="sum-lbl"><span class="sum-tag tag-norm">통상기간 90% 목표</span></div>
+      <span class="material-symbols-outlined sum-card-icon">event_available</span>
+      <div class="sum-lbl">통상기간 목표 (90%)</div>
       <div class="sum-val" style="color:var(--gold)">${s.tgt_norm_avg}일</div>
-      <div class="sum-sub">${normLbl} · ${s.norm_days}일<br>현재 ${s.cur_norm_avg}일 · ${s.n_norm.toLocaleString()}명</div>
+      <div class="sum-badge" style="background:rgba(245,158,11,0.12);color:var(--gold)">
+        <span class="material-symbols-outlined">schedule</span>
+        현재 ${s.cur_norm_avg}일 · ${s.n_norm.toLocaleString()}명
+      </div>
+      <div class="sum-sub">${normLbl} &nbsp;·&nbsp; <strong>${s.norm_days}일</strong></div>
+      <div class="sum-progress"><div class="sum-progress-fill" style="width:90%;background:var(--gold)"></div></div>
     </div>
     <div class="sum-card hira">
-      <div class="sum-lbl"><span class="sum-tag tag-hira">심평원 HIRA</span></div>
-      <div class="sum-val" style="color:var(--green)">6.2일</div>
-      <div class="sum-sub">전국 종합병원 상병코드 기준<br>전 항목 매칭 완료</div>
+      <span class="material-symbols-outlined sum-card-icon">analytics</span>
+      <div class="sum-lbl">심평원 HIRA</div>
+      <div class="sum-val" style="color:var(--green)">매칭완료</div>
+      <div class="sum-badge" style="background:rgba(11,218,91,0.1);color:var(--green)">
+        <span class="material-symbols-outlined">check_circle</span>
+        548건 전항목 매칭
+      </div>
+      <div class="sum-sub">전국 종합병원 상병코드 기준<br>ICD-10 수동매핑 포함</div>
+      <div class="sum-progress"><div class="sum-progress-fill" style="width:100%;background:var(--green)"></div></div>
     </div>
   </div>
 
@@ -604,18 +744,23 @@
 
   <div class="sec">의사별 · 진단별 재원일수 조정 목표</div>
 
-  <div class="ctrl-row">
-    <select class="ctrl-sel" id="sel-${h}" onchange="af('${h}')"><option value="">전체 의사</option></select>
-    <input class="ctrl-inp" id="inp-${h}" placeholder="🔍 진단명·의사명 검색..." oninput="af('${h}')">
+  <div class="ctrl-panel">
+    <div class="ctrl-left">
+      <select class="ctrl-sel" id="sel-${h}" onchange="af('${h}')"><option value="">전체 의사</option></select>
+      <div class="ctrl-inp-wrap">
+        <span class="material-symbols-outlined ctrl-inp-icon">search</span>
+        <input class="ctrl-inp" id="inp-${h}" placeholder="진단명·의사명 검색..." oninput="af('${h}')">
+      </div>
+      <div class="chips">
+        <span class="chip" id="ct-${h}" style="color:var(--sub)"></span>
+        <span class="chip" id="cd-${h}" style="color:${dir === '단축' ? 'var(--red)' : 'var(--green)'}"></span>
+        <span class="chip" id="ch-${h}" style="color:var(--green)"></span>
+      </div>
+    </div>
     <div class="tgl" id="tgl-${h}">
       <button class="tgl-btn on ${cls}" onclick="sm('${h}','all')">전체</button>
       <button class="tgl-btn ${cls}" onclick="sm('${h}','need')">${dir}필요</button>
       <button class="tgl-btn ${cls}" onclick="sm('${h}','hira')">심평원有</button>
-    </div>
-    <div class="chips">
-      <span class="chip" id="ct-${h}" style="color:var(--sub)"></span>
-      <span class="chip" id="cd-${h}" style="color:${dir === '단축' ? 'var(--red)' : 'var(--green)'}"></span>
-      <span class="chip" id="ch-${h}" style="color:var(--green)"></span>
     </div>
   </div>
 
@@ -624,26 +769,28 @@
     <div class="leg-item"><div class="leg-dot" style="background:var(--indigo)"></div>비수기 목표(85%)</div>
     <div class="leg-item"><div class="leg-dot" style="background:var(--gold)"></div>통상기간 목표(90%)</div>
     <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div>심평원</div>
-    <div class="leg-item"><span class="pill p-neg" style="font-size:10px;">−X.X일 줄여야 함</span></div>
-    <div class="leg-item"><span class="pill p-pos" style="font-size:10px;">+X.X일 늘려야 함</span></div>
+    <div class="leg-item"><span class="pill p-neg">−X.X일 줄여야 함</span></div>
+    <div class="leg-item"><span class="pill p-pos">+X.X일 늘려야 함</span></div>
   </div>
 
-  <div class="tbl-wrap">
-    <table id="tbl-${h}">
-      <thead><tr>
-        <th class="left" onclick="ds('${h}',0)">의사명</th>
-        <th class="left" onclick="ds('${h}',1)">진단명</th>
-        <th onclick="ds('${h}',2)">환자수</th>
-        <th onclick="ds('${h}',3)">비수기 목표 <span style="font-weight:400;color:var(--indigo)">(85%)</span><br><span style="font-size:9px;color:var(--muted)">3·4·11·12월</span></th>
-        <th onclick="ds('${h}',4)">통상기간 목표 <span style="font-weight:400;color:var(--gold)">(90%)</span><br><span style="font-size:9px;color:var(--muted)">1·2·5·6·7·8·9·10월</span></th>
-        <th onclick="ds('${h}',5)">연간목표 <span style="font-weight:400;color:${col}">(${s.tgt_occ}%)</span><br><span style="font-size:9px;color:var(--muted)">연간기준</span></th>
-        <th onclick="ds('${h}',6)">심평원</th>
-        <th onclick="ds('${h}',7)">vs 심평원</th>
-      </tr></thead>
-      <tbody id="tbody-${h}"></tbody>
-    </table>
-  </div>
-  <div class="pagi" id="pagi-${h}"></div>`;
+  <div class="tbl-outer">
+    <div class="tbl-scroll">
+      <table id="tbl-${h}">
+        <thead><tr>
+          <th class="left" onclick="ds('${h}',0)">의사명</th>
+          <th class="left" onclick="ds('${h}',1)">진단명</th>
+          <th onclick="ds('${h}',2)">환자수</th>
+          <th onclick="ds('${h}',3)">비수기 목표 <span style="font-weight:400;color:var(--indigo)">(85%)</span><br><span style="font-size:9px;color:var(--muted)">3·4·11·12월</span></th>
+          <th onclick="ds('${h}',4)">통상기간 목표 <span style="font-weight:400;color:var(--gold)">(90%)</span><br><span style="font-size:9px;color:var(--muted)">1·2·5·6·7·8·9·10월</span></th>
+          <th onclick="ds('${h}',5)">연간목표 <span style="font-weight:400;color:${col}">(${s.tgt_occ}%)</span><br><span style="font-size:9px;color:var(--muted)">연간기준</span></th>
+          <th onclick="ds('${h}',6)">심평원</th>
+          <th onclick="ds('${h}',7)">vs 심평원</th>
+        </tr></thead>
+        <tbody id="tbody-${h}"></tbody>
+      </table>
+    </div>
+    <div class="pagi" id="pagi-${h}"></div>
+  </div>`;
 
       const sel = document.getElementById('sel-' + h);
       const docDept = SUM[h].doc_dept || {};
@@ -720,7 +867,7 @@
     }
 
     function renderTbl(h) {
-      const col = h === '대전' ? '#3b82f6' : '#10b981';
+      const col = h === '대전' ? '#137fec' : '#10b981';
       const s = SUM[h], dir = s.direction;
       const tbody = document.getElementById('tbody-' + h);
       if (!tbody) return;
@@ -765,15 +912,15 @@
         let vsH = '<span class="hna">—</span>';
         if (r.vs_hira !== null) {
           const d = -r.vs_hira; // hira - cur: 심평원 도달을 위해 필요한 변화량
-          const overhira = dir === '단축' ? (r.vs_hira > 0.05) : (r.vs_hira < -0.05);
+          const overhira  = dir === '단축' ? (r.vs_hira > 0.05)  : (r.vs_hira < -0.05);
           const underhira = dir === '단축' ? (r.vs_hira < -0.05) : (r.vs_hira > 0.05);
-          if (overhira) vsH = `<span class="vo">${d > 0 ? '+' : ''}${d.toFixed(1)}일</span>`;
+          if (overhira)       vsH = `<span class="vo">${d > 0 ? '+' : ''}${d.toFixed(1)}일</span>`;
           else if (underhira) vsH = `<span class="vu">${d > 0 ? '+' : ''}${d.toFixed(1)}일</span>`;
-          else vsH = `<span style="color:var(--muted);font-size:11px;">±0</span>`;
+          else                vsH = `<span style="color:var(--muted);font-size:11px;">±0</span>`;
         }
 
         return `<tr>
-      <td class="left" style="font-weight:700;white-space:nowrap;">${r.doctor}</td>
+      <td class="left" style="font-weight:700;white-space:nowrap;"><span class="doc-link" onclick="openDoc('${h}','${r.doctor}')">${r.doctor}</span></td>
       <td class="left" style="color:var(--sub);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${r.diag}">${r.diag}</td>
       <td><b>${r.n}</b>명
         <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${barPct}%;background:${barCol}"></div></div></div>
@@ -813,6 +960,464 @@
         if (i === c) th.classList.add(sDir === 1 ? 'asc' : 'desc');
       });
       af(h);
+    }
+
+    // ── DOCTOR REPORT MODAL ──────────────────────────────────────────
+    function closeDoc(e) {
+      if (e === null || e.target === document.getElementById('doc-modal'))
+        document.getElementById('doc-modal').classList.remove('active');
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDoc(null); });
+
+    function dlReport(h, doctor) {
+      const dept = (SUM[h].doc_dept || {})[doctor] || '';
+      const hospDir = h === '대전' ? '대전' : '유성';
+      const fname = dept ? `${doctor}_${dept}_KPI분석보고서.md` : `${doctor}_KPI분석보고서.md`;
+      const path = `reports/${hospDir}/${fname}`;
+      const btn = document.querySelector('.modal-btn-apply');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '⏳ 불러오는 중...';
+      btn.disabled = true;
+      fetch(path)
+        .then(r => {
+          if (!r.ok) throw new Error(`파일 없음: ${path}`);
+          return r.text();
+        })
+        .then(text => {
+          const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fname;
+          a.click();
+          URL.revokeObjectURL(url);
+          btn.innerHTML = '✅ 저장 완료';
+          setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2000);
+        })
+        .catch(err => {
+          alert(`보고서 파일을 찾을 수 없습니다.\n${err.message}`);
+          btn.innerHTML = orig;
+          btn.disabled = false;
+        });
+    }
+
+    function buildDocChart(records, annualRatio, colHex, dir) {
+      const sorted = [...records].sort((a, b) => b.n - a.n);
+      const W = 620, rowH = 52, topPad = 40, botPad = 36;
+      const H = topPad + sorted.length * rowH + botPad;
+      const labelW = 162, plotX = labelW + 10, rightPad = 52;
+      const plotW = W - plotX - rightPad;
+      const trunc = (s, n = 20) => s.length > n ? s.slice(0, n) + '…' : s;
+
+      const allVals = sorted.flatMap(r => [
+        r.cur, r.tgt_off, r.tgt_norm,
+        r.cur * annualRatio,
+        r.hira != null ? r.hira : 0
+      ]);
+      const maxVal = Math.max(...allVals) * 1.1 || 30;
+      const sc = v => plotX + Math.min(1, v / maxVal) * plotW;
+
+      const tickStep = maxVal <= 12 ? 2 : maxVal <= 20 ? 5 : maxVal <= 40 ? 5 : 10;
+      const ticks = [];
+      for (let t = 0; t <= maxVal + tickStep; t += tickStep) { if (t > maxVal) break; ticks.push(t); }
+
+      let p = [];
+      // bg
+      p.push(`<rect width="${W}" height="${H}" fill="#111a22" rx="0"/>`);
+      // grid + tick labels
+      ticks.forEach(t => {
+        const x = sc(t).toFixed(1);
+        p.push(`<line x1="${x}" y1="${topPad - 6}" x2="${x}" y2="${H - botPad + 4}" stroke="#233648" stroke-width="1"/>`);
+        p.push(`<text x="${x}" y="${topPad - 10}" text-anchor="middle" fill="#4a5c6e" font-size="10">${t}</text>`);
+      });
+      p.push(`<text x="${plotX + plotW / 2}" y="13" text-anchor="middle" fill="#7a92a8" font-size="10" font-weight="600">재원일수 (일)</text>`);
+
+      sorted.forEach((r, i) => {
+        const yTop = topPad + i * rowH;
+        const yCtr = yTop + rowH / 2;
+        const barH = 14, barY = yCtr - barH / 2;
+        const tgtAnnual = r.cur * annualRatio;
+
+        // alt row bg
+        if (i % 2 === 1) p.push(`<rect x="${plotX}" y="${yTop}" width="${plotW + rightPad - 4}" height="${rowH}" fill="rgba(255,255,255,0.012)"/>`);
+
+        // label
+        const lbl = trunc(r.diag);
+        p.push(`<text x="${labelW - 6}" y="${yCtr + 3}" text-anchor="end" fill="#c8d8e8" font-size="11" font-weight="500"><title>${r.diag}</title>${lbl}</text>`);
+        p.push(`<text x="${labelW - 6}" y="${yCtr + 15}" text-anchor="end" fill="#4a5c6e" font-size="9">${r.n}명</text>`);
+
+        // current bar
+        const curX = sc(r.cur);
+        p.push(`<rect x="${plotX}" y="${barY}" width="${Math.max(2, curX - plotX).toFixed(1)}" height="${barH}" fill="${colHex}bb" rx="3"/>`);
+
+        // target extension (gap to reach annual target)
+        const tgtX = sc(tgtAnnual);
+        if (tgtAnnual > r.cur + 0.1) {
+          p.push(`<rect x="${curX.toFixed(1)}" y="${barY}" width="${(tgtX - curX).toFixed(1)}" height="${barH}" fill="${colHex}30" rx="3" stroke="${colHex}77" stroke-width="1" stroke-dasharray="4,3"/>`);
+        }
+
+        // HIRA marker (vertical tick + circle)
+        if (r.hira != null) {
+          const hx = sc(r.hira).toFixed(1);
+          p.push(`<line x1="${hx}" y1="${barY - 5}" x2="${hx}" y2="${barY + barH + 5}" stroke="#0bda5b" stroke-width="1.5"/>`);
+          p.push(`<circle cx="${hx}" cy="${barY - 5}" r="3" fill="#0bda5b"/>`);
+        }
+
+        // value text
+        const labelX = (Math.max(curX, tgtX) + 5).toFixed(1);
+        p.push(`<text x="${labelX}" y="${yCtr + 4}" fill="#e2eaf4" font-size="10" font-weight="700">${r.cur.toFixed(1)}</text>`);
+        if (tgtAnnual > r.cur + 0.1) {
+          p.push(`<text x="${(tgtX + 5).toFixed(1)}" y="${yCtr + 15}" fill="${colHex}cc" font-size="9">→${tgtAnnual.toFixed(1)}</text>`);
+        }
+      });
+
+      // legend
+      const ly = H - botPad + 16;
+      p.push(`<rect x="${plotX}" y="${ly - 8}" width="12" height="10" fill="${colHex}bb" rx="2"/>`);
+      p.push(`<text x="${plotX + 16}" y="${ly + 1}" fill="#7a92a8" font-size="10">현재 재원일수</text>`);
+      p.push(`<rect x="${plotX + 105}" y="${ly - 8}" width="12" height="10" fill="${colHex}30" rx="2" stroke="${colHex}77" stroke-width="1"/>`);
+      p.push(`<text x="${plotX + 121}" y="${ly + 1}" fill="#7a92a8" font-size="10">연간목표까지 필요량</text>`);
+      p.push(`<line x1="${plotX + 250}" y1="${ly - 4}" x2="${plotX + 262}" y2="${ly - 4}" stroke="#0bda5b" stroke-width="1.5"/>`);
+      p.push(`<circle cx="${plotX + 256}" cy="${ly - 4}" r="3" fill="#0bda5b"/>`);
+      p.push(`<text x="${plotX + 268}" y="${ly + 1}" fill="#7a92a8" font-size="10">심평원 평균</text>`);
+
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" style="width:100%;min-width:400px;display:block">${p.join('')}</svg>`;
+    }
+
+    function openDoc(h, doctor) {
+      const records = DATA[h].filter(r => r.doctor === doctor);
+      if (!records.length) return;
+      const s = SUM[h];
+      const isYs = h === '유성';
+      const col = isYs ? 'var(--ys)' : 'var(--dj)';
+      const colHex = isYs ? '#10b981' : '#137fec';
+      const dir = s.direction;
+      const annualRatio = window['annual_ratio_' + h] || 1;
+      const dept = (s.doc_dept || {})[doctor] || '—';
+      const adjVerb = dir === '연장' ? '연장' : '단축';
+
+      // ── Compute weighted stats ──
+      const totalN  = records.reduce((a, r) => a + r.n, 0);
+      const offN    = records.reduce((a, r) => a + r.off_n, 0);
+      const normN   = records.reduce((a, r) => a + r.norm_n, 0);
+      const wCur    = totalN > 0 ? records.reduce((a, r) => a + r.cur * r.n, 0) / totalN : 0;
+      const wOff    = offN   > 0 ? records.reduce((a, r) => a + r.cur_off * r.off_n, 0) / offN : 0;
+      const wNorm   = normN  > 0 ? records.reduce((a, r) => a + r.cur_norm * r.norm_n, 0) / normN : 0;
+      const wTgtOff  = offN  > 0 ? records.reduce((a, r) => a + r.tgt_off * r.off_n, 0) / offN : 0;
+      const wTgtNorm = normN > 0 ? records.reduce((a, r) => a + r.tgt_norm * r.norm_n, 0) / normN : 0;
+      const wTgtAnnual = totalN > 0 ? records.reduce((a, r) => a + r.cur * annualRatio * r.n, 0) / totalN : 0;
+      const dOff   = wOff  - wTgtOff;
+      const dNorm  = wNorm - wTgtNorm;
+      const dAnnual = wCur - wTgtAnnual;
+
+      // Contribution & Rank
+      const docBed  = records.reduce((a, r) => a + r.cur * r.n, 0);
+      const contrib = s.cur_total > 0 ? (docBed / s.cur_total * 100).toFixed(2) : '—';
+      const docAvgs = [...new Set(DATA[h].map(r => r.doctor))].map(d => {
+        const rr = DATA[h].filter(x => x.doctor === d);
+        const nn = rr.reduce((a, x) => a + x.n, 0);
+        return { d, avg: nn > 0 ? rr.reduce((a, x) => a + x.cur * x.n, 0) / nn : 0 };
+      }).sort((a, b) => b.avg - a.avg);
+      const rank = docAvgs.findIndex(x => x.d === doctor) + 1;
+      const docCount = docAvgs.length;
+
+      const needAdjRecs = records.filter(r =>
+        dir === '단축' ? (r.diff_off > 0.05 || r.diff_norm > 0.05) : (r.diff_off < -0.05 || r.diff_norm < -0.05)
+      );
+      const safeRecs = records.filter(r => r.hira != null && r.vs_hira < -0.05);
+      const overRecs = records.filter(r => r.hira != null && r.vs_hira > 0.05);
+      const totalBedGain = Math.abs(records.reduce((a, r) => {
+        return a + (r.cur * annualRatio - r.cur) * r.n;
+      }, 0));
+
+      // diff pill helper
+      const dp = (d) => {
+        if (Math.abs(d) <= 0.05) return '<span class="pill p-zero">±0</span>';
+        if (d > 0) return `<span class="pill p-neg">−${d.toFixed(2)}일</span>`;
+        return `<span class="pill p-pos">+${Math.abs(d).toFixed(2)}일</span>`;
+      };
+
+      // Gauge (hospital-level occupancy)
+      const gaugePct = s.cur_occ;
+      const gaugeOffset = (100 - gaugePct).toFixed(1);
+      const gapPct = (s.tgt_occ - s.cur_occ).toFixed(1);
+
+      // Seasonal comparison rows
+      const seasData = [
+        { lbl: '비수기 (85%)', sub: '3·4·11·12월', cur: wOff, tgt: wTgtOff, diff: dOff },
+        { lbl: '통상기간 (90%)', sub: '1·2·5~10월', cur: wNorm, tgt: wTgtNorm, diff: dNorm },
+        { lbl: '연간 (88.3%)', sub: '연간 기준', cur: wCur, tgt: wTgtAnnual, diff: dAnnual, bold: true },
+      ];
+      const seasRows = seasData.map(row => {
+        const needAdj = dir === '연장' ? row.diff < -0.05 : row.diff > 0.05;
+        const onTarget = Math.abs(row.diff) <= 0.05;
+        const badge = onTarget
+          ? `<span class="seas-badge ok">목표 달성</span>`
+          : needAdj
+            ? `<span class="seas-badge need">조정 필요</span>`
+            : `<span class="seas-badge warn">모니터링</span>`;
+        const diffStr = Math.abs(row.diff) <= 0.05 ? '±0일' : (row.diff > 0 ? `−${row.diff.toFixed(2)}일` : `+${Math.abs(row.diff).toFixed(2)}일`);
+        const diffColor = Math.abs(row.diff) <= 0.05 ? 'var(--muted)'
+          : dir === '연장' ? (row.diff < 0 ? '#fa6238' : '#0bda5b')
+          : (row.diff > 0 ? '#fa6238' : '#0bda5b');
+        return `<tr${row.bold ? ' class="highlight"' : ''}>
+          <td style="${row.bold ? 'font-weight:700;color:#fff' : ''}">${row.lbl}<br><span style="font-size:10px;color:var(--muted)">${row.sub}</span></td>
+          <td style="${row.bold ? 'font-weight:700' : ''}">${row.cur.toFixed(2)}일</td>
+          <td style="color:${colHex};font-weight:700">${row.tgt.toFixed(2)}일</td>
+          <td style="color:${diffColor};font-weight:600">${diffStr}</td>
+          <td>${badge}</td>
+        </tr>`;
+      }).join('');
+
+      // Diagnosis table
+      const diagRows = [...records].sort((a, b) => b.n - a.n).map(r => {
+        const tgtA = r.cur * annualRatio;
+        const diffA = parseFloat((r.cur - tgtA).toFixed(2));
+        let hiraCell = '<span class="hna">—</span>';
+        let riskBadge = '';
+        if (r.hira != null) {
+          hiraCell = `${r.hira}일`;
+          if (r.vs_hira < -0.05)     riskBadge = `<span class="risk-badge risk-safe">연장여유</span>`;
+          else if (r.vs_hira > 0.05) riskBadge = `<span class="risk-badge risk-over">심사주의</span>`;
+          else                        riskBadge = `<span class="risk-badge risk-match">심평원일치</span>`;
+        }
+        const vsD = r.vs_hira != null ? -(r.vs_hira) : null;
+        const vsCell = vsD != null
+          ? `<span class="${Math.abs(vsD) <= 0.05 ? 'hira-match' : vsD > 0 ? 'hira-safe' : 'hira-over'}">${vsD > 0 ? '+' : ''}${vsD.toFixed(1)}일</span>`
+          : '<span class="hna">—</span>';
+        return `<tr>
+          <td class="left" style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;" title="${r.diag}">${r.diag}</td>
+          <td>${r.n}명</td>
+          <td><span style="color:var(--sub)">${r.cur_off.toFixed(1)}</span> → <span style="color:var(--indigo);font-weight:700">${r.tgt_off.toFixed(1)}</span>${dp(r.diff_off)}<br><span style="font-size:10px;color:var(--muted)">${r.off_n}명</span></td>
+          <td><span style="color:var(--sub)">${r.cur_norm.toFixed(1)}</span> → <span style="color:var(--gold);font-weight:700">${r.tgt_norm.toFixed(1)}</span>${dp(r.diff_norm)}<br><span style="font-size:10px;color:var(--muted)">${r.norm_n}명</span></td>
+          <td><span style="color:var(--sub)">${r.cur.toFixed(1)}</span> → <span style="color:${colHex};font-weight:700">${tgtA.toFixed(1)}</span>${dp(diffA)}</td>
+          <td>${hiraCell}</td>
+          <td>${vsCell} ${riskBadge}</td>
+        </tr>`;
+      }).join('');
+
+      // AI Evaluation bullets
+      const aiBullets = [];
+      if (safeRecs.length > 0) {
+        const top = safeRecs[0];
+        aiBullets.push({ icon: 'trending_up', iconCol: '#2dd4bf', title: `삭감 리스크 없는 ${adjVerb} 여유 ${safeRecs.length}개 항목`,
+          text: `${top.diag.length > 20 ? top.diag.slice(0,20)+'…' : top.diag} 등 심평원 하회 항목은 ${adjVerb}해도 심사 삭감 리스크가 없습니다. 우선 추진 권장 영역입니다.` });
+      }
+      if (overRecs.length > 0) {
+        const top = overRecs.sort((a,b) => b.vs_hira - a.vs_hira)[0];
+        const over = top.vs_hira.toFixed(1);
+        aiBullets.push({ icon: 'report_problem', iconCol: '#fa6238', title: `HIRA 초과 ${overRecs.length}개 항목 — 의무기록 보강 필요`,
+          text: `${top.diag.length > 20 ? top.diag.slice(0,20)+'…' : top.diag}은 심평원 대비 +${over}일 초과 중. 추가 ${adjVerb} 시 임상적 근거 상세 기재 필수입니다.` });
+      }
+      if (aiBullets.length === 0) {
+        aiBullets.push({ icon: 'check_circle', iconCol: '#0bda5b', title: '심평원 기준 적정 범위 내',
+          text: `현재 재원일수는 심평원 기준 대비 적정 범위 내에 있습니다. 기간별 목표 달성을 위한 체계적 입원 관리 계획 수립을 권장합니다.` });
+      }
+
+      // Tasks
+      const tasks = [
+        safeRecs.length > 0
+          ? { title: '심평원 하회 진단 우선 연장 추진', desc: `${adjVerb} 여유가 있는 ${safeRecs.length}개 항목을 중심으로 입원 중 포괄적 평가·재활 프로그램을 통해 자연스러운 재원일수 확보를 추진합니다.` }
+          : { title: '입원 관리 프로토콜 강화', desc: '술후 합병증 모니터링·고령 환자 퇴원 전 안정성 평가 등 임상적으로 정당한 재원 기간을 체계적으로 확보합니다.' },
+        overRecs.length > 0
+          ? { title: '심평원 초과 진단 의무기록 강화', desc: `${overRecs.length}개 초과 항목에 대해 입원 사유·치료 계획·퇴원 기준을 표준 양식에 상세 기재하여 심사 대비를 강화합니다.` }
+          : { title: '월별 재원일수 KPI 모니터링', desc: '진단별 평균 재원일수를 월 단위로 추적하고, 비수기·통상기간 목표 대비 달성률을 정기적으로 피드백합니다.' },
+        { title: '다학제 퇴원 계획 (Discharge Planning)', desc: '입원 시점부터 예상 퇴원일을 설정하고, 간호팀·사회복지팀과 협력하여 퇴원 장애 요인을 조기에 해결합니다.' },
+      ];
+
+      // ── Assemble modal ──
+      const box = document.getElementById('doc-modal-box');
+      box.innerHTML = `
+        <div class="modal-hdr">
+          <div style="display:flex;align-items:center;gap:16px">
+            <div class="modal-hdr-icon">
+              <span class="material-symbols-outlined">auto_awesome</span>
+            </div>
+            <div>
+              <div style="display:flex;align-items:center;gap:0">
+                <div class="modal-title">${doctor} 의료진 KPI 분석 리포트</div>
+                <span class="modal-ai-badge">AI Generated</span>
+              </div>
+              <div class="modal-meta-row">
+                <span class="modal-meta-item"><span class="material-symbols-outlined">medical_services</span>${dept} · ${h}선병원</span>
+                <span class="modal-meta-dot"></span>
+                <span class="modal-meta-item"><span class="material-symbols-outlined">calendar_today</span>분석기준일: 2026년 2월</span>
+                <span class="modal-meta-dot"></span>
+                <span class="modal-meta-item"><span class="material-symbols-outlined">database</span>데이터: 2025 FY</span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-hdr-actions">
+            <button class="modal-close" onclick="closeDoc(null)"><span class="material-symbols-outlined" style="font-size:18px">close</span></button>
+          </div>
+        </div>
+
+        <div class="modal-scroll">
+
+          <!-- ① KPI Executive Summary -->
+          <div class="mdoc-sec-hdr">KPI Executive Summary</div>
+          <div class="mdoc-kpi-grid">
+            <div class="mdoc-kpi-card">
+              <div class="mdoc-kpi-lbl">총 환자수</div>
+              <div class="mdoc-kpi-val">${totalN}<span>명</span></div>
+            </div>
+            <div class="mdoc-kpi-card">
+              <div class="mdoc-kpi-lbl">평균 재원일수</div>
+              <div class="mdoc-kpi-val" style="color:${colHex}">${wCur.toFixed(2)}<span>일</span></div>
+            </div>
+            <div class="mdoc-kpi-card">
+              <div class="mdoc-kpi-lbl">병상일 기여율</div>
+              <div class="mdoc-kpi-val" style="color:${colHex}">${contrib}<span>%</span></div>
+            </div>
+            <div class="mdoc-kpi-card">
+              <div class="mdoc-kpi-lbl">조정 필요 진단</div>
+              <div class="mdoc-kpi-val" style="color:${needAdjRecs.length>0?'#fa6238':'#0bda5b'}">${needAdjRecs.length}/${records.length}<span>${needAdjRecs.length>0?'개 조정필요':'개 양호'}</span></div>
+            </div>
+            <div class="mdoc-kpi-card accent">
+              <div class="mdoc-kpi-lbl" style="color:#137fec">재원일수 순위</div>
+              <div class="mdoc-kpi-val">${rank}<span>위 / ${docCount}명</span></div>
+            </div>
+          </div>
+
+          <!-- ② Gauge + Seasonal -->
+          <div class="mdoc-sec-hdr">Bed Utilization Goal</div>
+          <div class="mdoc-mid-grid">
+            <div class="mdoc-panel">
+              <div class="mdoc-panel-hdr">병상가동률 현황</div>
+              <div class="mdoc-gauge-body">
+                <div class="mdoc-gauge-wrap">
+                  <svg width="128" height="128" viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="16" fill="none" stroke="#233648" stroke-width="3"/>
+                    <circle cx="18" cy="18" r="16" fill="none" stroke="${colHex}" stroke-width="3"
+                      stroke-dasharray="100" stroke-dashoffset="${gaugeOffset}" stroke-linecap="round"/>
+                  </svg>
+                  <div class="mdoc-gauge-center">
+                    <div class="mdoc-gauge-pct">${gaugePct}%</div>
+                    <div class="mdoc-gauge-sub">현재</div>
+                  </div>
+                </div>
+                <div class="mdoc-gauge-bar-row">
+                  <div class="mdoc-gauge-bar-lbl">
+                    <span style="color:var(--sub)">목표</span>
+                    <span style="color:#fff;font-weight:700">${s.tgt_occ}%</span>
+                  </div>
+                  <div class="mdoc-gauge-bar-bg">
+                    <div class="mdoc-gauge-bar-fill" style="width:${s.tgt_occ}%;background:${colHex}55"></div>
+                  </div>
+                  <div class="mdoc-gauge-gap">
+                    <span class="material-symbols-outlined">warning</span>
+                    ${gapPct}%p Gap to achieve target
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mdoc-panel">
+              <div class="mdoc-panel-hdr">Seasonal Performance — 의사 가중평균 재원일수</div>
+              <table class="mdoc-seas-tbl">
+                <thead><tr>
+                  <th>기간</th><th>현재</th><th>목표</th><th>차이</th><th>상태</th>
+                </tr></thead>
+                <tbody>${seasRows}</tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ③ TOP7 Chart -->
+          <div class="mdoc-sec-hdr">Top 7 Diagnoses LOS Comparison</div>
+          <div class="mdoc-chart-panel">
+            <div class="mdoc-panel-hdr">재원일수 현황 (현재 | 연간목표 필요량 | 심평원 평균)</div>
+            <div class="mdoc-chart-inner">
+              ${buildDocChart(records, annualRatio, colHex, dir)}
+            </div>
+          </div>
+
+          <!-- ④ Diagnosis Table -->
+          <div class="mdoc-sec-hdr">진단별 상세 분석</div>
+          <div class="mdoc-diag-panel">
+            <div class="mdoc-diag-scroll">
+              <table class="mdoc-tbl">
+                <thead><tr>
+                  <th class="left">진단명</th>
+                  <th>환자수</th>
+                  <th>비수기 (85%)</th>
+                  <th>통상기간 (90%)</th>
+                  <th>연간 (${s.tgt_occ}%)</th>
+                  <th>심평원</th>
+                  <th>vs 심평원</th>
+                </tr></thead>
+                <tbody>${diagRows}</tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ⑤ AI Eval + Tasks -->
+          <div class="mdoc-sec-hdr">AI Analysis &amp; Improvement Tasks</div>
+          <div class="mdoc-bottom-grid">
+            <div class="mdoc-ai-panel${isYs ? ' ys' : ''}">
+              <div class="mdoc-ai-title">
+                <span class="material-symbols-outlined" style="color:${colHex}">psychology</span>
+                AI 분석 평가
+              </div>
+              <div class="mdoc-ai-quote" style="border-left-color:${colHex}">
+                "${doctor} 의료진은 TOP7 진단 중 <strong style="color:${colHex}">${needAdjRecs.length}개</strong> 항목에서 ${adjVerb}이 필요하며, 목표 달성 시 약 <strong style="color:#2dd4bf">${totalBedGain.toFixed(0)} 병상일</strong>의 추가 확보가 가능합니다. ${safeRecs.length > 0 ? `심평원 하회 ${safeRecs.length}개 항목은 삭감 리스크 없이 우선 추진 가능합니다.` : ''}"
+              </div>
+              ${aiBullets.map(b => `
+              <div class="mdoc-ai-bullet">
+                <span class="material-symbols-outlined" style="color:${b.iconCol};font-size:20px;flex-shrink:0">${b.icon}</span>
+                <div>
+                  <div class="mdoc-ai-bullet-title">${b.title}</div>
+                  <div class="mdoc-ai-bullet-text">${b.text}</div>
+                </div>
+              </div>`).join('')}
+            </div>
+            <div class="mdoc-tasks-panel">
+              <div class="mdoc-task-title">
+                <span class="material-symbols-outlined" style="color:#0bda5b">assignment_turned_in</span>
+                개선 실행 과제
+              </div>
+              ${tasks.map(t => `
+              <div class="mdoc-task-item">
+                <div class="mdoc-task-icon"><span class="material-symbols-outlined">check</span></div>
+                <div>
+                  <div class="mdoc-task-name">${t.title}</div>
+                  <div class="mdoc-task-desc">${t.desc}</div>
+                </div>
+              </div>`).join('')}
+            </div>
+          </div>
+
+          <!-- ⑥ Banner -->
+          <div class="mdoc-banner" style="background:linear-gradient(135deg,${colHex}22,${colHex}0a,transparent);border:1px solid ${colHex}30">
+            <div class="mdoc-banner-glow" style="background:${colHex}33"></div>
+            <div class="mdoc-banner-icon" style="background:${colHex};box-shadow:0 8px 24px ${colHex}44">
+              <span class="material-symbols-outlined">rocket_launch</span>
+            </div>
+            <div style="position:relative;z-index:1">
+              <div class="mdoc-banner-title">최종 전략적 권고</div>
+              <div class="mdoc-banner-text">
+                권고 재원일수 조정을 실행하면 약 <strong style="color:#2dd4bf">${totalBedGain.toFixed(0)} 병상일</strong>을 추가로 확보할 수 있습니다.
+                ${safeRecs.length > 0 ? `삭감 리스크가 없는 심평원 하회 ${safeRecs.length}개 항목을 우선 추진하고, ` : ''}
+                임상적으로 정당한 재원일수 확보를 통해 단순 퇴원 지연이 아닌 <strong style="color:#fff">입원 서비스 질 향상</strong>으로 자연스러운 재원일수 확대를 추진하십시오.
+              </div>
+            </div>
+            <div class="mdoc-banner-num" style="position:relative;z-index:1">
+              <div class="mdoc-banner-num-lbl">Estimated Bed Day Gain</div>
+              <div class="mdoc-banner-num-val">+${totalBedGain.toFixed(0)}</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <div class="modal-footer-copy">© 2026 Sun Medical Center Data Analytics Division. Confidential.</div>
+          <div class="modal-footer-btns">
+            <button class="modal-btn-dismiss" onclick="closeDoc(null)">닫기</button>
+            <button class="modal-btn-apply" style="background:${colHex}" onclick="dlReport('${h}','${doctor.replace(/'/g,"\\'")}')">📄 보고서 저장 (MD)</button>
+          </div>
+        </div>`;
+
+      document.getElementById('doc-modal').classList.add('active');
+      document.getElementById('doc-modal').scrollTop = 0;
     }
 
     render('대전'); render('유성');
