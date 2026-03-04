@@ -210,6 +210,8 @@
     .ctrl-inp:focus { border-color: var(--hosp-color, var(--dj)); }
     .ctrl-inp::placeholder { color: var(--muted); }
 
+    .ctrl-right { display: flex; align-items: center; gap: 8px; }
+
     .csv-btn {
       display: inline-flex; align-items: center; gap: 4px;
       background: var(--card2); border: 1px solid var(--border);
@@ -607,6 +609,120 @@
       box-shadow: 0 4px 12px rgba(19,127,236,0.3);
     }
     .modal-btn-apply:hover { background: #1070d0; }
+
+    /* ═══════════════════════════════════════
+       MOBILE OPTIMIZATIONS
+       ─────────────────────────────────────── */
+
+    /* ── 태블릿 이하 (≤ 768px) ── */
+    @media (max-width: 768px) {
+      .nav { padding: 0 16px; height: 56px; }
+      .nav-subtitle { display: none; }
+      .nav-title { font-size: 13px; }
+      .nav-brand-icon { width: 32px; height: 32px; border-radius: 8px; }
+      .nav-brand-icon .material-symbols-outlined { font-size: 18px; }
+      .hosp-btn { padding: 6px 14px; font-size: 12px; }
+
+      .panel { padding: 16px 16px 32px; }
+
+      .panel-h2 { font-size: 20px; }
+      .panel-desc { font-size: 11px; line-height: 1.7; }
+
+      .ctrl-panel { padding: 12px 14px; flex-direction: column; align-items: stretch; gap: 10px; }
+      .ctrl-left { flex-direction: column; align-items: stretch; gap: 8px; }
+      .ctrl-sel { width: 100%; }
+      .ctrl-inp-wrap { width: 100%; }
+      .ctrl-inp { min-width: unset; width: 100%; }
+      .chips { gap: 6px; }
+
+      .ctrl-right { width: 100%; }
+      .tgl { flex: 1; }
+      .tgl-btn { flex: 1; text-align: center; padding: 7px 8px; }
+
+      .csv-btn { padding: 8px 12px; flex-shrink: 0; }
+
+      .leg-row { gap: 10px; }
+      .leg-item { font-size: 10px; }
+
+      .sum-card { padding: 14px 16px; }
+      .sum-val { font-size: 22px; }
+
+      .modal-overlay { padding: 0; align-items: flex-end; }
+      .modal-box {
+        border-radius: 20px 20px 0 0;
+        max-height: 92vh;
+        max-width: 100%;
+      }
+      .modal-hdr { padding: 14px 16px; gap: 10px; }
+      .modal-hdr > div:first-child { gap: 10px; flex: 1; min-width: 0; }
+      .modal-hdr-icon { width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0; }
+      .modal-hdr-icon .material-symbols-outlined { font-size: 20px; }
+      .modal-title { font-size: 15px; line-height: 1.3; word-break: keep-all; }
+      .modal-ai-badge { margin-left: 4px; font-size: 9px; padding: 2px 6px; }
+      .modal-meta-row { flex-wrap: wrap; gap: 5px 10px; margin-top: 4px; }
+      .modal-meta-dot { display: none; }
+      .modal-meta-item { font-size: 11px; }
+
+      .modal-scroll { padding: 20px 20px; }
+
+      .mdoc-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .mdoc-kpi-card { padding: 11px 12px; }
+      .mdoc-kpi-val { font-size: 16px; }
+
+      .mdoc-seas-tbl td,
+      .mdoc-seas-tbl thead th { padding: 10px 12px; }
+
+      .mdoc-chart-inner { padding: 12px; }
+
+      .mdoc-ai-panel,
+      .mdoc-tasks-panel { padding: 16px 18px; }
+
+      .mdoc-banner { padding: 18px 18px; gap: 14px; }
+      .mdoc-banner-title { font-size: 14px; }
+      .mdoc-banner-text { font-size: 11px; }
+
+      .modal-footer { padding: 12px 16px; gap: 8px; }
+      .modal-footer-copy { display: none; }
+      .modal-footer-btns { width: 100%; }
+      .modal-btn-dismiss,
+      .modal-btn-apply { flex: 1; text-align: center; }
+
+      .notice { font-size: 11px; }
+      .sec { font-size: 9px; letter-spacing: 1.5px; }
+
+      .panel-badge { white-space: normal; line-height: 1.5; font-size: 10px; }
+      .summary-dl-btn { font-size: 10px; padding: 5px 10px; }
+      .panel-hdr { margin-bottom: 16px; }
+      .panel-hdr > div:first-child { gap: 8px; }
+
+      .leg-row { gap: 7px 10px; }
+    }
+
+    /* ── 소형 폰 (≤ 480px) ── */
+    @media (max-width: 480px) {
+      .nav-brand { gap: 8px; }
+      .nav-title { font-size: 12px; }
+      .hosp-btn { padding: 6px 10px; font-size: 11px; }
+
+      .panel { padding: 12px 12px 28px; }
+
+      .panel-h2 { font-size: 18px; }
+
+      .panel-badge { font-size: 10px; padding: 4px 10px; }
+
+      .sum-val { font-size: 20px; }
+      .sum-lbl { font-size: 10px; }
+      .sum-sub { font-size: 10px; }
+
+      .mdoc-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+      .mdoc-kpi-val { font-size: 15px; }
+      .mdoc-kpi-lbl { font-size: 9px; }
+
+      .modal-scroll { padding: 16px 14px; }
+      .modal-hdr { padding: 14px 16px; gap: 10px; }
+
+      .mdoc-bottom-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 
@@ -749,15 +865,17 @@
         <span class="chip" id="ch-${h}" style="color:var(--green)"></span>
       </div>
     </div>
-    <div class="tgl" id="tgl-${h}">
-      <button class="tgl-btn on ${cls}" onclick="sm('${h}','all')">전체</button>
-      <button class="tgl-btn ${cls}" onclick="sm('${h}','need')">${dir}필요</button>
-      <button class="tgl-btn ${cls}" onclick="sm('${h}','hira')">심평원有</button>
+    <div class="ctrl-right">
+      <div class="tgl" id="tgl-${h}">
+        <button class="tgl-btn on ${cls}" onclick="sm('${h}','all')">전체</button>
+        <button class="tgl-btn ${cls}" onclick="sm('${h}','need')">${dir}필요</button>
+        <button class="tgl-btn ${cls}" onclick="sm('${h}','hira')">심평원有</button>
+      </div>
+      <button class="csv-btn" onclick="exportCSV('${h}')" title="현재 필터 기준으로 CSV 내보내기">
+        <span class="material-symbols-outlined" style="font-size:15px">download</span>
+        CSV
+      </button>
     </div>
-    <button class="csv-btn" onclick="exportCSV('${h}')" title="현재 필터 기준으로 CSV 내보내기">
-      <span class="material-symbols-outlined" style="font-size:15px">download</span>
-      CSV
-    </button>
   </div>
 
   <div class="leg-row">
